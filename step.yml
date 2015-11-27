@@ -14,9 +14,9 @@ description: |-
 
   3, Grant Access to provide the service account the necessary rights
   See: https://play.google.com/apps/publish ->Settings->User account & rights->Invite new user and give the privileges
-website:
-source_code_url:
-support_url:
+website: https://github.com/bitrise-io/steps-google-play-deploy
+source_code_url: https://github.com/bitrise-io/steps-google-play-deploy
+support_url: https://github.com/bitrise-io/steps-google-play-deploy/issues
 host_os_tags:
   - osx-10.10
 project_type_tags:
