@@ -2,6 +2,8 @@ title: Step google play deploy
 summary: Step google play deploy
 description: |-
   To use this step:
+  0, You have to upload the first apk manually
+  See: https://play.google.com/apps/publish ->All applications->Add new application
 
   1, You must link your Google Play Developer Console to an API project.
   See: https://developers.google.com/android-publisher/getting_started (Linking your API Project section)
