@@ -13,9 +13,7 @@ description: |-
   When you create your service account on the google developer console chose P12 as Key Type.
 
   3, Grant Access to provide the service account the necessary rights
-  See: https://play.google.com/apps/publish ->Settings->User account & rights->Invite new user and give it the privileges:
-    - Create & edit draft apps
-    - Manage Alpha & Beta users
+  See: https://play.google.com/apps/publish ->Settings->User account & rights->Invite new user and give the privileges
 website:
 source_code_url:
 support_url:
