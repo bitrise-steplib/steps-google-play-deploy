@@ -1,0 +1,76 @@
+title: Step google play deploy
+summary: Step google play deploy
+description: |-
+  To use this step:
+
+  1, You must link your Google Play Developer Console to an API project.
+  See: https://developers.google.com/android-publisher/getting_started (Linking your API Project section)
+
+  2, Setting Up API Access Clients:
+  See: https://developers.google.com/android-publisher/getting_started (Using a service account)
+  When you create your service account on the google developer console chose P12 as Key Type.
+
+  3, Grant Access to provide the service account the necessary rights
+  See: https://play.google.com/apps/publish ->Settings->User account & rights->Invite new user and give it the privileges:
+    - Create & edit draft apps
+    - Manage Alpha & Beta users
+website:
+source_code_url:
+support_url:
+host_os_tags:
+  - osx-10.10
+project_type_tags:
+  - android
+type_tags:
+  - deploy
+is_requires_admin_user: true
+is_always_run: false
+is_skippable: false
+dependencies: []
+run_if: ""
+inputs:
+  - service_account_email:
+    opts:
+      title: Service account email
+      summary: Service account email
+      description: Service account email
+      is_expand: true
+      is_required: true
+      is_dont_change_value: true
+  - package_name:
+    opts:
+      title: Package name
+      summary: Package name
+      description: Package name
+      is_expand: true
+      is_required: true
+      is_dont_change_value: true
+  - apk_file_path:
+    opts:
+      title: APK file path
+      summary: APK file path
+      description: APK file path
+      is_expand: true
+      is_required: true
+      is_dont_change_value: true
+  - key_file_path:
+    opts:
+      title: Key file path
+      summary: Key file path
+      description: P12 service account key file path
+      is_expand: true
+      is_required: true
+      is_dont_change_value: true
+  - track:
+    opts:
+      title: Track
+      summary: Track
+      description: Track
+      is_expand: true
+      is_required: true
+      is_dont_change_value: true
+      value_options:
+      - alpha
+      - beta
+      - production
+      - rollout
