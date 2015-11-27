@@ -1,6 +1,5 @@
 require 'optparse'
 require 'google/api_client'
-require 'net/http'
 
 # -----------------------
 # --- functions
