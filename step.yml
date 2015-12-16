@@ -37,7 +37,6 @@ inputs:
       description: Service account email
       is_expand: true
       is_required: true
-      is_dont_change_value: true
   - package_name:
     opts:
       title: Package name
@@ -45,7 +44,6 @@ inputs:
       description: Package name
       is_expand: true
       is_required: true
-      is_dont_change_value: true
   - apk_path: "$BITRISE_APK_PATH"
     opts:
       title: APK file path
@@ -53,7 +51,6 @@ inputs:
       description: APK file path
       is_expand: true
       is_required: true
-      is_dont_change_value: true
   - key_file_path:
     opts:
       title: Key file path
@@ -61,15 +58,13 @@ inputs:
       description: P12 service account key file path
       is_expand: true
       is_required: true
-      is_dont_change_value: true
-  - track:
+  - track: alpha
     opts:
       title: Track
       summary: Track
       description: Track
       is_expand: true
       is_required: true
-      is_dont_change_value: true
       value_options:
       - alpha
       - beta
