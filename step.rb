@@ -36,7 +36,7 @@ end
 options = {
   service_account_email: nil,
   package_name: nil,
-  apk_file_path: nil,
+  apk_path: nil,
   key_file_path: nil,
   track: nil
 }
@@ -45,7 +45,7 @@ parser = OptionParser.new do|opts|
   opts.banner = 'Usage: step.rb [options]'
   opts.on('-a', '--service_account email', 'Service Account Email') { |a| options[:service_account_email] = a unless a.to_s == '' }
   opts.on('-b', '--package name', 'Package Name') { |b| options[:package_name] = b unless b.to_s == '' }
-  opts.on('-c', '--apk path', 'APK path') { |c| options[:apk_file_path] = c unless c.to_s == '' }
+  opts.on('-c', '--apk path', 'APK path') { |c| options[:apk_path] = c unless c.to_s == '' }
   opts.on('-d', '--key path', 'KEY path') { |d| options[:key_file_path] = d unless d.to_s == '' }
   opts.on('-e', '--track name', 'Track name') { |e| options[:track] = e unless e.to_s == '' }
   opts.on('-h', '--help', 'Displays Help') do
@@ -57,7 +57,7 @@ parser.parse!
 fail_with_message('service_account_email not specified') unless options[:service_account_email]
 fail_with_message('package_name not specified') unless options[:package_name]
 fail_with_message('track not specified') unless options[:track]
-fail_with_message('apk_file_path not found') unless options[:apk_file_path] && File.exist?(options[:apk_file_path])
+fail_with_message('apk_path not found') unless options[:apk_path] && File.exist?(options[:apk_path])
 fail_with_message('key_file_path not found') unless options[:key_file_path] && File.exist?(options[:key_file_path])
 
 #
@@ -67,7 +67,7 @@ puts '========== Configs =========='
 puts ' * service_account_email: ***'
 puts " * package_name: #{options[:package_name]}"
 puts " * track: #{options[:track]}"
-puts " * apk_file_path: #{options[:apk_file_path]}"
+puts " * apk_path: #{options[:apk_path]}"
 puts ' * key_file_path: ***'
 
 #
@@ -121,7 +121,7 @@ faile_with_message_and_delete_edit(
 
 # Upload apk
 puts '  => Upload apk'
-apk = Google::APIClient::UploadIO.new(File.expand_path(options[:apk_file_path]), 'application/vnd.android.package-archive')
+apk = Google::APIClient::UploadIO.new(File.expand_path(options[:apk_path]), 'application/vnd.android.package-archive')
 result_upload = client.execute(
   api_method: android_publisher.edits.apks.upload,
   parameters: {

@@ -1,4 +1,4 @@
-title: Step google play deploy
+title: Step google play deploy [beta]
 summary: Step google play deploy
 description: |-
   To use this step:
@@ -19,6 +19,7 @@ source_code_url: https://github.com/bitrise-io/steps-google-play-deploy
 support_url: https://github.com/bitrise-io/steps-google-play-deploy/issues
 host_os_tags:
   - osx-10.10
+  - ubuntu
 project_type_tags:
   - android
 type_tags:
@@ -45,7 +46,7 @@ inputs:
       is_expand: true
       is_required: true
       is_dont_change_value: true
-  - apk_file_path:
+  - apk_path: "$BITRISE_APK_PATH"
     opts:
       title: APK file path
       summary: APK file path
