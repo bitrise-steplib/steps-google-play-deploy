@@ -8,3 +8,8 @@ and call `bitrise run test`.
 
 *Check the `bitrise.yml` file for required inputs which have to be
 added to your `.bitrise.secrets.yml` file!*
+
+## Run the tests in Docker, with `docker-compose`
+
+You can call `docker-compose run --rm app bitrise run test` to run the test
+inside the Bitrise Android Docker image.
