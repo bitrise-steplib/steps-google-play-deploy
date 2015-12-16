@@ -3,11 +3,11 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - SERVICE_ACCOUNT_EMAIL:
-  - PACKAGE_NAME:
-  - APK_FILE_PATH:
-  - KEY_FILE_PATH:
-  - TRACK: 
+  - SERVICE_ACCOUNT_EMAIL: $SERVICE_ACCOUNT_EMAIL
+  - PACKAGE_NAME: $PACKAGE_NAME
+  - BITRISE_APK_PATH: $BITRISE_APK_PATH
+  - KEY_FILE_PATH: $KEY_FILE_PATH
+  - TRACK: $TRACK
 
 workflows:
   test:
@@ -33,7 +33,7 @@ workflows:
         inputs:
         - service_account_email: $SERVICE_ACCOUNT_EMAIL
         - package_name: $PACKAGE_NAME
-        - apk_file_path: $APK_FILE_PATH
+        - apk_path: $BITRISE_APK_PATH
         - key_file_path: $KEY_FILE_PATH
         - track: $TRACK
 
@@ -42,10 +42,10 @@ workflows:
   share-this-step:
     envs:
       # if you want to share this step into a StepLib
-      - MY_STEPLIB_REPO_FORK_GIT_URL:
-      - STEP_ID_IN_STEPLIB:
-      - STEP_GIT_VERION_TAG_TO_SHARE:
-      - STEP_GIT_CLONE_URL:
+      - MY_STEPLIB_REPO_FORK_GIT_URL: $MY_STEPLIB_REPO_FORK_GIT_URL
+      - STEP_ID_IN_STEPLIB: google-play-deploy
+      - STEP_GIT_VERION_TAG_TO_SHARE: 0.9.0
+      - STEP_GIT_CLONE_URL: https://github.com/bitrise-steplib/steps-google-play-deploy.git
     description: |-
       If this is the first time you try to share a Step you should
       first call: $ bitrise share
