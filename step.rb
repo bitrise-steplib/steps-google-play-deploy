@@ -2,12 +2,30 @@ require 'optparse'
 require 'google/api_client'
 
 # -----------------------
-# --- functions
+# --- Functions
 # -----------------------
 
-def fail_with_message(message)
+def log_fail(message)
+  puts
   puts "\e[31m#{message}\e[0m"
   exit(1)
+end
+
+def log_warn(message)
+  puts "\e[33m#{message}\e[0m"
+end
+
+def log_info(message)
+  puts
+  puts "\e[34m#{message}\e[0m"
+end
+
+def log_details(message)
+  puts "  \e[97m#{message}\e[0m"
+end
+
+def log_done(message)
+  puts "  \e[32m#{message}\e[0m"
 end
 
 def faile_with_message_and_delete_edit(message, client, publisher, edit, package_name, auth_client)
@@ -24,11 +42,11 @@ def faile_with_message_and_delete_edit(message, client, publisher, edit, package
     puts result.error_message if result.error?
   end
 
-  fail_with_message(message)
+  log_fail(message)
 end
 
 # -----------------------
-# --- main
+# --- Main
 # -----------------------
 
 #
@@ -54,21 +72,19 @@ parser = OptionParser.new do|opts|
 end
 parser.parse!
 
-fail_with_message('service_account_email not specified') unless options[:service_account_email]
-fail_with_message('package_name not specified') unless options[:package_name]
-fail_with_message('track not specified') unless options[:track]
-fail_with_message('apk_path not found') unless options[:apk_path] && File.exist?(options[:apk_path])
-fail_with_message('key_file_path not found') unless options[:key_file_path] && File.exist?(options[:key_file_path])
-
 #
-# Print configs
-puts
-puts '========== Configs =========='
-puts ' * service_account_email: ***'
-puts " * package_name: #{options[:package_name]}"
-puts " * track: #{options[:track]}"
-puts " * apk_path: #{options[:apk_path]}"
-puts ' * key_file_path: ***'
+# Print options
+log_info('Configs:')
+log_details('service_account_email: ***')
+log_details("package_name: #{options[:package_name]}")
+log_details("apk_path: #{options[:apk_path]}")
+log_details('key_file_path: ***')
+
+log_fail('service_account_email not specified') unless options[:service_account_email]
+log_fail('package_name not specified') unless options[:package_name]
+log_fail('track not specified') unless options[:track]
+log_fail('apk_path not found') unless options[:apk_path] && File.exist?(options[:apk_path])
+log_fail('key_file_path not found') unless options[:key_file_path] && File.exist?(options[:key_file_path])
 
 #
 # Step
@@ -78,8 +94,7 @@ client = Google::APIClient.new(
 )
 
 # Authorization
-puts
-puts '=> Authorizing'
+log_info('Authorizing')
 key = Google::APIClient::KeyUtils.load_from_pkcs12(options[:key_file_path], 'notasecret')
 
 auth_client = nil
@@ -92,19 +107,18 @@ begin
     signing_key: key
   )
 rescue => ex
-  fail_with_message("Failed to authorize user: #{ex}")
+  log_fail("Failed to authorize user: #{ex}")
 end
 
 access_token = auth_client.fetch_access_token!
-fail_with_message('Failed to authorize user: no access token get') unless access_token
+log_fail('Failed to authorize user: no access token get') unless access_token
 
 # Publishing new version
-puts
-puts '=> Publishing new version'
+log_info('Publishing new version')
 android_publisher = client.discovered_api('androidpublisher', 'v2')
 
 # Create a new edit
-puts '  => Create a new edit'
+log_details('Create a new edit')
 edit = client.execute(
   api_method: android_publisher.edits.insert,
   parameters: { 'packageName' => options[:package_name] },
@@ -120,7 +134,7 @@ faile_with_message_and_delete_edit(
 ) if edit.error?
 
 # Upload apk
-puts '  => Upload apk'
+log_details('Upload apk')
 apk = Google::APIClient::UploadIO.new(File.expand_path(options[:apk_path]), 'application/vnd.android.package-archive')
 result_upload = client.execute(
   api_method: android_publisher.edits.apks.upload,
@@ -142,7 +156,7 @@ faile_with_message_and_delete_edit(
 ) if result_upload.error?
 
 # Update track
-puts '  => Update track'
+log_details('Update track')
 track_body = {
   'track' => options[:track],
   'userFraction' => 1.0,
@@ -169,7 +183,7 @@ faile_with_message_and_delete_edit(
 ) if result_update.error?
 
 # Commit edit
-puts '  => Commit edit'
+log_details('Commit edit')
 result = client.execute(
   api_method: android_publisher.edits.commit,
   parameters: {
