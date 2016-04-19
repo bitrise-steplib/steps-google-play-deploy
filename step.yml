@@ -10,7 +10,7 @@ description: |-
 
   2, Setting Up API Access Clients:
   See: https://developers.google.com/android-publisher/getting_started (Using a service account)
-  When you create your service account on the google developer console chose P12 as Key Type.
+  When you create your service account on the google developer console choose P12 as Key Type.
 
   3, Grant Access to provide the service account the necessary rights
   See: https://play.google.com/apps/publish ->Settings->User account & rights->Invite new user and give the privileges
