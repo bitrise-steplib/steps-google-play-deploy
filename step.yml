@@ -52,7 +52,10 @@ inputs:
     opts:
       title: Key file path
       summary: Key file path
-      description: P12 service account key file path
+      description: |-
+        P12 service account key file path.
+
+        You can specify local path: `~/key_file.p12` or remote URL as well.
       is_required: true
   - track: alpha
     opts:

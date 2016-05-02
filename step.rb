@@ -1,4 +1,6 @@
 require 'optparse'
+require 'tmpdir'
+require 'open-uri'
 require 'google/api_client'
 
 # -----------------------
@@ -21,7 +23,7 @@ def log_info(message)
 end
 
 def log_details(message)
-  puts "  \e[97m#{message}\e[0m"
+  puts "  #{message}"
 end
 
 def log_done(message)
@@ -83,11 +85,27 @@ log_details('key_file_path: ***')
 log_fail('service_account_email not specified') unless options[:service_account_email]
 log_fail('package_name not specified') unless options[:package_name]
 log_fail('track not specified') unless options[:track]
+
 log_fail('apk_path not found') unless options[:apk_path] && File.exist?(options[:apk_path])
-log_fail('key_file_path not found') unless options[:key_file_path] && File.exist?(options[:key_file_path])
+log_fail('key_file_path not found') unless options[:key_file_path]
 
 #
 # Step
+if options[:key_file_path].start_with?('http', 'https')
+  log_details 'downloading key file...'
+  tmp_dir = Dir.tmpdir
+  tmp_key_file_path = File.join(tmp_dir, 'key_file.p12')
+
+  begin
+    download = open(options[:key_file_path])
+    IO.copy_stream(download, tmp_key_file_path)
+  rescue => ex
+    log_fail "download failed with exception: #{ex}"
+  end
+
+  options[:key_file_path] = tmp_key_file_path.to_s
+end
+
 client = Google::APIClient.new(
   application_name: 'Bitrise',
   application_version: '0.0.1'
