@@ -2,18 +2,24 @@ title: Step google play deploy [beta]
 summary: Step google play deploy
 description: |-
   To use this step:
-  0, You have to upload the first apk manually
-  See: https://play.google.com/apps/publish ->All applications->Add new application
 
-  1, You must link your Google Play Developer Console to an API project.
-  See: https://developers.google.com/android-publisher/getting_started (Linking your API Project section)
+  1. You have to upload the first apk manually (using the web interface).
+    See: https://play.google.com/apps/publish -> All applications -> Add new application
 
-  2, Setting Up API Access Clients:
-  See: https://developers.google.com/android-publisher/getting_started (Using a service account)
-  When you create your service account on the google developer console choose P12 as Key Type.
+  2. You must link your Google Play Developer Console to an API project.
+    See: https://developers.google.com/android-publisher/getting_started (Linking your API Project section)
 
-  3, Grant Access to provide the service account the necessary rights
-  See: https://play.google.com/apps/publish ->Settings->User account & rights->Invite new user and give the privileges
+  3. Setting Up API Access Clients:
+    See: https://developers.google.com/android-publisher/getting_started (Using a service account)
+    When you create your service account on the google developer console choose P12 as Key Type.
+
+  4. Grant Access to provide the service account the necessary rights.
+    See: https://play.google.com/apps/publish -> Settings -> User account & rights -> Invite new user and give the privileges.
+    Due to the way the Google Play Publisher API works, you have to grant at least the following permissions to that service account:
+     - Edit store listing, pricing & distribution
+     - Manage Production APKs
+     - Manage Alpha & Beta APKs
+     - Manage Alpha & Beta users
 website: https://github.com/bitrise-io/steps-google-play-deploy
 source_code_url: https://github.com/bitrise-io/steps-google-play-deploy
 support_url: https://github.com/bitrise-io/steps-google-play-deploy/issues
@@ -52,7 +58,10 @@ inputs:
     opts:
       title: Key file path
       summary: Key file path
-      description: P12 service account key file path
+      description: |-
+        P12 service account key file path.
+
+        You can specify local path: `~/key_file.p12` or remote URL as well.
       is_required: true
   - track: alpha
     opts:
