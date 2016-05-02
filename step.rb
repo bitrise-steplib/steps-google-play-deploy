@@ -87,7 +87,7 @@ log_fail('package_name not specified') unless options[:package_name]
 log_fail('track not specified') unless options[:track]
 
 log_fail('apk_path not found') unless options[:apk_path] && File.exist?(options[:apk_path])
-log_fail('key_file_path not found') unless options[:key_file_path]
+log_fail('key_file_path not provided') unless options[:key_file_path]
 
 #
 # Step
@@ -105,6 +105,8 @@ if options[:key_file_path].start_with?('http', 'https')
 
   options[:key_file_path] = tmp_key_file_path.to_s
 end
+
+log_fail('key_file_path does not exist') unless File.exist?(options[:key_file_path])
 
 client = Google::APIClient.new(
   application_name: 'Bitrise',

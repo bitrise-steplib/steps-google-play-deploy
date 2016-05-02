@@ -38,13 +38,41 @@ workflows:
         - track: $TRACK
 
   # ----------------------------------------------------------------
+  # --- workflows to create Release
+  create-release:
+    steps:
+    - script:
+        title:
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -e
+
+            export CI=true
+            releaseman create --bump-version patch
+
+  create-release-version:
+    envs:
+    - RELEASE_VERSION: 0.9.2
+    steps:
+    - script:
+        title:
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -e
+
+            export CI=true
+            releaseman create --version $RELEASE_VERSION
+
+  # ----------------------------------------------------------------
   # --- workflows to Share this step into a Step Library
   share-this-step:
     envs:
       # if you want to share this step into a StepLib
       - MY_STEPLIB_REPO_FORK_GIT_URL: $MY_STEPLIB_REPO_FORK_GIT_URL
       - STEP_ID_IN_STEPLIB: google-play-deploy
-      - STEP_GIT_VERION_TAG_TO_SHARE: 0.9.0
+      - STEP_GIT_VERION_TAG_TO_SHARE: 0.9.2
       - STEP_GIT_CLONE_URL: https://github.com/bitrise-steplib/steps-google-play-deploy.git
     description: |-
       If this is the first time you try to share a Step you should
