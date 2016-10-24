@@ -101,8 +101,8 @@ inputs:
       - "0.5"
   - service_account_email:
     opts:
-      title: Service account ID
-      summary: Service account ID
+      title: [DEPRECATED!] Service account ID
+      summary: [DEPRECATED!] Service account ID
       description: |-
         __DEPRECATED!__
         Use JSON key instead of P12 key and `service_account_json_key_path` input.
@@ -110,8 +110,8 @@ inputs:
         The `Service account ID` of the Service Account you want to use to authorize the deploy. 
   - key_file_path:
     opts:
-      title: (DEPRECATED!) Service Account p12 key file path
-      summary: Service Account p12 key file path
+      title: [DEPRECATED!] Service Account p12 key file path
+      summary: [DEPRECATED!] Service Account p12 key file path
       description: |-
         __DEPRECATED!__
         Use JSON key instead of P12 key and `service_account_json_key_path` input.
