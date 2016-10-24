@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -49,16 +50,63 @@ func createConfigsModelFromEnvs() ConfigsModel {
 	}
 }
 
+func secureInput(str string) string {
+	if str == "" {
+		return ""
+	}
+
+	secureStr := func(s string, show int) string {
+		runeCount := utf8.RuneCountInString(s)
+		if runeCount < 6 || show == 0 {
+			return strings.Repeat("*", 3)
+		}
+		if show*4 > runeCount {
+			show = 1
+		}
+
+		sec := fmt.Sprintf("%s%s%s", s[0:show], strings.Repeat("*", 3), s[len(s)-show:len(s)])
+		return sec
+	}
+
+	prefix := ""
+	cont := str
+	sec := secureStr(cont, 0)
+
+	if strings.HasPrefix(str, "file://") {
+		prefix = "file://"
+		cont = strings.TrimPrefix(str, prefix)
+		sec = secureStr(cont, 3)
+	} else if strings.HasPrefix(str, "http://www.") {
+		prefix = "http://www."
+		cont = strings.TrimPrefix(str, prefix)
+		sec = secureStr(cont, 3)
+	} else if strings.HasPrefix(str, "https://www.") {
+		prefix = "https://www."
+		cont = strings.TrimPrefix(str, prefix)
+		sec = secureStr(cont, 3)
+	} else if strings.HasPrefix(str, "http://") {
+		prefix = "http://"
+		cont = strings.TrimPrefix(str, prefix)
+		sec = secureStr(cont, 3)
+	} else if strings.HasPrefix(str, "https://") {
+		prefix = "https://"
+		cont = strings.TrimPrefix(str, prefix)
+		sec = secureStr(cont, 3)
+	}
+
+	return prefix + sec
+}
+
 func (configs ConfigsModel) print() {
 	log.Info("Configs:")
-	log.Detail("- JSONKeyPath: %s", configs.JSONKeyPath)
+	log.Detail("- JSONKeyPath: %s", secureInput(configs.JSONKeyPath))
 	log.Detail("- PackageName: %s", configs.PackageName)
 	log.Detail("- ApkPath: %s", configs.ApkPath)
 	log.Detail("- Track: %s", configs.Track)
 	log.Detail("- UserFraction: %s", configs.UserFraction)
 	log.Info("Deprecated Configs:")
-	log.Detail("- ServiceAccountEmail: %s", configs.ServiceAccountEmail)
-	log.Detail("- P12KeyPath: %s", configs.P12KeyPath)
+	log.Detail("- ServiceAccountEmail: %s", secureInput(configs.ServiceAccountEmail))
+	log.Detail("- P12KeyPath: %s", secureInput(configs.P12KeyPath))
 }
 
 func (configs ConfigsModel) validate() error {
@@ -203,7 +251,7 @@ func main() {
 	//
 	// Create client
 	fmt.Println()
-	log.Info("Create client")
+	log.Info("Authenticateing")
 
 	jwtConfig := new(jwt.Config)
 
@@ -268,7 +316,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Done("Client created")
+	log.Done("Authenticated client created")
 	// ---
 
 	//
