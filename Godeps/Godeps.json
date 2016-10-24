@@ -17,7 +17,23 @@
 			"Rev": "7450882a75c8d2600748666d1ed16e0a5afa532d"
 		},
 		{
+			"ImportPath": "github.com/bitrise-io/go-utils/cmdex",
+			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
+		},
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/colorstring",
+			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
+		},
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/errorutil",
+			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
+		},
+		{
 			"ImportPath": "github.com/bitrise-io/go-utils/fileutil",
+			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
+		},
+		{
+			"ImportPath": "github.com/bitrise-io/go-utils/log",
 			"Rev": "5c210e4691a5a75e5685d2e842a104ca55ec7697"
 		},
 		{
@@ -55,6 +71,22 @@
 		{
 			"ImportPath": "golang.org/x/oauth2/jwt",
 			"Rev": "1e695b1c8febf17aad3bfa7bf0a819ef94b98ad5"
+		},
+		{
+			"ImportPath": "google.golang.org/api/androidpublisher/v2",
+			"Rev": "45c1c8fbb52e06888fad4b269d9e1c280d638f42"
+		},
+		{
+			"ImportPath": "google.golang.org/api/gensupport",
+			"Rev": "45c1c8fbb52e06888fad4b269d9e1c280d638f42"
+		},
+		{
+			"ImportPath": "google.golang.org/api/googleapi",
+			"Rev": "45c1c8fbb52e06888fad4b269d9e1c280d638f42"
+		},
+		{
+			"ImportPath": "google.golang.org/api/googleapi/internal/uritemplates",
+			"Rev": "45c1c8fbb52e06888fad4b269d9e1c280d638f42"
 		},
 		{
 			"ImportPath": "google.golang.org/appengine",
