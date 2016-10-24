@@ -85,7 +85,7 @@ inputs:
       - beta
       - rollout
       - production
-  - user_fraction: 
+  - user_fraction: "0.5"
     opts:
       title: User Fraction
       summary: User Fraction
