@@ -71,7 +71,7 @@ inputs:
         Format emxamples:
 
         - `/path/to/my/app.apk`
-        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app1.apk`
+        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
       is_required: true
   - track: alpha
     opts:
