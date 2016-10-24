@@ -41,7 +41,7 @@ deps:
     bin_name: go
 toolkit:
   go:
-    package_name: github.com/bitrise-io/steps-google-play-deploy
+    package_name: github.com/bitrise-steplib/steps-google-play-deploy
 inputs:
   - service_account_json_key_path:
     opts:
