@@ -1,6 +1,13 @@
-## Changelog (Current version: 0.9.2)
+## Changelog (Current version: 1.0.0)
 
 -----------------
+
+### 1.0.0 (2016 Oct 24)
+
+* [1831c39] secure inputs (#11)
+* [8c56077] step.yml update
+* [8689fdf] step.yml update
+* [bbeee71] go-toolkit (#10)
 
 ### 0.9.2 (2016 May 02)
 
@@ -17,4 +24,4 @@
 
 -----------------
 
-Updated: 2016 May 02
+Updated: 2016 Oct 24
