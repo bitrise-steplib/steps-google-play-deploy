@@ -2,6 +2,15 @@
 
 -----------------
 
+### 1.0.0 (2016 Oct 25)
+
+* [dccc0c2] step.yml update
+* [2df615b] v1.0.0
+* [1831c39] secure inputs (#11)
+* [8c56077] step.yml update
+* [8689fdf] step.yml update
+* [bbeee71] go-toolkit (#10)
+
 ### 1.0.0 (2016 Oct 24)
 
 * [1831c39] secure inputs (#11)
@@ -24,4 +33,4 @@
 
 -----------------
 
-Updated: 2016 Oct 24
+Updated: 2016 Oct 25
