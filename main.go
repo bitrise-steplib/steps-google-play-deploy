@@ -402,9 +402,8 @@ func main() {
 	//
 	// Commit edit
 	editsCommitCall := editsService.Commit(configs.PackageName, appEdit.Id)
-	appEdit, err = editsCommitCall.Do()
-	if err != nil {
-		log.Error("Failed to commit edit (%s), error: %s", appEdit.Id, err)
+	if _, err := editsCommitCall.Do(); err != nil {
+		log.Error("Failed to commit edit, error: %s", err)
 		os.Exit(1)
 	}
 
