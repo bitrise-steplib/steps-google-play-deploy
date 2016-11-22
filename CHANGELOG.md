@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.0.1)
+## Changelog (Current version: 1.1.0)
 
 -----------------
+
+### 1.1.0 (2016 Nov 22)
+
+* [a17b2f0] prepare for 1.1.0
+* [5f31300] Whats new (#14)
 
 ### 1.0.1 (2016 Nov 21)
 
@@ -38,4 +43,4 @@
 
 -----------------
 
-Updated: 2016 Nov 21
+Updated: 2016 Nov 22
