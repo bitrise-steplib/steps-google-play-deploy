@@ -213,7 +213,7 @@ func jwtConfigFromJSONKeyFile(pth string) (*jwt.Config, error) {
 		return nil, err
 	}
 
-	config, err := google.JWTConfigFromJSON(jsonKeyBytes, "https://www.googleapis.com/auth/androidpublisher")
+	config, err := google.JWTConfigFromJSON(jsonKeyBytes, androidpublisher.AndroidpublisherScope)
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +243,7 @@ func jwtConfigFromP12KeyFile(pth, email string) (*jwt.Config, error) {
 		Email:      email,
 		PrivateKey: outBuffer.Bytes(),
 		TokenURL:   google.JWTTokenURL,
-		Scopes:     []string{"https://www.googleapis.com/auth/androidpublisher"},
+		Scopes:     []string{androidpublisher.AndroidpublisherScope},
 	}, nil
 }
 
