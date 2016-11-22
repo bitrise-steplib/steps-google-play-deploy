@@ -11,6 +11,7 @@ app:
   - BITRISE_APK_PATH: $BITRISE_APK_PATH
   - TRACK: $TRACK
   - USER_FRACTION: $USER_FRACTION
+  - WHATNEWS_DIR: $WHATNEWS_DIR
 
 workflows:
   test:
@@ -31,6 +32,7 @@ workflows:
         - apk_path: $BITRISE_APK_PATH
         - track: $TRACK
         - user_fraction: $USER_FRACTION
+        - whatsnews_dir: $WHATNEWS_DIR
 
   go-tests:
     before_run:
