@@ -20,6 +20,10 @@ description: |-
      - Manage Production APKs
      - Manage Alpha & Beta APKs
      - Manage Alpha & Beta users
+  
+  5. OPTIONAL - Add translations for your Store Listing.
+    To allow the step to assign your whats news to the uploaded apk version.
+    See: https://support.google.com/googleplay/android-developer/answer/3125566?hl=en (Add translations for your Store Listing)
 website: https://github.com/bitrise-io/steps-google-play-deploy
 source_code_url: https://github.com/bitrise-io/steps-google-play-deploy
 support_url: https://github.com/bitrise-io/steps-google-play-deploy/issues
@@ -99,6 +103,24 @@ inputs:
       - "0.1"
       - "0.2"
       - "0.5"
+  - whatsnews_dir:
+    opts:
+      title: "Direcotry of localised whatsnew files"
+      description: |-
+        Use this input to specify localised whatsnew files directory.
+
+        This directory should contain whatsnew files postfixed with the local.
+
+        whatsnew file name pattern: `whatsnew-LOCAL`
+
+        Example:
+        ```
+        + - [PATH/TO/WHATSNEWS]
+            |
+            + - whatsnew-en-US
+            |
+            + - whatsnew-de-DE
+        ```
   - service_account_email:
     opts:
       title: "[DEPRECATED!] Service account ID"

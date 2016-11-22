@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -36,6 +37,7 @@ type ConfigsModel struct {
 	ApkPath             string
 	Track               string
 	UserFraction        string
+	WhatsnewsDir        string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
@@ -47,6 +49,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		ApkPath:             os.Getenv("apk_path"),
 		Track:               os.Getenv("track"),
 		UserFraction:        os.Getenv("user_fraction"),
+		WhatsnewsDir:        os.Getenv("whatsnews_dir"),
 	}
 }
 
@@ -104,6 +107,7 @@ func (configs ConfigsModel) print() {
 	log.Detail("- ApkPath: %s", configs.ApkPath)
 	log.Detail("- Track: %s", configs.Track)
 	log.Detail("- UserFraction: %s", configs.UserFraction)
+	log.Detail("- WhatsnewsDir: %s", configs.WhatsnewsDir)
 	log.Info("Deprecated Configs:")
 	log.Detail("- ServiceAccountEmail: %s", secureInput(configs.ServiceAccountEmail))
 	log.Detail("- P12KeyPath: %s", secureInput(configs.P12KeyPath))
@@ -163,6 +167,14 @@ func (configs ConfigsModel) validate() error {
 		}
 	}
 
+	if configs.WhatsnewsDir != "" {
+		if exist, err := pathutil.IsPathExists(configs.WhatsnewsDir); err != nil {
+			return fmt.Errorf("Failed to check if WhatsnewsDir exist at: %s, error: %s", configs.WhatsnewsDir, err)
+		} else if !exist {
+			return fmt.Errorf("WhatsnewsDir not exist at: %s", configs.WhatsnewsDir)
+		}
+	}
+
 	return nil
 }
 
@@ -201,7 +213,7 @@ func jwtConfigFromJSONKeyFile(pth string) (*jwt.Config, error) {
 		return nil, err
 	}
 
-	config, err := google.JWTConfigFromJSON(jsonKeyBytes, "https://www.googleapis.com/auth/androidpublisher")
+	config, err := google.JWTConfigFromJSON(jsonKeyBytes, androidpublisher.AndroidpublisherScope)
 	if err != nil {
 		return nil, err
 	}
@@ -231,8 +243,36 @@ func jwtConfigFromP12KeyFile(pth, email string) (*jwt.Config, error) {
 		Email:      email,
 		PrivateKey: outBuffer.Bytes(),
 		TokenURL:   google.JWTTokenURL,
-		Scopes:     []string{"https://www.googleapis.com/auth/androidpublisher"},
+		Scopes:     []string{androidpublisher.AndroidpublisherScope},
 	}, nil
+}
+
+func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, error) {
+	recentChangesMap := map[string]string{}
+
+	pattern := filepath.Join(recentChangesDir, "whatsnew-*-*")
+	recentChangesPaths, err := filepath.Glob(pattern)
+	if err != nil {
+		return map[string]string{}, err
+	}
+
+	pattern = `whatsnew-(?P<local>.*-.*)`
+	re := regexp.MustCompile(pattern)
+
+	for _, recentChangesPath := range recentChangesPaths {
+		matches := re.FindStringSubmatch(recentChangesPath)
+		if len(matches) == 2 {
+			lanugage := matches[1]
+			content, err := fileutil.ReadStringFromFile(recentChangesPath)
+			if err != nil {
+				return map[string]string{}, err
+			}
+
+			recentChangesMap[lanugage] = content
+		}
+	}
+
+	return recentChangesMap, nil
 }
 
 func main() {
@@ -342,7 +382,7 @@ func main() {
 	fmt.Println()
 	log.Info("Upload apks")
 
-	versionCode := []int64{}
+	versionCodes := []int64{}
 	apkPaths := strings.Split(configs.ApkPath, "|")
 	for _, apkPath := range apkPaths {
 		apkFile, err := os.Open(apkPath)
@@ -363,7 +403,7 @@ func main() {
 		}
 
 		log.Detail(" uploaded apk version: %d", apk.VersionCode)
-		versionCode = append(versionCode, apk.VersionCode)
+		versionCodes = append(versionCodes, apk.VersionCode)
 	}
 	// ---
 
@@ -376,7 +416,7 @@ func main() {
 
 	newTrack := androidpublisher.Track{
 		Track:        configs.Track,
-		VersionCodes: versionCode,
+		VersionCodes: versionCodes,
 	}
 
 	if configs.Track == "rollout" {
@@ -400,14 +440,66 @@ func main() {
 	// ---
 
 	//
+	// Update listing
+	if configs.WhatsnewsDir != "" {
+		fmt.Println()
+		log.Info("Update listing")
+
+		recentChangesMap, err := readLocalisedRecentChanges(configs.WhatsnewsDir)
+		if err != nil {
+			log.Error("Failed to read whatsnews, error: %s", err)
+			os.Exit(1)
+		}
+
+		editsApklistingsService := androidpublisher.NewEditsApklistingsService(service)
+
+		for _, versionCode := range versionCodes {
+			log.Detail(" updating recent changes for version: %d", versionCode)
+
+			for language, recentChanges := range recentChangesMap {
+				newApkListing := androidpublisher.ApkListing{
+					Language:      language,
+					RecentChanges: recentChanges,
+				}
+
+				editsApkListingsCall := editsApklistingsService.Update(configs.PackageName, appEdit.Id, versionCode, language, &newApkListing)
+				apkListing, err := editsApkListingsCall.Do()
+				if err != nil {
+					log.Error("Failed to update listing, error: %s", err)
+					os.Exit(1)
+				}
+
+				log.Detail(" - language: %s", apkListing.Language)
+			}
+		}
+	}
+	// ---
+
+	//
+	// Validate edit
+	fmt.Println()
+	log.Info("Validating edit")
+
+	editsValidateCall := editsService.Validate(configs.PackageName, appEdit.Id)
+	if _, err := editsValidateCall.Do(); err != nil {
+		log.Error("Failed to validate edit, error: %s", err)
+		os.Exit(1)
+	}
+
+	log.Done("Edit is valid")
+	// ---
+
+	//
 	// Commit edit
+	fmt.Println()
+	log.Info("Committing edit")
+
 	editsCommitCall := editsService.Commit(configs.PackageName, appEdit.Id)
 	if _, err := editsCommitCall.Do(); err != nil {
 		log.Error("Failed to commit edit, error: %s", err)
 		os.Exit(1)
 	}
 
-	fmt.Println()
 	log.Done("Edit committed")
 	// ---
 }
