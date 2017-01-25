@@ -38,6 +38,7 @@ type ConfigsModel struct {
 	Track               string
 	UserFraction        string
 	WhatsnewsDir        string
+	MappingFile         string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
@@ -50,6 +51,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		Track:               os.Getenv("track"),
 		UserFraction:        os.Getenv("user_fraction"),
 		WhatsnewsDir:        os.Getenv("whatsnews_dir"),
+		MappingFile:         os.Getenv("mapping_file"),
 	}
 }
 
@@ -105,6 +107,7 @@ func (configs ConfigsModel) print() {
 	log.Detail("- JSONKeyPath: %s", secureInput(configs.JSONKeyPath))
 	log.Detail("- PackageName: %s", configs.PackageName)
 	log.Detail("- ApkPath: %s", configs.ApkPath)
+	log.Detail("- MappingFile: %s", configs.MappingFile)
 	log.Detail("- Track: %s", configs.Track)
 	log.Detail("- UserFraction: %s", configs.UserFraction)
 	log.Detail("- WhatsnewsDir: %s", configs.WhatsnewsDir)
@@ -154,6 +157,14 @@ func (configs ConfigsModel) validate() error {
 			return fmt.Errorf("Failed to check if APK exist at: %s, error: %s", apkPath, err)
 		} else if !exist {
 			return fmt.Errorf("APK not exist at: %s", apkPath)
+		}
+	}
+
+	if configs.MappingFile != "" {
+		if exist, err := pathutil.IsPathExists(configs.MappingFile); err != nil {
+			return fmt.Errorf("Failed to check if Mapping file exist at: %s, error: %s", configs.MappingFile, err)
+		} else if !exist {
+			return fmt.Errorf("Mapping file not exist at: %s", configs.MappingFile)
 		}
 	}
 
@@ -382,6 +393,7 @@ func main() {
 	fmt.Println()
 	log.Info("Upload apks")
 
+	lastVersionCode := int64{}
 	versionCodes := []int64{}
 	apkPaths := strings.Split(configs.ApkPath, "|")
 	for _, apkPath := range apkPaths {
@@ -404,6 +416,30 @@ func main() {
 
 		log.Detail(" uploaded apk version: %d", apk.VersionCode)
 		versionCodes = append(versionCodes, apk.VersionCode)
+		lastVersionCode = apk.VersionCode
+	}
+	// ---
+
+	//
+	// Upload deobfuscation file
+	fmt.Println()
+	log.Info("Upload mapping file")
+
+	mappingFile, err := os.Open(configs.MappingFile)
+	if err != nil {
+		log.Error("Failed to read mapping file (%s), error: %s", configs.MappingFile, err)
+		os.Exit(1)
+	}
+
+	editsDeobfuscationfilesService := androidpublisher.NewEditsDeobfuscationfilesService(service)
+
+	editsDeobfuscationfilesUloadCall := editsDeobfuscationfilesService.Upload(configs.PackageName, appEdit.Id, lastVersionCode, "proguard")
+	editsDeobfuscationfilesUloadCall.Media(mappingFile, googleapi.ContentType("application/octet-stream"))
+
+	mappingf, err := editsDeobfuscationfilesUloadCall.Do()
+	if err != nil {
+		log.Error("Failed to upload mapping file, error: %s", err)
+		os.Exit(1)
 	}
 	// ---
 
