@@ -3,7 +3,7 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - RELEASE_VERSION: 1.1.1
+  - RELEASE_VERSION: 1.1.0
 
   # define these in your .bitrise.secrets.yml
   - SERVICE_ACCOUNT_JSON_KEY_PATH: $SERVICE_ACCOUNT_JSON_KEY_PATH
@@ -12,7 +12,6 @@ app:
   - TRACK: $TRACK
   - USER_FRACTION: $USER_FRACTION
   - WHATNEWS_DIR: $WHATNEWS_DIR
-  - MAPPING_FILE: $BITRISE_MAPPING_PATH
 
 workflows:
   test:
@@ -31,7 +30,6 @@ workflows:
         - service_account_json_key_path: $SERVICE_ACCOUNT_JSON_KEY_PATH
         - package_name: $PACKAGE_NAME
         - apk_path: $BITRISE_APK_PATH
-        - mapping_file: $MAPPING_FILE
         - track: $TRACK
         - user_fraction: $USER_FRACTION
         - whatsnews_dir: $WHATNEWS_DIR
