@@ -121,6 +121,19 @@ inputs:
             |
             + - whatsnew-de-DE
         ```
+  - untrack_blocking_versions: "true"
+    opts:
+      title: "Untrack blocking versions?"
+      description: |-
+        Should deactivet apks, with lower version code, on lower level tracks?
+
+        E.g.: 
+        If you have an __active apk on alpha__ track with version code: `42`.
+        And you try to __upload a new version (`43`), to the beta track__, you will see error, like this:
+
+        `Version 42 of this app can not be downloaded by any devices as they will all receive APKs with higher version codes`
+
+        To avoid this issue set this input to: `"true"` and the step will deactivate every apk with lower version code, on lower level tracks.
   - service_account_email:
     opts:
       title: "[DEPRECATED!] Service account ID"
