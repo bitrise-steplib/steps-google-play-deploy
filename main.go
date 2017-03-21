@@ -542,14 +542,21 @@ func main() {
 				if len(versionCodesToKeep) > 0 {
 					track.VersionCodes = versionCodesToKeep
 				} else {
-					track.VersionCodes = nil
+					track.VersionCodes = []int64{}
+					track.NullFields = []string{"VersionCodes"}
 				}
+
+				track.ForceSendFields = []string{"VersionCodes"}
 
 				tracksUpdateCall := tracksService.Patch(configs.PackageName, appEdit.Id, trackName, track)
 				if track, err := tracksUpdateCall.Do(); err != nil {
 					log.Printf("headers: %#v", tracksUpdateCall.Header())
 					log.Printf("track: %#v", track)
-					failf("Failed to update track (%s), error: %s", trackName, err)
+					if err == io.EOF {
+						log.Printf("*EditsTracksPatchCall failed, error: %s", err)
+					} else {
+						failf("Failed to update track (%s), error: %s", trackName, err)
+					}
 				}
 			}
 		}

@@ -32,8 +32,8 @@ workflows:
         - apk_path: $BITRISE_APK_PATH
         - user_fraction: $USER_FRACTION
         - whatsnews_dir: $WHATNEWS_DIR
-        - track: "beta"
-        - untrack_blocking_versions: "false"
+        - track: $TRACK
+        - untrack_blocking_versions: "true"
 
   go-tests:
     before_run:
