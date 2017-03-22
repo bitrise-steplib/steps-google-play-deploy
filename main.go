@@ -285,18 +285,6 @@ func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, err
 	return recentChangesMap, nil
 }
 
-func heighestVersionCode(versions []int64) (int64, error) {
-	heighestVersion := int64(-1)
-
-	for _, version := range versions {
-		if version > heighestVersion {
-			heighestVersion = version
-		}
-	}
-
-	return heighestVersion, nil
-}
-
 func failf(format string, v ...interface{}) {
 	log.Errorf(format, v...)
 	os.Exit(1)
@@ -473,13 +461,6 @@ func main() {
 		fmt.Println()
 		log.Infof("Deactivating blocking apk versions")
 
-		// Determin heighest version code
-		// heighestVersion, err := heighestVersionCode(versionCodes)
-		// if err != nil {
-		// 	failf("Failed to get heighest version code, error: %s", err)
-		// }
-
-		// log.Printf(" heighest apk version to upload: %d", heighestVersion)
 		heighestVersion := versionCodes[0]
 
 		// List all tracks
@@ -550,10 +531,8 @@ func main() {
 
 				tracksUpdateCall := tracksService.Patch(configs.PackageName, appEdit.Id, trackName, track)
 				if track, err := tracksUpdateCall.Do(); err != nil {
-					log.Printf("headers: %#v", tracksUpdateCall.Header())
-					log.Printf("track: %#v", track)
 					if err == io.EOF {
-						log.Printf("*EditsTracksPatchCall failed, error: %s", err)
+						log.Printf("*EditsTracksPatchCall (%s) failed, error: %s", track.Track, err)
 					} else {
 						failf("Failed to update track (%s), error: %s", trackName, err)
 					}
@@ -566,7 +545,6 @@ func main() {
 		} else {
 			log.Donef("No blocking apk version found")
 		}
-
 	}
 	// ---
 
