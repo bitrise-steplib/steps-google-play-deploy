@@ -129,7 +129,7 @@ inputs:
     opts:
       title: "Untrack blocking versions?"
       description: |-
-        Should deactivet apks, with lower version code, on lower level tracks?
+        Should deactivate apks, with lower version code, on lower level tracks?
 
         E.g.: 
         If you have an __active apk on alpha__ track with version code: `42`.
