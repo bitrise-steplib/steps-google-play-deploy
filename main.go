@@ -171,7 +171,7 @@ func (configs ConfigsModel) validate() error {
 		return errors.New("No Track parameter specified")
 	}
 
-	if configs.Track == "rollout" {
+	if configs.Track == rolloutTrackName {
 		if configs.UserFraction == "" {
 			return errors.New("No UserFraction parameter specified")
 		}
@@ -421,7 +421,7 @@ func main() {
 		VersionCodes: versionCodes,
 	}
 
-	if configs.Track == "rollout" {
+	if configs.Track == rolloutTrackName {
 		userFraction, err := strconv.ParseFloat(configs.UserFraction, 64)
 		if err != nil {
 			failf("Failed to parse user fraction, error: %s", err)
@@ -477,10 +477,10 @@ func main() {
 
 		possibleTrackNamesToUpdate := []string{}
 		switch configs.Track {
-		case "beta":
-			possibleTrackNamesToUpdate = []string{"alpha"}
-		case "rollout", "production":
-			possibleTrackNamesToUpdate = []string{"alpha", "beta"}
+		case betaTrackName:
+			possibleTrackNamesToUpdate = []string{alphaTrackName}
+		case rolloutTrackName, productionTrackName:
+			possibleTrackNamesToUpdate = []string{alphaTrackName, betaTrackName}
 		}
 
 		trackNamesToUpdate := []string{}
@@ -501,7 +501,7 @@ func main() {
 				failf("Failed to get track (%s), error: %s", trackName, err)
 			}
 
-			log.Printf(" checking apk version on track: %s", track.Track)
+			log.Printf(" checking apk versions on track: %s", track.Track)
 
 			versionCodesToKeep := []int64{}
 			versionCodes := track.VersionCodes
@@ -530,12 +530,8 @@ func main() {
 				track.ForceSendFields = []string{"VersionCodes"}
 
 				tracksUpdateCall := tracksService.Patch(configs.PackageName, appEdit.Id, trackName, track)
-				if track, err := tracksUpdateCall.Do(); err != nil {
-					if err == io.EOF {
-						log.Printf("*EditsTracksPatchCall (%s) failed, error: %s", track.Track, err)
-					} else {
-						failf("Failed to update track (%s), error: %s", trackName, err)
-					}
+				if _, err := tracksUpdateCall.Do(); err != nil && err != io.EOF {
+					failf("Failed to update track (%s), error: %s", trackName, err)
 				}
 			}
 		}
