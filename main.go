@@ -21,35 +21,44 @@ import (
 	"google.golang.org/api/androidpublisher/v2"
 	"google.golang.org/api/googleapi"
 
-	"github.com/bitrise-io/go-utils/cmdex"
+	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 )
 
+const (
+	alphaTrackName      = "alpha"
+	betaTrackName       = "beta"
+	rolloutTrackName    = "rollout"
+	productionTrackName = "production"
+)
+
 // ConfigsModel ...
 type ConfigsModel struct {
-	ServiceAccountEmail string
-	P12KeyPath          string
-	JSONKeyPath         string
-	PackageName         string
-	ApkPath             string
-	Track               string
-	UserFraction        string
-	WhatsnewsDir        string
+	ServiceAccountEmail     string
+	P12KeyPath              string
+	JSONKeyPath             string
+	PackageName             string
+	ApkPath                 string
+	Track                   string
+	UserFraction            string
+	WhatsnewsDir            string
+	UntrackBlockingVersions string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
 	return ConfigsModel{
-		ServiceAccountEmail: os.Getenv("service_account_email"),
-		P12KeyPath:          os.Getenv("key_file_path"),
-		JSONKeyPath:         os.Getenv("service_account_json_key_path"),
-		PackageName:         os.Getenv("package_name"),
-		ApkPath:             os.Getenv("apk_path"),
-		Track:               os.Getenv("track"),
-		UserFraction:        os.Getenv("user_fraction"),
-		WhatsnewsDir:        os.Getenv("whatsnews_dir"),
+		ServiceAccountEmail:     os.Getenv("service_account_email"),
+		P12KeyPath:              os.Getenv("key_file_path"),
+		JSONKeyPath:             os.Getenv("service_account_json_key_path"),
+		PackageName:             os.Getenv("package_name"),
+		ApkPath:                 os.Getenv("apk_path"),
+		Track:                   os.Getenv("track"),
+		UserFraction:            os.Getenv("user_fraction"),
+		WhatsnewsDir:            os.Getenv("whatsnews_dir"),
+		UntrackBlockingVersions: os.Getenv("untrack_blocking_versions"),
 	}
 }
 
@@ -101,16 +110,17 @@ func secureInput(str string) string {
 }
 
 func (configs ConfigsModel) print() {
-	log.Info("Configs:")
-	log.Detail("- JSONKeyPath: %s", secureInput(configs.JSONKeyPath))
-	log.Detail("- PackageName: %s", configs.PackageName)
-	log.Detail("- ApkPath: %s", configs.ApkPath)
-	log.Detail("- Track: %s", configs.Track)
-	log.Detail("- UserFraction: %s", configs.UserFraction)
-	log.Detail("- WhatsnewsDir: %s", configs.WhatsnewsDir)
-	log.Info("Deprecated Configs:")
-	log.Detail("- ServiceAccountEmail: %s", secureInput(configs.ServiceAccountEmail))
-	log.Detail("- P12KeyPath: %s", secureInput(configs.P12KeyPath))
+	log.Infof("Configs:")
+	log.Printf("- JSONKeyPath: %s", secureInput(configs.JSONKeyPath))
+	log.Printf("- PackageName: %s", configs.PackageName)
+	log.Printf("- ApkPath: %s", configs.ApkPath)
+	log.Printf("- Track: %s", configs.Track)
+	log.Printf("- UserFraction: %s", configs.UserFraction)
+	log.Printf("- WhatsnewsDir: %s", configs.WhatsnewsDir)
+	log.Infof("Deprecated Configs:")
+	log.Printf("- ServiceAccountEmail: %s", secureInput(configs.ServiceAccountEmail))
+	log.Printf("- P12KeyPath: %s", secureInput(configs.P12KeyPath))
+	log.Printf("- UntrackBlockingVersions: %s", configs.UntrackBlockingVersions)
 }
 
 func (configs ConfigsModel) validate() error {
@@ -161,7 +171,7 @@ func (configs ConfigsModel) validate() error {
 		return errors.New("No Track parameter specified")
 	}
 
-	if configs.Track == "rollout" {
+	if configs.Track == rolloutTrackName {
 		if configs.UserFraction == "" {
 			return errors.New("No UserFraction parameter specified")
 		}
@@ -185,7 +195,7 @@ func downloadFile(downloadURL, targetPath string) error {
 	}
 	defer func() {
 		if err := outFile.Close(); err != nil {
-			log.Warn("Failed to close (%s)", targetPath)
+			log.Warnf("Failed to close (%s)", targetPath)
 		}
 	}()
 
@@ -195,7 +205,7 @@ func downloadFile(downloadURL, targetPath string) error {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Warn("failed to close (%s) body", downloadURL)
+			log.Warnf("failed to close (%s) body", downloadURL)
 		}
 	}()
 
@@ -222,7 +232,7 @@ func jwtConfigFromJSONKeyFile(pth string) (*jwt.Config, error) {
 }
 
 func jwtConfigFromP12KeyFile(pth, email string) (*jwt.Config, error) {
-	cmd := cmdex.NewCommand("openssl", "pkcs12", "-in", pth, "-passin", "pass:notasecret", "-nodes")
+	cmd := command.New("openssl", "pkcs12", "-in", pth, "-passin", "pass:notasecret", "-nodes")
 
 	var outBuffer bytes.Buffer
 	outWriter := bufio.NewWriter(&outBuffer)
@@ -275,6 +285,11 @@ func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, err
 	return recentChangesMap, nil
 }
 
+func failf(format string, v ...interface{}) {
+	log.Errorf(format, v...)
+	os.Exit(1)
+}
+
 func main() {
 	configs := createConfigsModelFromEnvs()
 
@@ -282,16 +297,13 @@ func main() {
 	configs.print()
 
 	if err := configs.validate(); err != nil {
-		fmt.Println()
-		log.Error("Issue with input: %s", err)
-
-		os.Exit(1)
+		failf("Issue with input: %s", err)
 	}
 
 	//
 	// Create client
 	fmt.Println()
-	log.Info("Authenticateing")
+	log.Infof("Authenticateing")
 
 	jwtConfig := new(jwt.Config)
 
@@ -303,22 +315,19 @@ func main() {
 		} else {
 			tmpDir, err := pathutil.NormalizedOSTempDirPath("__google-play-deploy__")
 			if err != nil {
-				log.Error("Failed to create tmp dir, error: %s", err)
-				os.Exit(1)
+				failf("Failed to create tmp dir, error: %s", err)
 			}
 
 			jsonKeyPth = filepath.Join(tmpDir, "key.json")
 
 			if err := downloadFile(configs.JSONKeyPath, jsonKeyPth); err != nil {
-				log.Error("Failed to download json key file, error: %s", err)
-				os.Exit(1)
+				failf("Failed to download json key file, error: %s", err)
 			}
 		}
 
 		authConfig, err := jwtConfigFromJSONKeyFile(jsonKeyPth)
 		if err != nil {
-			log.Error("Failed to create auth config from json key file, error: %s", err)
-			os.Exit(1)
+			failf("Failed to create auth config from json key file, error: %s", err)
 		}
 		jwtConfig = authConfig
 	} else {
@@ -329,22 +338,19 @@ func main() {
 		} else {
 			tmpDir, err := pathutil.NormalizedOSTempDirPath("__google-play-deploy__")
 			if err != nil {
-				log.Error("Failed to create tmp dir, error: %s", err)
-				os.Exit(1)
+				failf("Failed to create tmp dir, error: %s", err)
 			}
 
 			p12KeyPath = filepath.Join(tmpDir, "key.p12")
 
 			if err := downloadFile(configs.P12KeyPath, p12KeyPath); err != nil {
-				log.Error("Failed to download p12 key file, error: %s", err)
-				os.Exit(1)
+				failf("Failed to download p12 key file, error: %s", err)
 			}
 		}
 
 		authConfig, err := jwtConfigFromP12KeyFile(p12KeyPath, configs.ServiceAccountEmail)
 		if err != nil {
-			log.Error("Failed to create auth config from p12 key file, error: %s", err)
-			os.Exit(1)
+			failf("Failed to create auth config from p12 key file, error: %s", err)
 		}
 		jwtConfig = authConfig
 	}
@@ -352,17 +358,16 @@ func main() {
 	client := jwtConfig.Client(oauth2.NoContext)
 	service, err := androidpublisher.New(client)
 	if err != nil {
-		log.Error("Failed to create publisher service, error: %s", err)
-		os.Exit(1)
+		failf("Failed to create publisher service, error: %s", err)
 	}
 
-	log.Done("Authenticated client created")
+	log.Donef("Authenticated client created")
 	// ---
 
 	//
 	// Create insert edit
 	fmt.Println()
-	log.Info("Create new edit")
+	log.Infof("Create new edit")
 
 	editsService := androidpublisher.NewEditsService(service)
 
@@ -370,25 +375,23 @@ func main() {
 
 	appEdit, err := editsInsertCall.Do()
 	if err != nil {
-		log.Error("Failed to perform edit insert call, error: %s", err)
-		os.Exit(1)
+		failf("Failed to perform edit insert call, error: %s", err)
 	}
 
-	log.Detail(" editID: %s", appEdit.Id)
+	log.Printf(" editID: %s", appEdit.Id)
 	// ---
 
 	//
 	// Upload APKs
 	fmt.Println()
-	log.Info("Upload apks")
+	log.Infof("Upload apks")
 
 	versionCodes := []int64{}
 	apkPaths := strings.Split(configs.ApkPath, "|")
 	for _, apkPath := range apkPaths {
 		apkFile, err := os.Open(apkPath)
 		if err != nil {
-			log.Error("Failed to read apk (%s), error: %s", apkPath, err)
-			os.Exit(1)
+			failf("Failed to read apk (%s), error: %s", apkPath, err)
 		}
 
 		editsApksService := androidpublisher.NewEditsApksService(service)
@@ -398,11 +401,10 @@ func main() {
 
 		apk, err := editsApksUloadCall.Do()
 		if err != nil {
-			log.Error("Failed to upload apk, error: %s", err)
-			os.Exit(1)
+			failf("Failed to upload apk, error: %s", err)
 		}
 
-		log.Detail(" uploaded apk version: %d", apk.VersionCode)
+		log.Printf(" uploaded apk version: %d", apk.VersionCode)
 		versionCodes = append(versionCodes, apk.VersionCode)
 	}
 	// ---
@@ -410,7 +412,7 @@ func main() {
 	//
 	// Update track
 	fmt.Println()
-	log.Info("Update track")
+	log.Infof("Update track")
 
 	editsTracksService := androidpublisher.NewEditsTracksService(service)
 
@@ -419,11 +421,10 @@ func main() {
 		VersionCodes: versionCodes,
 	}
 
-	if configs.Track == "rollout" {
+	if configs.Track == rolloutTrackName {
 		userFraction, err := strconv.ParseFloat(configs.UserFraction, 64)
 		if err != nil {
-			log.Error("Failed to parse user fraction, error: %s", err)
-			os.Exit(1)
+			failf("Failed to parse user fraction, error: %s", err)
 		}
 		newTrack.UserFraction = userFraction
 	}
@@ -431,30 +432,133 @@ func main() {
 	editsTracksUpdateCall := editsTracksService.Update(configs.PackageName, appEdit.Id, configs.Track, &newTrack)
 	track, err := editsTracksUpdateCall.Do()
 	if err != nil {
-		log.Error("Failed to update track, error: %s", err)
-		os.Exit(1)
+		failf("Failed to update track, error: %s", err)
 	}
 
-	log.Detail(" updated track: %s", track.Track)
-	log.Detail(" assigned apk versions: %v", track.VersionCodes)
+	log.Printf(" updated track: %s", track.Track)
+	log.Printf(" assigned apk versions: %v", track.VersionCodes)
+	// ---
+
+	//
+	// Deactivate blocking apks
+	untrackApks := (configs.UntrackBlockingVersions == "true")
+
+	if untrackApks && configs.Track == alphaTrackName {
+		fmt.Println()
+		log.Warnf("UntrackBlockingVersions is set, but selected track is: alpha, nothing to deactivate")
+		untrackApks = false
+	}
+
+	if untrackApks && len(apkPaths) > 1 {
+		fmt.Println()
+		log.Warnf("UntrackBlockingVersions is set, but deploying multiple apks, deactivateing blocking versions is not supported, in this case")
+		untrackApks = false
+	}
+
+	anyTrackUpdated := false
+
+	if untrackApks {
+		fmt.Println()
+		log.Infof("Deactivating blocking apk versions")
+
+		heighestVersion := versionCodes[0]
+
+		// List all tracks
+		tracksService := androidpublisher.NewEditsTracksService(service)
+
+		// Collect tracks to update
+		tracksListCall := tracksService.List(configs.PackageName, appEdit.Id)
+		listResponse, err := tracksListCall.Do()
+		if err != nil {
+			failf("Failed to list tracks, error: %s", err)
+		}
+
+		tracks := listResponse.Tracks
+
+		possibleTrackNamesToUpdate := []string{}
+		switch configs.Track {
+		case betaTrackName:
+			possibleTrackNamesToUpdate = []string{alphaTrackName}
+		case rolloutTrackName, productionTrackName:
+			possibleTrackNamesToUpdate = []string{alphaTrackName, betaTrackName}
+		}
+
+		trackNamesToUpdate := []string{}
+		for _, track := range tracks {
+			for _, trackNameToUpdate := range possibleTrackNamesToUpdate {
+				if trackNameToUpdate == track.Track {
+					trackNamesToUpdate = append(trackNamesToUpdate, trackNameToUpdate)
+				}
+			}
+		}
+
+		log.Printf(" possible tracks to update: %v", trackNamesToUpdate)
+
+		for _, trackName := range trackNamesToUpdate {
+			tracksGetCall := tracksService.Get(configs.PackageName, appEdit.Id, trackName)
+			track, err := tracksGetCall.Do()
+			if err != nil {
+				failf("Failed to get track (%s), error: %s", trackName, err)
+			}
+
+			log.Printf(" checking apk versions on track: %s", track.Track)
+
+			versionCodesToKeep := []int64{}
+			versionCodes := track.VersionCodes
+
+			log.Infof(" versionCodes: %v", versionCodes)
+
+			for _, versionCode := range versionCodes {
+				if versionCode > heighestVersion {
+					log.Donef(" - keeping apk with version: %d", versionCode)
+					versionCodesToKeep = append(versionCodesToKeep, versionCode)
+				} else {
+					log.Warnf(" - removing apk with version: %d", versionCode)
+				}
+			}
+
+			if len(versionCodes) != len(versionCodesToKeep) {
+				anyTrackUpdated = true
+
+				if len(versionCodesToKeep) > 0 {
+					track.VersionCodes = versionCodesToKeep
+				} else {
+					track.VersionCodes = []int64{}
+					track.NullFields = []string{"VersionCodes"}
+				}
+
+				track.ForceSendFields = []string{"VersionCodes"}
+
+				tracksUpdateCall := tracksService.Patch(configs.PackageName, appEdit.Id, trackName, track)
+				if _, err := tracksUpdateCall.Do(); err != nil && err != io.EOF {
+					failf("Failed to update track (%s), error: %s", trackName, err)
+				}
+			}
+		}
+
+		if anyTrackUpdated {
+			log.Donef("Desired versions deactivated")
+		} else {
+			log.Donef("No blocking apk version found")
+		}
+	}
 	// ---
 
 	//
 	// Update listing
 	if configs.WhatsnewsDir != "" {
 		fmt.Println()
-		log.Info("Update listing")
+		log.Infof("Update listing")
 
 		recentChangesMap, err := readLocalisedRecentChanges(configs.WhatsnewsDir)
 		if err != nil {
-			log.Error("Failed to read whatsnews, error: %s", err)
-			os.Exit(1)
+			failf("Failed to read whatsnews, error: %s", err)
 		}
 
 		editsApklistingsService := androidpublisher.NewEditsApklistingsService(service)
 
 		for _, versionCode := range versionCodes {
-			log.Detail(" updating recent changes for version: %d", versionCode)
+			log.Printf(" updating recent changes for version: %d", versionCode)
 
 			for language, recentChanges := range recentChangesMap {
 				newApkListing := androidpublisher.ApkListing{
@@ -465,11 +569,10 @@ func main() {
 				editsApkListingsCall := editsApklistingsService.Update(configs.PackageName, appEdit.Id, versionCode, language, &newApkListing)
 				apkListing, err := editsApkListingsCall.Do()
 				if err != nil {
-					log.Error("Failed to update listing, error: %s", err)
-					os.Exit(1)
+					failf("Failed to update listing, error: %s", err)
 				}
 
-				log.Detail(" - language: %s", apkListing.Language)
+				log.Printf(" - language: %s", apkListing.Language)
 			}
 		}
 	}
@@ -478,28 +581,26 @@ func main() {
 	//
 	// Validate edit
 	fmt.Println()
-	log.Info("Validating edit")
+	log.Infof("Validating edit")
 
 	editsValidateCall := editsService.Validate(configs.PackageName, appEdit.Id)
 	if _, err := editsValidateCall.Do(); err != nil {
-		log.Error("Failed to validate edit, error: %s", err)
-		os.Exit(1)
+		failf("Failed to validate edit, error: %s", err)
 	}
 
-	log.Done("Edit is valid")
+	log.Donef("Edit is valid")
 	// ---
 
 	//
 	// Commit edit
 	fmt.Println()
-	log.Info("Committing edit")
+	log.Infof("Committing edit")
 
 	editsCommitCall := editsService.Commit(configs.PackageName, appEdit.Id)
 	if _, err := editsCommitCall.Do(); err != nil {
-		log.Error("Failed to commit edit, error: %s", err)
-		os.Exit(1)
+		failf("Failed to commit edit, error: %s", err)
 	}
 
-	log.Done("Edit committed")
+	log.Donef("Edit committed")
 	// ---
 }

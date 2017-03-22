@@ -30,9 +30,10 @@ workflows:
         - service_account_json_key_path: $SERVICE_ACCOUNT_JSON_KEY_PATH
         - package_name: $PACKAGE_NAME
         - apk_path: $BITRISE_APK_PATH
-        - track: $TRACK
         - user_fraction: $USER_FRACTION
         - whatsnews_dir: $WHATNEWS_DIR
+        - track: $TRACK
+        - untrack_blocking_versions: "true"
 
   go-tests:
     before_run:
