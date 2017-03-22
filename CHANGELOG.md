@@ -1,6 +1,10 @@
-## Changelog (Current version: 1.2.0)
+## Changelog (Current version: 1.2.1)
 
 -----------------
+
+### 1.2.1 (2017 Mar 22)
+
+* [df1d9d7] Prepare for 1.2.1
 
 ### 1.2.0 (2017 Mar 22)
 
