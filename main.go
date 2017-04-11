@@ -338,11 +338,17 @@ func main() {
 		}
 		jwtConfig = authConfig
 	} else {
-		p12KeyPath := ""
+		p12KeyPath := configs.P12KeyPath
 
-		if strings.HasPrefix(configs.P12KeyPath, "file://") {
+		url, err := url.Parse(configs.P12KeyPath)
+		if err != nil {
+			failf("Failed to parse P12 key path, error: %s", err)
+		}
+
+		switch url.Scheme {
+		case "file":
 			p12KeyPath = strings.TrimPrefix(configs.P12KeyPath, "file://")
-		} else {
+		case "http", "https":
 			tmpDir, err := pathutil.NormalizedOSTempDirPath("__google-play-deploy__")
 			if err != nil {
 				failf("Failed to create tmp dir, error: %s", err)
