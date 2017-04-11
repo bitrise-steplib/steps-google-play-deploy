@@ -292,6 +292,15 @@ func failf(format string, v ...interface{}) {
 	os.Exit(1)
 }
 
+func getKeyPath(keyPath string) (string, bool, error) {
+	url, err := url.Parse(keyPath)
+	if err != nil {
+		return "", false, fmt.Errorf("failed to parse key path, error: %s", err)
+	}
+
+	return strings.TrimPrefix(keyPath, "file://"), (url.Scheme == "http" || url.Scheme == "https"), nil
+}
+
 func main() {
 	configs := createConfigsModelFromEnvs()
 
@@ -310,24 +319,20 @@ func main() {
 	jwtConfig := new(jwt.Config)
 
 	if configs.JSONKeyPath != "" {
-		jsonKeyPth := configs.JSONKeyPath
 
-		url, err := url.Parse(configs.JSONKeyPath)
+		jsonKeyPth, isRemote, err := getKeyPath(configs.JSONKeyPath)
 		if err != nil {
-			failf("Failed to parse json key path, error: %s", err)
+			failf("Failed to get key path (%s), error: %s", configs.JSONKeyPath, err)
 		}
 
-		switch url.Scheme {
-		case "file":
-			jsonKeyPth = strings.TrimPrefix(configs.JSONKeyPath, "file://")
-		case "http", "https":
+		if isRemote {
 			tmpDir, err := pathutil.NormalizedOSTempDirPath("__google-play-deploy__")
 			if err != nil {
 				failf("Failed to create tmp dir, error: %s", err)
 			}
 
-			jsonKeyPth = filepath.Join(tmpDir, "key.json")
-			if err := downloadFile(configs.JSONKeyPath, jsonKeyPth); err != nil {
+			jsonKeyPthDest := filepath.Join(tmpDir, "key.json")
+			if err := downloadFile(jsonKeyPth, jsonKeyPthDest); err != nil {
 				failf("Failed to download json key file, error: %s", err)
 			}
 		}
@@ -338,25 +343,19 @@ func main() {
 		}
 		jwtConfig = authConfig
 	} else {
-		p12KeyPath := configs.P12KeyPath
-
-		url, err := url.Parse(configs.P12KeyPath)
+		p12KeyPath, isRemote, err := getKeyPath(configs.P12KeyPath)
 		if err != nil {
-			failf("Failed to parse P12 key path, error: %s", err)
+			failf("Failed to get key path (%s), error: %s", configs.P12KeyPath, err)
 		}
 
-		switch url.Scheme {
-		case "file":
-			p12KeyPath = strings.TrimPrefix(configs.P12KeyPath, "file://")
-		case "http", "https":
+		if isRemote {
 			tmpDir, err := pathutil.NormalizedOSTempDirPath("__google-play-deploy__")
 			if err != nil {
 				failf("Failed to create tmp dir, error: %s", err)
 			}
 
-			p12KeyPath = filepath.Join(tmpDir, "key.p12")
-
-			if err := downloadFile(configs.P12KeyPath, p12KeyPath); err != nil {
+			p12KeyPathDest := filepath.Join(tmpDir, "key.p12")
+			if err := downloadFile(p12KeyPath, p12KeyPathDest); err != nil {
 				failf("Failed to download p12 key file, error: %s", err)
 			}
 		}
