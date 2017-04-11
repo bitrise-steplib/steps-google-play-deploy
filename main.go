@@ -305,7 +305,7 @@ func main() {
 	//
 	// Create client
 	fmt.Println()
-	log.Infof("Authenticateing")
+	log.Infof("Authenticating")
 
 	jwtConfig := new(jwt.Config)
 
