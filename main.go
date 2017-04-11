@@ -21,6 +21,8 @@ import (
 	"google.golang.org/api/androidpublisher/v2"
 	"google.golang.org/api/googleapi"
 
+	"net/url"
+
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/fileutil"
@@ -308,18 +310,23 @@ func main() {
 	jwtConfig := new(jwt.Config)
 
 	if configs.JSONKeyPath != "" {
-		jsonKeyPth := ""
+		jsonKeyPth := configs.JSONKeyPath
 
-		if strings.HasPrefix(configs.JSONKeyPath, "file://") {
+		url, err := url.Parse(configs.JSONKeyPath)
+		if err != nil {
+			failf("Failed to parse json key path, error: %s", err)
+		}
+
+		switch url.Scheme {
+		case "file":
 			jsonKeyPth = strings.TrimPrefix(configs.JSONKeyPath, "file://")
-		} else {
+		case "http", "https":
 			tmpDir, err := pathutil.NormalizedOSTempDirPath("__google-play-deploy__")
 			if err != nil {
 				failf("Failed to create tmp dir, error: %s", err)
 			}
 
 			jsonKeyPth = filepath.Join(tmpDir, "key.json")
-
 			if err := downloadFile(configs.JSONKeyPath, jsonKeyPth); err != nil {
 				failf("Failed to download json key file, error: %s", err)
 			}
