@@ -331,8 +331,9 @@ func main() {
 				failf("Failed to create tmp dir, error: %s", err)
 			}
 
-			jsonKeyPthDest := filepath.Join(tmpDir, "key.json")
-			if err := downloadFile(jsonKeyPth, jsonKeyPthDest); err != nil {
+			jsonKeySource := jsonKeyPth
+			jsonKeyPth = filepath.Join(tmpDir, "key.json")
+			if err := downloadFile(jsonKeySource, jsonKeyPth); err != nil {
 				failf("Failed to download json key file, error: %s", err)
 			}
 		}
@@ -354,8 +355,9 @@ func main() {
 				failf("Failed to create tmp dir, error: %s", err)
 			}
 
-			p12KeyPathDest := filepath.Join(tmpDir, "key.p12")
-			if err := downloadFile(p12KeyPath, p12KeyPathDest); err != nil {
+			p12KeySource := p12KeyPath
+			p12KeyPath = filepath.Join(tmpDir, "key.p12")
+			if err := downloadFile(p12KeySource, p12KeyPath); err != nil {
 				failf("Failed to download p12 key file, error: %s", err)
 			}
 		}
