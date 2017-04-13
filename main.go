@@ -292,10 +292,10 @@ func failf(format string, v ...interface{}) {
 	os.Exit(1)
 }
 
-func getKeyPath(keyPath string) (string, bool, error) {
+func prepareKeyPath(keyPath string) (string, bool, error) {
 	url, err := url.Parse(keyPath)
 	if err != nil {
-		return "", false, fmt.Errorf("failed to parse key path, error: %s", err)
+		return "", false, fmt.Errorf("failed to parse url (%s), error: %s", keyPath, err)
 	}
 
 	return strings.TrimPrefix(keyPath, "file://"), (url.Scheme == "http" || url.Scheme == "https"), nil
@@ -320,9 +320,9 @@ func main() {
 
 	if configs.JSONKeyPath != "" {
 
-		jsonKeyPth, isRemote, err := getKeyPath(configs.JSONKeyPath)
+		jsonKeyPth, isRemote, err := prepareKeyPath(configs.JSONKeyPath)
 		if err != nil {
-			failf("Failed to get key path (%s), error: %s", configs.JSONKeyPath, err)
+			failf("Failed to prepare key path (%s), error: %s", configs.JSONKeyPath, err)
 		}
 
 		if isRemote {
@@ -344,9 +344,9 @@ func main() {
 		}
 		jwtConfig = authConfig
 	} else {
-		p12KeyPath, isRemote, err := getKeyPath(configs.P12KeyPath)
+		p12KeyPath, isRemote, err := prepareKeyPath(configs.P12KeyPath)
 		if err != nil {
-			failf("Failed to get key path (%s), error: %s", configs.P12KeyPath, err)
+			failf("Failed to prepare key path (%s), error: %s", configs.P12KeyPath, err)
 		}
 
 		if isRemote {
