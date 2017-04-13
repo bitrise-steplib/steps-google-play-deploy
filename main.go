@@ -21,6 +21,8 @@ import (
 	"google.golang.org/api/androidpublisher/v2"
 	"google.golang.org/api/googleapi"
 
+	"net/url"
+
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/fileutil"
@@ -290,6 +292,15 @@ func failf(format string, v ...interface{}) {
 	os.Exit(1)
 }
 
+func prepareKeyPath(keyPath string) (string, bool, error) {
+	url, err := url.Parse(keyPath)
+	if err != nil {
+		return "", false, fmt.Errorf("failed to parse url (%s), error: %s", keyPath, err)
+	}
+
+	return strings.TrimPrefix(keyPath, "file://"), (url.Scheme == "http" || url.Scheme == "https"), nil
+}
+
 func main() {
 	configs := createConfigsModelFromEnvs()
 
@@ -303,24 +314,26 @@ func main() {
 	//
 	// Create client
 	fmt.Println()
-	log.Infof("Authenticateing")
+	log.Infof("Authenticating")
 
 	jwtConfig := new(jwt.Config)
 
 	if configs.JSONKeyPath != "" {
-		jsonKeyPth := ""
 
-		if strings.HasPrefix(configs.JSONKeyPath, "file://") {
-			jsonKeyPth = strings.TrimPrefix(configs.JSONKeyPath, "file://")
-		} else {
+		jsonKeyPth, isRemote, err := prepareKeyPath(configs.JSONKeyPath)
+		if err != nil {
+			failf("Failed to prepare key path (%s), error: %s", configs.JSONKeyPath, err)
+		}
+
+		if isRemote {
 			tmpDir, err := pathutil.NormalizedOSTempDirPath("__google-play-deploy__")
 			if err != nil {
 				failf("Failed to create tmp dir, error: %s", err)
 			}
 
+			jsonKeySource := jsonKeyPth
 			jsonKeyPth = filepath.Join(tmpDir, "key.json")
-
-			if err := downloadFile(configs.JSONKeyPath, jsonKeyPth); err != nil {
+			if err := downloadFile(jsonKeySource, jsonKeyPth); err != nil {
 				failf("Failed to download json key file, error: %s", err)
 			}
 		}
@@ -331,19 +344,20 @@ func main() {
 		}
 		jwtConfig = authConfig
 	} else {
-		p12KeyPath := ""
+		p12KeyPath, isRemote, err := prepareKeyPath(configs.P12KeyPath)
+		if err != nil {
+			failf("Failed to prepare key path (%s), error: %s", configs.P12KeyPath, err)
+		}
 
-		if strings.HasPrefix(configs.P12KeyPath, "file://") {
-			p12KeyPath = strings.TrimPrefix(configs.P12KeyPath, "file://")
-		} else {
+		if isRemote {
 			tmpDir, err := pathutil.NormalizedOSTempDirPath("__google-play-deploy__")
 			if err != nil {
 				failf("Failed to create tmp dir, error: %s", err)
 			}
 
+			p12KeySource := p12KeyPath
 			p12KeyPath = filepath.Join(tmpDir, "key.p12")
-
-			if err := downloadFile(configs.P12KeyPath, p12KeyPath); err != nil {
+			if err := downloadFile(p12KeySource, p12KeyPath); err != nil {
 				failf("Failed to download p12 key file, error: %s", err)
 			}
 		}
