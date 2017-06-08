@@ -119,10 +119,10 @@ func (configs ConfigsModel) print() {
 	log.Printf("- Track: %s", configs.Track)
 	log.Printf("- UserFraction: %s", configs.UserFraction)
 	log.Printf("- WhatsnewsDir: %s", configs.WhatsnewsDir)
+	log.Printf("- UntrackBlockingVersions: %s", configs.UntrackBlockingVersions)
 	log.Infof("Deprecated Configs:")
 	log.Printf("- ServiceAccountEmail: %s", secureInput(configs.ServiceAccountEmail))
 	log.Printf("- P12KeyPath: %s", secureInput(configs.P12KeyPath))
-	log.Printf("- UntrackBlockingVersions: %s", configs.UntrackBlockingVersions)
 }
 
 func (configs ConfigsModel) validate() error {
