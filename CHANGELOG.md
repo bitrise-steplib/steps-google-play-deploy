@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.2.2)
+## Changelog (Current version: 1.2.3)
 
 -----------------
+
+### 1.2.3 (2017 Jun 08)
+
+* [9205bc4] prepare for 1.2.3
+* [a04f6d7] deploy multiple apks (#23)
 
 ### 1.2.2 (2017 Apr 13)
 
@@ -59,4 +64,4 @@
 
 -----------------
 
-Updated: 2017 Apr 13
+Updated: 2017 Jun 08
