@@ -1,39 +1,63 @@
-format_version: 1.3.1
+format_version: "2"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
   - RELEASE_VERSION: 1.2.2
 
+  - SAMPLE_APP_REPOSITORY_URL: https://github.com/bitrise-samples/sample-apps-android-abi-split.git
+  - GRADLE_TASK: assembleRelease
+  - GRADLEW_PATH: "./gradlew"
+  - PACKAGE_NAME: "com.bitrise.apkslit"
+
   # define these in your .bitrise.secrets.yml
   - SERVICE_ACCOUNT_JSON_KEY_PATH: $SERVICE_ACCOUNT_JSON_KEY_PATH
-  - PACKAGE_NAME: $PACKAGE_NAME
-  - BITRISE_APK_PATH: $BITRISE_APK_PATH
-  - TRACK: $TRACK
-  - USER_FRACTION: $USER_FRACTION
-  - WHATNEWS_DIR: $WHATNEWS_DIR
+  - VERSION_CODE: "2"
 
 workflows:
   test:
     before_run:
+    - audit-this-step
     - go-tests
     steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+            rm -rf ./_tmp
     - change-workdir:
-        title: Switch working dir to test / _tmp dir
+        title: Switch working dir to test/_tmp dir
         run_if: true
         inputs:
         - path: ./_tmp
         - is_create_path: true
+    - git-clone:
+        run_if: true
+        inputs:
+        - repository_url: $SAMPLE_APP_REPOSITORY_URL
+        - branch: "master"
+        - commit: ""
+        - tag: ""
+        - pull_request_id: ""
+        - clone_into_dir: "./"
+    - change-android-versioncode-and-versionname:
+        inputs:
+        - build_gradle_path: "./app/build.gradle"
+        - new_version_code: $VERSION_CODE
+    - gradle-runner:
+        inputs:
+        - gradle_task: "$GRADLE_TASK"
+        - gradlew_path: "$GRADLEW_PATH"
+    - sign-apk:
+        inputs:
+        - apk_path: $BITRISE_APK_PATH_LIST
     - path::./:
         title: Step Test
         inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_JSON_KEY_PATH
         - package_name: $PACKAGE_NAME
-        - apk_path: $BITRISE_APK_PATH
-        - user_fraction: $USER_FRACTION
-        - whatsnews_dir: $WHATNEWS_DIR
-        - track: $TRACK
-        - untrack_blocking_versions: "true"
+        - apk_path: $BITRISE_SIGNED_APK_PATH
 
   go-tests:
     before_run:
@@ -110,6 +134,9 @@ workflows:
             #!/bin/bash
             set -ex
             go get -u -v github.com/tools/godep
+
+            go get -u -v github.com/davecgh/go-spew/spew
+            go get -u -v github.com/pmezard/go-difflib/difflib
 
             rm -rf ./Godeps
             rm -rf ./vendor

@@ -396,6 +396,21 @@ func main() {
 	// ---
 
 	//
+	// List track infos
+	fmt.Println()
+	log.Infof("List track infos")
+
+	tracksService := androidpublisher.NewEditsTracksService(service)
+	tracksListCall := tracksService.List(configs.PackageName, appEdit.Id)
+	listResponse, err := tracksListCall.Do()
+	if err != nil {
+		failf("Failed to list tracks, error: %s", err)
+	}
+	for _, track := range listResponse.Tracks {
+		log.Printf(" %s versionCodes: %v", track.Track, track.VersionCodes)
+	}
+
+	//
 	// Upload APKs
 	fmt.Println()
 	log.Infof("Upload apks")
