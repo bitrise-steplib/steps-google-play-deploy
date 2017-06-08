@@ -12,7 +12,7 @@ app:
 
   # define these in your .bitrise.secrets.yml
   - SERVICE_ACCOUNT_JSON_KEY_PATH: $SERVICE_ACCOUNT_JSON_KEY_PATH
-  - VERSION_CODE: "2"
+  - VERSION_CODE: "$VERSION_CODE"
 
 workflows:
   test:
