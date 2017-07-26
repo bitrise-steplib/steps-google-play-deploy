@@ -118,6 +118,7 @@ inputs:
         whatsnew file name pattern: `whatsnew-LOCAL`
 
         Example:
+        
         ```
         + - [PATH/TO/WHATSNEWS]
             |
@@ -125,6 +126,11 @@ inputs:
             |
             + - whatsnew-de-DE
         ```
+
+        Format examples:
+
+        - "./"         # whatsnew files are in the repo root directory
+        - "./whatsnew" # whatsnew files are in the whatsnew directory
   - untrack_blocking_versions: "true"
     opts:
       title: "Untrack blocking versions?"
