@@ -165,3 +165,10 @@ inputs:
 
         For remote P12 key file you can provide any download location (ex: `https://URL/TO/key.p12`).
         For local P12 key file provide file path url. (ex: `file://PATH/TO/key.p12`).
+  - mapping_file:
+    opts:
+      title: Location of your mapping.txt file
+      summary: Location of your mapping.txt file
+      description: |-
+        The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names.
+
