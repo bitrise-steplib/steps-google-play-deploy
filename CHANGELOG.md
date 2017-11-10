@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.3.0)
+## Changelog (Current version: 1.3.1)
 
 -----------------
+
+### 1.3.1 (2017 Nov 10)
+
+* [5883871] Bump version to 1.3.1
+* [be1a2a7] Remove [beta] tag from title
 
 ### 1.3.0 (2017 Nov 10)
 
