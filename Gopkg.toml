@@ -1,0 +1,15 @@
+[[constraint]]
+  name = "github.com/bitrise-io/go-utils"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  branch = "master"
+
+[[constraint]]
+  name = "golang.org/x/oauth2"
+  branch = "master"
+
+[[constraint]]
+  name = "google.golang.org/api"
+  branch = "master"

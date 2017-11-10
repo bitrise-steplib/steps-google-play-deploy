@@ -48,6 +48,7 @@ type ConfigsModel struct {
 	UserFraction            string
 	WhatsnewsDir            string
 	UntrackBlockingVersions string
+	MappingFile             string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
@@ -61,6 +62,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		UserFraction:            os.Getenv("user_fraction"),
 		WhatsnewsDir:            os.Getenv("whatsnews_dir"),
 		UntrackBlockingVersions: os.Getenv("untrack_blocking_versions"),
+		MappingFile:             os.Getenv("mapping_file"),
 	}
 }
 
@@ -120,6 +122,7 @@ func (configs ConfigsModel) print() {
 	log.Printf("- UserFraction: %s", configs.UserFraction)
 	log.Printf("- WhatsnewsDir: %s", configs.WhatsnewsDir)
 	log.Printf("- UntrackBlockingVersions: %s", configs.UntrackBlockingVersions)
+	log.Printf("- MappingFile: %s", configs.MappingFile)
 	log.Infof("Deprecated Configs:")
 	log.Printf("- ServiceAccountEmail: %s", secureInput(configs.ServiceAccountEmail))
 	log.Printf("- P12KeyPath: %s", secureInput(configs.P12KeyPath))
@@ -184,6 +187,14 @@ func (configs ConfigsModel) validate() error {
 			return fmt.Errorf("Failed to check if WhatsnewsDir exist at: %s, error: %s", configs.WhatsnewsDir, err)
 		} else if !exist {
 			return fmt.Errorf("WhatsnewsDir not exist at: %s", configs.WhatsnewsDir)
+		}
+	}
+
+	if configs.MappingFile != "" {
+		if _, err := os.Stat(configs.MappingFile); os.IsNotExist(err) {
+			return fmt.Errorf("Mapping file not exist at: %s", configs.MappingFile)
+		} else if err != nil {
+			return fmt.Errorf("Can't get FileInfo (%s), error: %s", configs.MappingFile, err)
 		}
 	}
 
@@ -417,7 +428,8 @@ func main() {
 
 	versionCodes := []int64{}
 	apkPaths := strings.Split(configs.ApkPath, "|")
-	for _, apkPath := range apkPaths {
+
+	for i, apkPath := range apkPaths {
 		apkFile, err := os.Open(apkPath)
 		if err != nil {
 			failf("Failed to read apk (%s), error: %s", apkPath, err)
@@ -435,10 +447,28 @@ func main() {
 
 		log.Printf(" uploaded apk version: %d", apk.VersionCode)
 		versionCodes = append(versionCodes, apk.VersionCode)
-	}
-	// ---
 
-	//
+		// Upload mapping.txt
+		if configs.MappingFile != "" {
+			mappingFile, err := os.Open(configs.MappingFile)
+			if err != nil {
+				failf("Failed to read mapping file (%s), error: %s", configs.MappingFile, err)
+			}
+			editsDeobfuscationfilesService := androidpublisher.NewEditsDeobfuscationfilesService(service)
+			editsDeobfuscationfilesUloadCall := editsDeobfuscationfilesService.Upload(configs.PackageName, appEdit.Id, apk.VersionCode, "proguard")
+			editsDeobfuscationfilesUloadCall.Media(mappingFile, googleapi.ContentType("application/octet-stream"))
+
+			if _, err = editsDeobfuscationfilesUloadCall.Do(); err != nil {
+				failf("Failed to upload mapping file, error: %s", err)
+			}
+
+			log.Printf(" uploaded mapping file for apk version: %d", apk.VersionCode)
+			if i < len(apkPaths)-1 {
+				fmt.Println()
+			}
+		}
+	}
+
 	// Update track
 	fmt.Println()
 	log.Infof("Update track")
