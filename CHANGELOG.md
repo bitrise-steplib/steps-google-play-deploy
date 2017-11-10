@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.3.1)
+## Changelog (Current version: 1.3.2)
 
 -----------------
+
+### 1.3.2 (2017 Nov 10)
+
+* [4b92f1f] Bump version to 1.3.2
+* [88e2bbc] Set default value for mapping_file (#26)
 
 ### 1.3.1 (2017 Nov 10)
 
