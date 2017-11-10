@@ -191,10 +191,10 @@ func (configs ConfigsModel) validate() error {
 	}
 
 	if configs.MappingFile != "" {
-		if _, err := os.Stat(configs.MappingFile); os.IsNotExist(err) {
-			return fmt.Errorf("Mapping file not exist at: %s", configs.MappingFile)
-		} else if err != nil {
-			return fmt.Errorf("Can't get FileInfo (%s), error: %s", configs.MappingFile, err)
+		if exist, err := pathutil.IsPathExists(configs.MappingFile); err != nil {
+			return fmt.Errorf("Failed to check if MappingFile exist at: %s, error: %s", configs.MappingFile, err)
+		} else if !exist {
+			return fmt.Errorf("MappingFile not exist at: %s", configs.MappingFile)
 		}
 	}
 
