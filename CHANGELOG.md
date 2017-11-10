@@ -1,6 +1,13 @@
-## Changelog (Current version: 1.2.3)
+## Changelog (Current version: 1.3.0)
 
 -----------------
+
+### 1.3.0 (2017 Nov 10)
+
+* [cf5f2f4] Bump version to 1.3.0
+* [e03ee61] New input: mapping file (#25)
+* [0e07d8d] step.yml update
+* [c3d3633] README and step.yml updates
 
 ### 1.2.3 (2017 Jun 08)
 
@@ -64,4 +71,4 @@
 
 -----------------
 
-Updated: 2017 Jun 08
+Updated: 2017 Nov 10
