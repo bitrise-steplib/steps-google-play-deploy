@@ -113,9 +113,9 @@ inputs:
       description: |-
         Use this input to specify localised whatsnew files directory.
 
-        This directory should contain whatsnew files postfixed with the local.
+        This directory should contain whatsnew files postfixed with the locale.
 
-        whatsnew file name pattern: `whatsnew-LOCAL`
+        whatsnew file name pattern: `whatsnew-LOCALE`
 
         Example:
         
