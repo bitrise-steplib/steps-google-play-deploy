@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.3.2)
+## Changelog (Current version: 1.3.3)
 
 -----------------
+
+### 1.3.3 (2017 Nov 28)
+
+* [8a5b8db] Bump version to 1.3.3
+* [81500bb] Merge pull request #27 from phdesign/patch-1
+* [6e49c66] Correct spelling of 'locale'
 
 ### 1.3.2 (2017 Nov 10)
 
@@ -81,4 +87,4 @@
 
 -----------------
 
-Updated: 2017 Nov 10
+Updated: 2017 Nov 28
