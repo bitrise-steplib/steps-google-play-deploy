@@ -109,7 +109,7 @@ inputs:
       - "0.5"
   - whatsnews_dir:
     opts:
-      title: "Direcotry of localised whatsnew files"
+      title: "Directory of localised whatsnew files"
       description: |-
         Use this input to specify localised whatsnew files directory.
 
