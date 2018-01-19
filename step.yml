@@ -54,23 +54,21 @@ inputs:
   - service_account_json_key_path:
     opts:
       title: Service Account JSON key file path
-      summary: Service Account JSON key file path
       description: |-
         Path to the Service Account's JSON key file.
 
         For remote JSON key file you can provide any download location (ex: `https://URL/TO/key.json`).
         For local JSON key file provide file path url. (ex: `file://PATH/TO/key.json`).
+      is_required: true
   - package_name:
     opts:
       title: Package name
-      summary: Package name
       description: |-
         Package name of the APK to deploy.
       is_required: true
   - apk_path: "$BITRISE_APK_PATH"
     opts:
       title: APK file path
-      summary: APK file path
       description: |-
         Path to the APK to deploy.
 
@@ -84,29 +82,27 @@ inputs:
   - track: alpha
     opts:
       title: Track
-      summary: Track
       description: |-
         Track to assign the APK(s).
-      is_required: true
       value_options:
       - alpha
       - beta
       - rollout
       - production
+      is_required: true
   - user_fraction: "0.5"
     opts:
       title: User Fraction
-      summary: User Fraction
       description: |-
         __Only available if `track` is `rollout`.__
 
         Portion of the users who should get the staged rollout version of the APK.
-      is_required: true
       value_options:
       - "0.05"
       - "0.1"
       - "0.2"
       - "0.5"
+      is_required: true
   - whatsnews_dir:
     opts:
       title: "Directory of localised whatsnew files"
@@ -131,6 +127,11 @@ inputs:
 
         - "./"         # whatsnew files are in the repo root directory
         - "./whatsnew" # whatsnew files are in the whatsnew directory
+  - mapping_file: "$BITRISE_MAPPING_PATH"
+    opts:
+      title: Location of your mapping.txt file
+      description: |-
+        The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names.
   - untrack_blocking_versions: "true"
     opts:
       title: "Untrack blocking versions?"
@@ -144,31 +145,8 @@ inputs:
         `Version 42 of this app can not be downloaded by any devices as they will all receive APKs with higher version codes`
 
         To avoid this issue set this input to: `"true"` and the step will deactivate every apk with lower version code, on lower level tracks.
-  - service_account_email:
-    opts:
-      title: "[DEPRECATED!] Service account ID"
-      summary: "[DEPRECATED!] Service account ID"
-      description: |-
-        __DEPRECATED!__
-        Use JSON key instead of P12 key and `service_account_json_key_path` input.
-
-        The `Service account ID` of the Service Account you want to use to authorize the deploy. 
-  - key_file_path:
-    opts:
-      title: "[DEPRECATED!] Service Account p12 key file path"
-      summary: "[DEPRECATED!] Service Account p12 key file path"
-      description: |-
-        __DEPRECATED!__
-        Use JSON key instead of P12 key and `service_account_json_key_path` input.
-
-        Path to the Service Account's p12 key file .
-
-        For remote P12 key file you can provide any download location (ex: `https://URL/TO/key.p12`).
-        For local P12 key file provide file path url. (ex: `file://PATH/TO/key.p12`).
-  - mapping_file: "$BITRISE_MAPPING_PATH"
-    opts:
-      title: Location of your mapping.txt file
-      summary: Location of your mapping.txt file
-      description: |-
-        The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names.
+      value_options:
+      - "true"
+      - "false"
+      is_required: true
 

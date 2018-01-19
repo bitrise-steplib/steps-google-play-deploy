@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -17,17 +18,15 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
-
 	"google.golang.org/api/androidpublisher/v2"
 	"google.golang.org/api/googleapi"
-
-	"net/url"
 
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-tools/go-steputils/input"
 )
 
 const (
@@ -39,30 +38,26 @@ const (
 
 // ConfigsModel ...
 type ConfigsModel struct {
-	ServiceAccountEmail     string
-	P12KeyPath              string
 	JSONKeyPath             string
 	PackageName             string
 	ApkPath                 string
 	Track                   string
 	UserFraction            string
 	WhatsnewsDir            string
-	UntrackBlockingVersions string
 	MappingFile             string
+	UntrackBlockingVersions string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
 	return ConfigsModel{
-		ServiceAccountEmail:     os.Getenv("service_account_email"),
-		P12KeyPath:              os.Getenv("key_file_path"),
 		JSONKeyPath:             os.Getenv("service_account_json_key_path"),
 		PackageName:             os.Getenv("package_name"),
 		ApkPath:                 os.Getenv("apk_path"),
 		Track:                   os.Getenv("track"),
 		UserFraction:            os.Getenv("user_fraction"),
 		WhatsnewsDir:            os.Getenv("whatsnews_dir"),
-		UntrackBlockingVersions: os.Getenv("untrack_blocking_versions"),
 		MappingFile:             os.Getenv("mapping_file"),
+		UntrackBlockingVersions: os.Getenv("untrack_blocking_versions"),
 	}
 }
 
@@ -121,61 +116,43 @@ func (configs ConfigsModel) print() {
 	log.Printf("- Track: %s", configs.Track)
 	log.Printf("- UserFraction: %s", configs.UserFraction)
 	log.Printf("- WhatsnewsDir: %s", configs.WhatsnewsDir)
-	log.Printf("- UntrackBlockingVersions: %s", configs.UntrackBlockingVersions)
 	log.Printf("- MappingFile: %s", configs.MappingFile)
-	log.Infof("Deprecated Configs:")
-	log.Printf("- ServiceAccountEmail: %s", secureInput(configs.ServiceAccountEmail))
-	log.Printf("- P12KeyPath: %s", secureInput(configs.P12KeyPath))
+	log.Printf("- UntrackBlockingVersions: %s", configs.UntrackBlockingVersions)
 }
 
 func (configs ConfigsModel) validate() error {
 	// required
-	if configs.JSONKeyPath != "" {
-		if strings.HasPrefix(configs.JSONKeyPath, "file://") {
-			pth := strings.TrimPrefix(configs.JSONKeyPath, "file://")
-			if exist, err := pathutil.IsPathExists(pth); err != nil {
-				return fmt.Errorf("Failed to check if JSONKeyPath exist at: %s, error: %s", pth, err)
-			} else if !exist {
-				return fmt.Errorf("JSONKeyPath not exist at: %s", pth)
-			}
-		}
+	if err := input.ValidateIfNotEmpty(configs.JSONKeyPath); err != nil {
+		return errors.New("issue with input JSONKeyPath: " + err.Error())
+	} else if strings.HasPrefix(configs.JSONKeyPath, "file://") {
+		pth := strings.TrimPrefix(configs.JSONKeyPath, "file://")
 
-	} else if configs.P12KeyPath != "" {
-		if strings.HasPrefix(configs.P12KeyPath, "file://") {
-			pth := strings.TrimPrefix(configs.P12KeyPath, "file://")
-			if exist, err := pathutil.IsPathExists(pth); err != nil {
-				return fmt.Errorf("Failed to check if P12KeyPath exist at: %s, error: %s", pth, err)
-			} else if !exist {
-				return fmt.Errorf("P12KeyPath not exist at: %s", pth)
-			}
+		if exist, err := pathutil.IsPathExists(pth); err != nil {
+			return fmt.Errorf("Failed to check if JSONKeyPath exist at: %s, error: %s", pth, err)
+		} else if !exist {
+			return errors.New("JSONKeyPath not exist at: " + pth)
 		}
-		if configs.ServiceAccountEmail == "" {
-			return fmt.Errorf("No ServiceAccountEmail parameter specified")
-		}
-	} else {
-		return errors.New("No JSONKeyPath nor P12KeyPath provided")
 	}
 
-	if configs.PackageName == "" {
-		return errors.New("No PackageName parameter specified")
+	if err := input.ValidateIfNotEmpty(configs.PackageName); err != nil {
+		return errors.New("issue with input PackageName: " + err.Error())
 	}
 
-	if configs.ApkPath == "" {
-		return errors.New("No ApkPath parameter specified")
+	if err := input.ValidateIfNotEmpty(configs.ApkPath); err != nil {
+		return errors.New("issue with input ApkPath: " + err.Error())
 	}
 	apkPaths := strings.Split(configs.ApkPath, "|")
 	for _, apkPath := range apkPaths {
 		if exist, err := pathutil.IsPathExists(apkPath); err != nil {
 			return fmt.Errorf("Failed to check if APK exist at: %s, error: %s", apkPath, err)
 		} else if !exist {
-			return fmt.Errorf("APK not exist at: %s", apkPath)
+			return errors.New("APK not exist at: " + apkPath)
 		}
 	}
 
-	if configs.Track == "" {
-		return errors.New("No Track parameter specified")
+	if err := input.ValidateIfNotEmpty(configs.Track); err != nil {
+		return errors.New("Issue with input Track: " + err.Error())
 	}
-
 	if configs.Track == rolloutTrackName {
 		if configs.UserFraction == "" {
 			return errors.New("No UserFraction parameter specified")
@@ -186,7 +163,7 @@ func (configs ConfigsModel) validate() error {
 		if exist, err := pathutil.IsPathExists(configs.WhatsnewsDir); err != nil {
 			return fmt.Errorf("Failed to check if WhatsnewsDir exist at: %s, error: %s", configs.WhatsnewsDir, err)
 		} else if !exist {
-			return fmt.Errorf("WhatsnewsDir not exist at: %s", configs.WhatsnewsDir)
+			return errors.New("WhatsnewsDir not exist at: " + configs.WhatsnewsDir)
 		}
 	}
 
@@ -194,8 +171,12 @@ func (configs ConfigsModel) validate() error {
 		if exist, err := pathutil.IsPathExists(configs.MappingFile); err != nil {
 			return fmt.Errorf("Failed to check if MappingFile exist at: %s, error: %s", configs.MappingFile, err)
 		} else if !exist {
-			return fmt.Errorf("MappingFile not exist at: %s", configs.MappingFile)
+			return errors.New("MappingFile not exist at: " + configs.MappingFile)
 		}
+	}
+
+	if err := input.ValidateWithOptions(configs.UntrackBlockingVersions, "true", "false"); err != nil {
+		return errors.New("issue with input UntrackBlockingVersions: " + err.Error())
 	}
 
 	return nil
@@ -328,57 +309,29 @@ func main() {
 	log.Infof("Authenticating")
 
 	jwtConfig := new(jwt.Config)
-
-	if configs.JSONKeyPath != "" {
-
-		jsonKeyPth, isRemote, err := prepareKeyPath(configs.JSONKeyPath)
-		if err != nil {
-			failf("Failed to prepare key path (%s), error: %s", configs.JSONKeyPath, err)
-		}
-
-		if isRemote {
-			tmpDir, err := pathutil.NormalizedOSTempDirPath("__google-play-deploy__")
-			if err != nil {
-				failf("Failed to create tmp dir, error: %s", err)
-			}
-
-			jsonKeySource := jsonKeyPth
-			jsonKeyPth = filepath.Join(tmpDir, "key.json")
-			if err := downloadFile(jsonKeySource, jsonKeyPth); err != nil {
-				failf("Failed to download json key file, error: %s", err)
-			}
-		}
-
-		authConfig, err := jwtConfigFromJSONKeyFile(jsonKeyPth)
-		if err != nil {
-			failf("Failed to create auth config from json key file, error: %s", err)
-		}
-		jwtConfig = authConfig
-	} else {
-		p12KeyPath, isRemote, err := prepareKeyPath(configs.P12KeyPath)
-		if err != nil {
-			failf("Failed to prepare key path (%s), error: %s", configs.P12KeyPath, err)
-		}
-
-		if isRemote {
-			tmpDir, err := pathutil.NormalizedOSTempDirPath("__google-play-deploy__")
-			if err != nil {
-				failf("Failed to create tmp dir, error: %s", err)
-			}
-
-			p12KeySource := p12KeyPath
-			p12KeyPath = filepath.Join(tmpDir, "key.p12")
-			if err := downloadFile(p12KeySource, p12KeyPath); err != nil {
-				failf("Failed to download p12 key file, error: %s", err)
-			}
-		}
-
-		authConfig, err := jwtConfigFromP12KeyFile(p12KeyPath, configs.ServiceAccountEmail)
-		if err != nil {
-			failf("Failed to create auth config from p12 key file, error: %s", err)
-		}
-		jwtConfig = authConfig
+	jsonKeyPth, isRemote, err := prepareKeyPath(configs.JSONKeyPath)
+	if err != nil {
+		failf("Failed to prepare key path (%s), error: %s", configs.JSONKeyPath, err)
 	}
+
+	if isRemote {
+		tmpDir, err := pathutil.NormalizedOSTempDirPath("__google-play-deploy__")
+		if err != nil {
+			failf("Failed to create tmp dir, error: %s", err)
+		}
+
+		jsonKeySource := jsonKeyPth
+		jsonKeyPth = filepath.Join(tmpDir, "key.json")
+		if err := downloadFile(jsonKeySource, jsonKeyPth); err != nil {
+			failf("Failed to download json key file, error: %s", err)
+		}
+	}
+
+	authConfig, err := jwtConfigFromJSONKeyFile(jsonKeyPth)
+	if err != nil {
+		failf("Failed to create auth config from json key file, error: %s", err)
+	}
+	jwtConfig = authConfig
 
 	client := jwtConfig.Client(oauth2.NoContext)
 	service, err := androidpublisher.New(client)

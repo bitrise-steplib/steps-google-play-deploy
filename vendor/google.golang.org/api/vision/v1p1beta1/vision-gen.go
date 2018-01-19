@@ -261,21 +261,21 @@ type Color struct {
 }
 
 func (s *Color) MarshalJSON() ([]byte, error) {
-	type noMethod Color
-	raw := noMethod(*s)
+	type NoMethod Color
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *Color) UnmarshalJSON(data []byte) error {
-	type noMethod Color
+	type NoMethod Color
 	var s1 struct {
 		Alpha gensupport.JSONFloat64 `json:"alpha"`
 		Blue  gensupport.JSONFloat64 `json:"blue"`
 		Green gensupport.JSONFloat64 `json:"green"`
 		Red   gensupport.JSONFloat64 `json:"red"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -317,8 +317,8 @@ type GoogleCloudVisionV1p1beta1AnnotateImageRequest struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1AnnotateImageRequest) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1AnnotateImageRequest
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1AnnotateImageRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -392,8 +392,8 @@ type GoogleCloudVisionV1p1beta1AnnotateImageResponse struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1AnnotateImageResponse) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1AnnotateImageResponse
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1AnnotateImageResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -421,8 +421,8 @@ type GoogleCloudVisionV1p1beta1BatchAnnotateImagesRequest struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1BatchAnnotateImagesRequest) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1BatchAnnotateImagesRequest
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1BatchAnnotateImagesRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -455,8 +455,8 @@ type GoogleCloudVisionV1p1beta1BatchAnnotateImagesResponse struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1BatchAnnotateImagesResponse) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1BatchAnnotateImagesResponse
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1BatchAnnotateImagesResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -482,15 +482,20 @@ type GoogleCloudVisionV1p1beta1Block struct {
 	// is
 	// read in the 'natural' orientation.
 	// For example:
-	//   * when the text is horizontal it might look like:
-	//      0----1
-	//      |    |
-	//      3----2
-	//   * when it's rotated 180 degrees around the top-left corner it
+	//
+	// * when the text is horizontal it might look like:
+	//
+	//         0----1
+	//         |    |
+	//         3----2
+	//
+	// * when it's rotated 180 degrees around the top-left corner it
 	// becomes:
-	//      2----3
-	//      |    |
-	//      1----0
+	//
+	//         2----3
+	//         |    |
+	//         1----0
+	//
 	//   and the vertice order will still be (0, 1, 2, 3).
 	BoundingBox *GoogleCloudVisionV1p1beta1BoundingPoly `json:"boundingBox,omitempty"`
 
@@ -522,18 +527,18 @@ type GoogleCloudVisionV1p1beta1Block struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1Block) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1Block
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1Block
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1Block) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1Block
+	type NoMethod GoogleCloudVisionV1p1beta1Block
 	var s1 struct {
 		Confidence gensupport.JSONFloat64 `json:"confidence"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -565,8 +570,8 @@ type GoogleCloudVisionV1p1beta1BoundingPoly struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1BoundingPoly) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1BoundingPoly
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1BoundingPoly
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -603,19 +608,19 @@ type GoogleCloudVisionV1p1beta1ColorInfo struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1ColorInfo) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1ColorInfo
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1ColorInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1ColorInfo) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1ColorInfo
+	type NoMethod GoogleCloudVisionV1p1beta1ColorInfo
 	var s1 struct {
 		PixelFraction gensupport.JSONFloat64 `json:"pixelFraction"`
 		Score         gensupport.JSONFloat64 `json:"score"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -658,19 +663,19 @@ type GoogleCloudVisionV1p1beta1CropHint struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1CropHint) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1CropHint
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1CropHint
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1CropHint) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1CropHint
+	type NoMethod GoogleCloudVisionV1p1beta1CropHint
 	var s1 struct {
 		Confidence         gensupport.JSONFloat64 `json:"confidence"`
 		ImportanceFraction gensupport.JSONFloat64 `json:"importanceFraction"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -703,8 +708,8 @@ type GoogleCloudVisionV1p1beta1CropHintsAnnotation struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1CropHintsAnnotation) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1CropHintsAnnotation
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1CropHintsAnnotation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -742,8 +747,8 @@ type GoogleCloudVisionV1p1beta1CropHintsParams struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1CropHintsParams) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1CropHintsParams
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1CropHintsParams
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -771,8 +776,8 @@ type GoogleCloudVisionV1p1beta1DominantColorsAnnotation struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1DominantColorsAnnotation) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1DominantColorsAnnotation
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1DominantColorsAnnotation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -784,7 +789,8 @@ type GoogleCloudVisionV1p1beta1EntityAnnotation struct {
 	// for `LABEL_DETECTION` features.
 	BoundingPoly *GoogleCloudVisionV1p1beta1BoundingPoly `json:"boundingPoly,omitempty"`
 
-	// Confidence: The accuracy of the entity detection in an image.
+	// Confidence: **Deprecated. Use `score` instead.**
+	// The accuracy of the entity detection in an image.
 	// For example, for an image in which the "Eiffel Tower" entity is
 	// detected,
 	// this field represents the confidence that there is a tower in the
@@ -855,20 +861,20 @@ type GoogleCloudVisionV1p1beta1EntityAnnotation struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1EntityAnnotation) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1EntityAnnotation
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1EntityAnnotation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1EntityAnnotation) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1EntityAnnotation
+	type NoMethod GoogleCloudVisionV1p1beta1EntityAnnotation
 	var s1 struct {
 		Confidence gensupport.JSONFloat64 `json:"confidence"`
 		Score      gensupport.JSONFloat64 `json:"score"`
 		Topicality gensupport.JSONFloat64 `json:"topicality"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1065,22 +1071,22 @@ type GoogleCloudVisionV1p1beta1FaceAnnotation struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1FaceAnnotation) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1FaceAnnotation
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1FaceAnnotation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1FaceAnnotation) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1FaceAnnotation
+	type NoMethod GoogleCloudVisionV1p1beta1FaceAnnotation
 	var s1 struct {
 		DetectionConfidence   gensupport.JSONFloat64 `json:"detectionConfidence"`
 		LandmarkingConfidence gensupport.JSONFloat64 `json:"landmarkingConfidence"`
 		PanAngle              gensupport.JSONFloat64 `json:"panAngle"`
 		RollAngle             gensupport.JSONFloat64 `json:"rollAngle"`
 		TiltAngle             gensupport.JSONFloat64 `json:"tiltAngle"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1157,21 +1163,20 @@ type GoogleCloudVisionV1p1beta1FaceAnnotationLandmark struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1FaceAnnotationLandmark) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1FaceAnnotationLandmark
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1FaceAnnotationLandmark
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// GoogleCloudVisionV1p1beta1Feature: Users describe the type of Google
-// Cloud Vision API tasks to perform over
-// images by using *Feature*s. Each Feature indicates a type of
-// image
-// detection task to perform. Features encode the Cloud Vision
-// API
-// vertical to operate on and the number of top-scoring results to
-// return.
+// GoogleCloudVisionV1p1beta1Feature: The type of Google Cloud Vision
+// API detection to perform, and the maximum
+// number of results to return for that type. Multiple `Feature` objects
+// can
+// be specified in the `features` list.
 type GoogleCloudVisionV1p1beta1Feature struct {
-	// MaxResults: Maximum number of results of this type.
+	// MaxResults: Maximum number of results of this type. Does not apply
+	// to
+	// `TEXT_DETECTION`, `DOCUMENT_TEXT_DETECTION`, or `CROP_HINTS`.
 	MaxResults int64 `json:"maxResults,omitempty"`
 
 	// Model: Model to use for the feature.
@@ -1188,13 +1193,19 @@ type GoogleCloudVisionV1p1beta1Feature struct {
 	//   "LANDMARK_DETECTION" - Run landmark detection.
 	//   "LOGO_DETECTION" - Run logo detection.
 	//   "LABEL_DETECTION" - Run label detection.
-	//   "TEXT_DETECTION" - Run OCR.
+	//   "TEXT_DETECTION" - Run text detection / optical character
+	// recognition (OCR). Text detection
+	// is optimized for areas of text within a larger image; if the image
+	// is
+	// a document, use `DOCUMENT_TEXT_DETECTION` instead.
 	//   "DOCUMENT_TEXT_DETECTION" - Run dense text document OCR. Takes
 	// precedence when both
-	// DOCUMENT_TEXT_DETECTION and TEXT_DETECTION are present.
-	//   "SAFE_SEARCH_DETECTION" - Run computer vision models to compute
-	// image safe-search properties.
-	//   "IMAGE_PROPERTIES" - Compute a set of image properties, such as the
+	// `DOCUMENT_TEXT_DETECTION` and `TEXT_DETECTION` are present.
+	//   "SAFE_SEARCH_DETECTION" - Run Safe Search to detect potentially
+	// unsafe
+	// or undesirable content.
+	//   "IMAGE_PROPERTIES" - Compute a set of image properties, such as
+	// the
 	// image's dominant colors.
 	//   "CROP_HINTS" - Run crop hints.
 	//   "WEB_DETECTION" - Run web detection.
@@ -1218,8 +1229,8 @@ type GoogleCloudVisionV1p1beta1Feature struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1Feature) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1Feature
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1Feature
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1227,15 +1238,16 @@ func (s *GoogleCloudVisionV1p1beta1Feature) MarshalJSON() ([]byte, error) {
 // Vision API tasks over.
 type GoogleCloudVisionV1p1beta1Image struct {
 	// Content: Image content, represented as a stream of bytes.
-	// Note: as with all `bytes` fields, protobuffers use a pure
+	// Note: As with all `bytes` fields, protobuffers use a pure
 	// binary
 	// representation, whereas JSON representations use base64.
 	Content string `json:"content,omitempty"`
 
-	// Source: Google Cloud Storage image location. If both `content` and
-	// `source`
-	// are provided for an image, `content` takes precedence and is
-	// used to perform the image annotation request.
+	// Source: Google Cloud Storage image location, or publicly-accessible
+	// image
+	// URL. If both `content` and `source` are provided for an image,
+	// `content`
+	// takes precedence and is used to perform the image annotation request.
 	Source *GoogleCloudVisionV1p1beta1ImageSource `json:"source,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Content") to
@@ -1256,8 +1268,8 @@ type GoogleCloudVisionV1p1beta1Image struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1Image) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1Image
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1Image
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1310,8 +1322,8 @@ type GoogleCloudVisionV1p1beta1ImageContext struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1ImageContext) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1ImageContext
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1ImageContext
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1340,39 +1352,48 @@ type GoogleCloudVisionV1p1beta1ImageProperties struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1ImageProperties) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1ImageProperties
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1ImageProperties
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // GoogleCloudVisionV1p1beta1ImageSource: External image source (Google
-// Cloud Storage image location).
+// Cloud Storage or web URL image location).
 type GoogleCloudVisionV1p1beta1ImageSource struct {
-	// GcsImageUri: NOTE: For new code `image_uri` below is
-	// preferred.
-	// Google Cloud Storage image URI, which must be in the following
-	// form:
-	// `gs://bucket_name/object_name` (for details, see
+	// GcsImageUri: **Use `image_uri` instead.**
+	//
+	// The Google Cloud Storage  URI of the
+	// form
+	// `gs://bucket_name/object_name`. Object versioning is not supported.
+	// See
 	// [Google Cloud Storage
 	// Request
-	// URIs](https://cloud.google.com/storage/docs/reference-uris)).
-	//
-	// NOTE: Cloud Storage object versioning is not supported.
+	// URIs](https://cloud.google.com/storage/docs/reference-uris) for more
+	// info.
 	GcsImageUri string `json:"gcsImageUri,omitempty"`
 
-	// ImageUri: Image URI which supports:
-	// 1) Google Cloud Storage image URI, which must be in the following
-	// form:
-	// `gs://bucket_name/object_name` (for details, see
-	// [Google Cloud Storage
-	// Request
-	// URIs](https://cloud.google.com/storage/docs/reference-uris)).
+	// ImageUri: The URI of the source image. Can be either:
 	//
-	// NOTE: Cloud Storage object versioning is not supported.
-	// 2) Publicly accessible image HTTP/HTTPS URL.
-	// This is preferred over the legacy `gcs_image_uri` above. When
-	// both
-	// `gcs_image_uri` and `image_uri` are specified, `image_uri`
+	// 1. A Google Cloud Storage URI of the form
+	//    `gs://bucket_name/object_name`. Object versioning is not
+	// supported. See
+	//    [Google Cloud Storage Request
+	//    URIs](https://cloud.google.com/storage/docs/reference-uris) for
+	// more
+	//    info.
+	//
+	// 2. A publicly-accessible image HTTP/HTTPS URL. When fetching images
+	// from
+	//    HTTP/HTTPS URLs, Google cannot guarantee that the request will be
+	//    completed. Your request may fail if the specified host denies the
+	//    request (e.g. due to request throttling or DOS prevention), or if
+	// Google
+	//    throttles requests to the site for abuse prevention. You should
+	// not
+	//    depend on externally-hosted images for production
+	// applications.
+	//
+	// When both `gcs_image_uri` and `image_uri` are specified, `image_uri`
 	// takes
 	// precedence.
 	ImageUri string `json:"imageUri,omitempty"`
@@ -1395,8 +1416,8 @@ type GoogleCloudVisionV1p1beta1ImageSource struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1ImageSource) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1ImageSource
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1ImageSource
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1427,8 +1448,8 @@ type GoogleCloudVisionV1p1beta1LatLongRect struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1LatLongRect) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1LatLongRect
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1LatLongRect
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1456,8 +1477,8 @@ type GoogleCloudVisionV1p1beta1LocationInfo struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1LocationInfo) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1LocationInfo
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1LocationInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1496,18 +1517,18 @@ type GoogleCloudVisionV1p1beta1Page struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1Page) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1Page
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1Page
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1Page) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1Page
+	type NoMethod GoogleCloudVisionV1p1beta1Page
 	var s1 struct {
 		Confidence gensupport.JSONFloat64 `json:"confidence"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1567,18 +1588,18 @@ type GoogleCloudVisionV1p1beta1Paragraph struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1Paragraph) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1Paragraph
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1Paragraph
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1Paragraph) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1Paragraph
+	type NoMethod GoogleCloudVisionV1p1beta1Paragraph
 	var s1 struct {
 		Confidence gensupport.JSONFloat64 `json:"confidence"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1618,20 +1639,20 @@ type GoogleCloudVisionV1p1beta1Position struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1Position) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1Position
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1Position
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1Position) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1Position
+	type NoMethod GoogleCloudVisionV1p1beta1Position
 	var s1 struct {
 		X gensupport.JSONFloat64 `json:"x"`
 		Y gensupport.JSONFloat64 `json:"y"`
 		Z gensupport.JSONFloat64 `json:"z"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1671,8 +1692,8 @@ type GoogleCloudVisionV1p1beta1Property struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1Property) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1Property
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1Property
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1792,8 +1813,8 @@ type GoogleCloudVisionV1p1beta1SafeSearchAnnotation struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1SafeSearchAnnotation) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1SafeSearchAnnotation
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1SafeSearchAnnotation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1848,18 +1869,18 @@ type GoogleCloudVisionV1p1beta1Symbol struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1Symbol) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1Symbol
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1Symbol
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1Symbol) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1Symbol
+	type NoMethod GoogleCloudVisionV1p1beta1Symbol
 	var s1 struct {
 		Confidence gensupport.JSONFloat64 `json:"confidence"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1904,8 +1925,8 @@ type GoogleCloudVisionV1p1beta1TextAnnotation struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1TextAnnotation) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1TextAnnotation
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1TextAnnotation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1946,8 +1967,8 @@ type GoogleCloudVisionV1p1beta1TextAnnotationDetectedBreak struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1TextAnnotationDetectedBreak) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1TextAnnotationDetectedBreak
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1TextAnnotationDetectedBreak
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1982,18 +2003,18 @@ type GoogleCloudVisionV1p1beta1TextAnnotationDetectedLanguage struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1TextAnnotationDetectedLanguage) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1TextAnnotationDetectedLanguage
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1TextAnnotationDetectedLanguage
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1TextAnnotationDetectedLanguage) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1TextAnnotationDetectedLanguage
+	type NoMethod GoogleCloudVisionV1p1beta1TextAnnotationDetectedLanguage
 	var s1 struct {
 		Confidence gensupport.JSONFloat64 `json:"confidence"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -2029,8 +2050,8 @@ type GoogleCloudVisionV1p1beta1TextAnnotationTextProperty struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1TextAnnotationTextProperty) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1TextAnnotationTextProperty
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1TextAnnotationTextProperty
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2063,8 +2084,8 @@ type GoogleCloudVisionV1p1beta1Vertex struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1Vertex) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1Vertex
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1Vertex
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2115,8 +2136,8 @@ type GoogleCloudVisionV1p1beta1WebDetection struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1WebDetection) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1WebDetection
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1WebDetection
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2146,8 +2167,8 @@ type GoogleCloudVisionV1p1beta1WebDetectionParams struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1WebDetectionParams) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1WebDetectionParams
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1WebDetectionParams
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2182,18 +2203,18 @@ type GoogleCloudVisionV1p1beta1WebDetectionWebEntity struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1WebDetectionWebEntity) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1WebDetectionWebEntity
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1WebDetectionWebEntity
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1WebDetectionWebEntity) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1WebDetectionWebEntity
+	type NoMethod GoogleCloudVisionV1p1beta1WebDetectionWebEntity
 	var s1 struct {
 		Score gensupport.JSONFloat64 `json:"score"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -2228,18 +2249,18 @@ type GoogleCloudVisionV1p1beta1WebDetectionWebImage struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1WebDetectionWebImage) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1WebDetectionWebImage
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1WebDetectionWebImage
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1WebDetectionWebImage) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1WebDetectionWebImage
+	type NoMethod GoogleCloudVisionV1p1beta1WebDetectionWebImage
 	var s1 struct {
 		Score gensupport.JSONFloat64 `json:"score"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -2278,8 +2299,8 @@ type GoogleCloudVisionV1p1beta1WebDetectionWebLabel struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1WebDetectionWebLabel) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1WebDetectionWebLabel
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1WebDetectionWebLabel
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2326,18 +2347,18 @@ type GoogleCloudVisionV1p1beta1WebDetectionWebPage struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1WebDetectionWebPage) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1WebDetectionWebPage
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1WebDetectionWebPage
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1WebDetectionWebPage) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1WebDetectionWebPage
+	type NoMethod GoogleCloudVisionV1p1beta1WebDetectionWebPage
 	var s1 struct {
 		Score gensupport.JSONFloat64 `json:"score"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -2396,18 +2417,18 @@ type GoogleCloudVisionV1p1beta1Word struct {
 }
 
 func (s *GoogleCloudVisionV1p1beta1Word) MarshalJSON() ([]byte, error) {
-	type noMethod GoogleCloudVisionV1p1beta1Word
-	raw := noMethod(*s)
+	type NoMethod GoogleCloudVisionV1p1beta1Word
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *GoogleCloudVisionV1p1beta1Word) UnmarshalJSON(data []byte) error {
-	type noMethod GoogleCloudVisionV1p1beta1Word
+	type NoMethod GoogleCloudVisionV1p1beta1Word
 	var s1 struct {
 		Confidence gensupport.JSONFloat64 `json:"confidence"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -2451,19 +2472,19 @@ type LatLng struct {
 }
 
 func (s *LatLng) MarshalJSON() ([]byte, error) {
-	type noMethod LatLng
-	raw := noMethod(*s)
+	type NoMethod LatLng
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *LatLng) UnmarshalJSON(data []byte) error {
-	type noMethod LatLng
+	type NoMethod LatLng
 	var s1 struct {
 		Latitude  gensupport.JSONFloat64 `json:"latitude"`
 		Longitude gensupport.JSONFloat64 `json:"longitude"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -2586,8 +2607,8 @@ type Status struct {
 }
 
 func (s *Status) MarshalJSON() ([]byte, error) {
-	type noMethod Status
-	raw := noMethod(*s)
+	type NoMethod Status
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2688,7 +2709,7 @@ func (c *ImagesAnnotateCall) Do(opts ...googleapi.CallOption) (*GoogleCloudVisio
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
