@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.4.0)
+## Changelog (Current version: 1.4.1)
 
 -----------------
+
+### 1.4.1 (2018 Jan 19)
+
+* [72c9d4e] prepare for 1.4.1
+* [8b8b5c2] removed deprecated inputs (#30)
 
 ### 1.4.0 (2018 Jan 19)
 
