@@ -1,6 +1,12 @@
-## Changelog (Current version: 1.3.3)
+## Changelog (Current version: 1.4.0)
 
 -----------------
+
+### 1.4.0 (2018 Jan 19)
+
+* [23b14a6] prepare for 1.4.0
+* [9daaea0] Fix spell (#28)
+* [18a07fb] Update (#29)
 
 ### 1.3.3 (2017 Nov 28)
 
@@ -87,4 +93,4 @@
 
 -----------------
 
-Updated: 2017 Nov 28
+Updated: 2018 Jan 19
