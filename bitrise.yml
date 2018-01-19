@@ -5,14 +5,24 @@ app:
   envs:
   - RELEASE_VERSION: 1.3.3
 
-  - SAMPLE_APP_REPOSITORY_URL: https://github.com/bitrise-samples/sample-apps-android-abi-split.git
+  - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-android-realmtasks.git
+  - BRANCH: master
+
   - GRADLE_TASK: assembleRelease
   - GRADLEW_PATH: "./gradlew"
-  - PACKAGE_NAME: "com.bitrise.apkslit"
+  - PACKAGE_NAME: "io.bitrise.realmtasks"
 
   # define these in your .bitrise.secrets.yml
   - SERVICE_ACCOUNT_JSON_KEY_PATH: $SERVICE_ACCOUNT_JSON_KEY_PATH
   - VERSION_CODE: "$VERSION_CODE"
+  - TRACK: $TRACK
+
+  - BITRISEIO_GOOGLE_SERVICES_JSON_URL: $BITRISEIO_GOOGLE_SERVICES_JSON_URL
+
+  - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
+  - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
+  - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
+  - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
 
 workflows:
   test:
@@ -23,7 +33,7 @@ workflows:
     - script:
         inputs:
         - content: |-
-            #!/bin/bash
+            #!/usr/bin/env bash
             set -ex
             rm -rf ./_tmp
     - change-workdir:
@@ -32,15 +42,28 @@ workflows:
         inputs:
         - path: ./_tmp
         - is_create_path: true
-    - git-clone:
-        run_if: true
+    - script:
         inputs:
-        - repository_url: $SAMPLE_APP_REPOSITORY_URL
-        - branch: "master"
-        - commit: ""
-        - tag: ""
-        - pull_request_id: ""
-        - clone_into_dir: "./"
+        - content: |-
+            #!/usr/bin/env bash
+            if [[ -z "${SAMPLE_APP_URL}" ]]; then
+              echo "error: there is no SAMPLE_APP_URL env var specified"
+              exit 1
+            elif [[ -z "${COMMIT}" && -z "${BRANCH}" ]]; then
+              echo "error: can't checkout: there is no BRANCH or COMMIT env var specified"
+              exit 1
+            fi
+            git init
+            git remote add origin "${SAMPLE_APP_URL}"
+            git fetch || exit 1
+            [[ -n "${COMMIT}" ]] && git checkout "${COMMIT}" || git checkout "${BRANCH}"
+    - install-missing-android-tools:
+    - script:
+        inputs:
+        - content: |-
+            #!/usr/bin/env bash
+            set -ex
+            curl -o "./app/google-services.json" "$BITRISEIO_GOOGLE_SERVICES_JSON_URL"
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: "./app/build.gradle"
@@ -58,6 +81,7 @@ workflows:
         - service_account_json_key_path: $SERVICE_ACCOUNT_JSON_KEY_PATH
         - package_name: $PACKAGE_NAME
         - apk_path: $BITRISE_SIGNED_APK_PATH
+        - track: $TRACK
 
   go-tests:
     before_run:
