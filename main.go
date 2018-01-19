@@ -44,8 +44,8 @@ type ConfigsModel struct {
 	Track                   string
 	UserFraction            string
 	WhatsnewsDir            string
-	UntrackBlockingVersions string
 	MappingFile             string
+	UntrackBlockingVersions string
 }
 
 func createConfigsModelFromEnvs() ConfigsModel {
@@ -56,8 +56,8 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		Track:                   os.Getenv("track"),
 		UserFraction:            os.Getenv("user_fraction"),
 		WhatsnewsDir:            os.Getenv("whatsnews_dir"),
-		UntrackBlockingVersions: os.Getenv("untrack_blocking_versions"),
 		MappingFile:             os.Getenv("mapping_file"),
+		UntrackBlockingVersions: os.Getenv("untrack_blocking_versions"),
 	}
 }
 
@@ -116,8 +116,8 @@ func (configs ConfigsModel) print() {
 	log.Printf("- Track: %s", configs.Track)
 	log.Printf("- UserFraction: %s", configs.UserFraction)
 	log.Printf("- WhatsnewsDir: %s", configs.WhatsnewsDir)
-	log.Printf("- UntrackBlockingVersions: %s", configs.UntrackBlockingVersions)
 	log.Printf("- MappingFile: %s", configs.MappingFile)
+	log.Printf("- UntrackBlockingVersions: %s", configs.UntrackBlockingVersions)
 }
 
 func (configs ConfigsModel) validate() error {
@@ -130,7 +130,7 @@ func (configs ConfigsModel) validate() error {
 		if exist, err := pathutil.IsPathExists(pth); err != nil {
 			return fmt.Errorf("Failed to check if JSONKeyPath exist at: %s, error: %s", pth, err)
 		} else if !exist {
-			return fmt.Errorf("JSONKeyPath not exist at: %s", pth)
+			return errors.New("JSONKeyPath not exist at: " + pth)
 		}
 	}
 
@@ -146,12 +146,12 @@ func (configs ConfigsModel) validate() error {
 		if exist, err := pathutil.IsPathExists(apkPath); err != nil {
 			return fmt.Errorf("Failed to check if APK exist at: %s, error: %s", apkPath, err)
 		} else if !exist {
-			return fmt.Errorf("APK not exist at: %s", apkPath)
+			return errors.New("APK not exist at: " + apkPath)
 		}
 	}
 
 	if err := input.ValidateIfNotEmpty(configs.Track); err != nil {
-		return errors.New("issue with input Track: " + err.Error())
+		return errors.New("Issue with input Track: " + err.Error())
 	}
 	if configs.Track == rolloutTrackName {
 		if configs.UserFraction == "" {
@@ -163,7 +163,7 @@ func (configs ConfigsModel) validate() error {
 		if exist, err := pathutil.IsPathExists(configs.WhatsnewsDir); err != nil {
 			return fmt.Errorf("Failed to check if WhatsnewsDir exist at: %s, error: %s", configs.WhatsnewsDir, err)
 		} else if !exist {
-			return fmt.Errorf("WhatsnewsDir not exist at: %s", configs.WhatsnewsDir)
+			return errors.New("WhatsnewsDir not exist at: " + configs.WhatsnewsDir)
 		}
 	}
 
@@ -171,8 +171,12 @@ func (configs ConfigsModel) validate() error {
 		if exist, err := pathutil.IsPathExists(configs.MappingFile); err != nil {
 			return fmt.Errorf("Failed to check if MappingFile exist at: %s, error: %s", configs.MappingFile, err)
 		} else if !exist {
-			return fmt.Errorf("MappingFile not exist at: %s", configs.MappingFile)
+			return errors.New("MappingFile not exist at: " + configs.MappingFile)
 		}
+	}
+
+	if err := input.ValidateWithOptions(configs.UntrackBlockingVersions, "true", "false"); err != nil {
+		return errors.New("issue with input UntrackBlockingVersions: " + err.Error())
 	}
 
 	return nil
