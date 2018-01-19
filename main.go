@@ -508,12 +508,6 @@ func main() {
 		untrackApks = false
 	}
 
-	if untrackApks && len(apkPaths) > 1 {
-		fmt.Println()
-		log.Warnf("UntrackBlockingVersions is set, but deploying multiple apks, deactivateing blocking versions is not supported, in this case")
-		untrackApks = false
-	}
-
 	anyTrackUpdated := false
 
 	if untrackApks {
