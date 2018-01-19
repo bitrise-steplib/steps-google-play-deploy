@@ -306,8 +306,8 @@ type Apk struct {
 }
 
 func (s *Apk) MarshalJSON() ([]byte, error) {
-	type noMethod Apk
-	raw := noMethod(*s)
+	type NoMethod Apk
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -339,8 +339,8 @@ type ApkBinary struct {
 }
 
 func (s *ApkBinary) MarshalJSON() ([]byte, error) {
-	type noMethod ApkBinary
-	raw := noMethod(*s)
+	type NoMethod ApkBinary
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -373,8 +373,8 @@ type ApkListing struct {
 }
 
 func (s *ApkListing) MarshalJSON() ([]byte, error) {
-	type noMethod ApkListing
-	raw := noMethod(*s)
+	type NoMethod ApkListing
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -407,8 +407,8 @@ type ApkListingsListResponse struct {
 }
 
 func (s *ApkListingsListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ApkListingsListResponse
-	raw := noMethod(*s)
+	type NoMethod ApkListingsListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -436,8 +436,8 @@ type ApksAddExternallyHostedRequest struct {
 }
 
 func (s *ApksAddExternallyHostedRequest) MarshalJSON() ([]byte, error) {
-	type noMethod ApksAddExternallyHostedRequest
-	raw := noMethod(*s)
+	type NoMethod ApksAddExternallyHostedRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -469,8 +469,8 @@ type ApksAddExternallyHostedResponse struct {
 }
 
 func (s *ApksAddExternallyHostedResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ApksAddExternallyHostedResponse
-	raw := noMethod(*s)
+	type NoMethod ApksAddExternallyHostedResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -503,8 +503,8 @@ type ApksListResponse struct {
 }
 
 func (s *ApksListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ApksListResponse
-	raw := noMethod(*s)
+	type NoMethod ApksListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -544,8 +544,8 @@ type AppDetails struct {
 }
 
 func (s *AppDetails) MarshalJSON() ([]byte, error) {
-	type noMethod AppDetails
-	raw := noMethod(*s)
+	type NoMethod AppDetails
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -583,8 +583,8 @@ type AppEdit struct {
 }
 
 func (s *AppEdit) MarshalJSON() ([]byte, error) {
-	type noMethod AppEdit
-	raw := noMethod(*s)
+	type NoMethod AppEdit
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -614,8 +614,8 @@ type Comment struct {
 }
 
 func (s *Comment) MarshalJSON() ([]byte, error) {
-	type noMethod Comment
-	raw := noMethod(*s)
+	type NoMethod Comment
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -642,8 +642,8 @@ type DeobfuscationFile struct {
 }
 
 func (s *DeobfuscationFile) MarshalJSON() ([]byte, error) {
-	type noMethod DeobfuscationFile
-	raw := noMethod(*s)
+	type NoMethod DeobfuscationFile
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -673,8 +673,8 @@ type DeobfuscationFilesUploadResponse struct {
 }
 
 func (s *DeobfuscationFilesUploadResponse) MarshalJSON() ([]byte, error) {
-	type noMethod DeobfuscationFilesUploadResponse
-	raw := noMethod(*s)
+	type NoMethod DeobfuscationFilesUploadResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -703,8 +703,8 @@ type DeveloperComment struct {
 }
 
 func (s *DeveloperComment) MarshalJSON() ([]byte, error) {
-	type noMethod DeveloperComment
-	raw := noMethod(*s)
+	type NoMethod DeveloperComment
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -761,8 +761,8 @@ type DeviceMetadata struct {
 }
 
 func (s *DeviceMetadata) MarshalJSON() ([]byte, error) {
-	type noMethod DeviceMetadata
-	raw := noMethod(*s)
+	type NoMethod DeviceMetadata
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -803,8 +803,8 @@ type Entitlement struct {
 }
 
 func (s *Entitlement) MarshalJSON() ([]byte, error) {
-	type noMethod Entitlement
-	raw := noMethod(*s)
+	type NoMethod Entitlement
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -837,8 +837,8 @@ type EntitlementsListResponse struct {
 }
 
 func (s *EntitlementsListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod EntitlementsListResponse
-	raw := noMethod(*s)
+	type NoMethod EntitlementsListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -875,8 +875,8 @@ type ExpansionFile struct {
 }
 
 func (s *ExpansionFile) MarshalJSON() ([]byte, error) {
-	type noMethod ExpansionFile
-	raw := noMethod(*s)
+	type NoMethod ExpansionFile
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -905,8 +905,8 @@ type ExpansionFilesUploadResponse struct {
 }
 
 func (s *ExpansionFilesUploadResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ExpansionFilesUploadResponse
-	raw := noMethod(*s)
+	type NoMethod ExpansionFilesUploadResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -987,8 +987,8 @@ type ExternallyHostedApk struct {
 }
 
 func (s *ExternallyHostedApk) MarshalJSON() ([]byte, error) {
-	type noMethod ExternallyHostedApk
-	raw := noMethod(*s)
+	type NoMethod ExternallyHostedApk
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1019,8 +1019,8 @@ type ExternallyHostedApkUsesPermission struct {
 }
 
 func (s *ExternallyHostedApkUsesPermission) MarshalJSON() ([]byte, error) {
-	type noMethod ExternallyHostedApkUsesPermission
-	raw := noMethod(*s)
+	type NoMethod ExternallyHostedApkUsesPermission
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1052,8 +1052,8 @@ type Image struct {
 }
 
 func (s *Image) MarshalJSON() ([]byte, error) {
-	type noMethod Image
-	raw := noMethod(*s)
+	type NoMethod Image
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1082,8 +1082,8 @@ type ImagesDeleteAllResponse struct {
 }
 
 func (s *ImagesDeleteAllResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ImagesDeleteAllResponse
-	raw := noMethod(*s)
+	type NoMethod ImagesDeleteAllResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1112,8 +1112,8 @@ type ImagesListResponse struct {
 }
 
 func (s *ImagesListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ImagesListResponse
-	raw := noMethod(*s)
+	type NoMethod ImagesListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1142,8 +1142,8 @@ type ImagesUploadResponse struct {
 }
 
 func (s *ImagesUploadResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ImagesUploadResponse
-	raw := noMethod(*s)
+	type NoMethod ImagesUploadResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1213,8 +1213,8 @@ type InAppProduct struct {
 }
 
 func (s *InAppProduct) MarshalJSON() ([]byte, error) {
-	type noMethod InAppProduct
-	raw := noMethod(*s)
+	type NoMethod InAppProduct
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1241,8 +1241,8 @@ type InAppProductListing struct {
 }
 
 func (s *InAppProductListing) MarshalJSON() ([]byte, error) {
-	type noMethod InAppProductListing
-	raw := noMethod(*s)
+	type NoMethod InAppProductListing
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1279,8 +1279,8 @@ type InappproductsListResponse struct {
 }
 
 func (s *InappproductsListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod InappproductsListResponse
-	raw := noMethod(*s)
+	type NoMethod InappproductsListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1326,8 +1326,8 @@ type Listing struct {
 }
 
 func (s *Listing) MarshalJSON() ([]byte, error) {
-	type noMethod Listing
-	raw := noMethod(*s)
+	type NoMethod Listing
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1360,8 +1360,8 @@ type ListingsListResponse struct {
 }
 
 func (s *ListingsListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListingsListResponse
-	raw := noMethod(*s)
+	type NoMethod ListingsListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1391,8 +1391,8 @@ type MonthDay struct {
 }
 
 func (s *MonthDay) MarshalJSON() ([]byte, error) {
-	type noMethod MonthDay
-	raw := noMethod(*s)
+	type NoMethod MonthDay
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1421,8 +1421,8 @@ type PageInfo struct {
 }
 
 func (s *PageInfo) MarshalJSON() ([]byte, error) {
-	type noMethod PageInfo
-	raw := noMethod(*s)
+	type NoMethod PageInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1452,8 +1452,8 @@ type Price struct {
 }
 
 func (s *Price) MarshalJSON() ([]byte, error) {
-	type noMethod Price
-	raw := noMethod(*s)
+	type NoMethod Price
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1488,6 +1488,12 @@ type ProductPurchase struct {
 	// milliseconds since the epoch (Jan 1, 1970).
 	PurchaseTimeMillis int64 `json:"purchaseTimeMillis,omitempty,string"`
 
+	// PurchaseType: The type of purchase of the inapp product. This field
+	// is only set if this purchase was not made using the standard in-app
+	// billing flow. Possible values are:
+	// - Test (i.e. purchased from a license testing account)
+	PurchaseType int64 `json:"purchaseType,omitempty"`
+
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
 	googleapi.ServerResponse `json:"-"`
@@ -1511,8 +1517,8 @@ type ProductPurchase struct {
 }
 
 func (s *ProductPurchase) MarshalJSON() ([]byte, error) {
-	type noMethod ProductPurchase
-	raw := noMethod(*s)
+	type NoMethod ProductPurchase
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1544,8 +1550,8 @@ type Prorate struct {
 }
 
 func (s *Prorate) MarshalJSON() ([]byte, error) {
-	type noMethod Prorate
-	raw := noMethod(*s)
+	type NoMethod Prorate
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1581,8 +1587,8 @@ type Review struct {
 }
 
 func (s *Review) MarshalJSON() ([]byte, error) {
-	type noMethod Review
-	raw := noMethod(*s)
+	type NoMethod Review
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1611,8 +1617,8 @@ type ReviewReplyResult struct {
 }
 
 func (s *ReviewReplyResult) MarshalJSON() ([]byte, error) {
-	type noMethod ReviewReplyResult
-	raw := noMethod(*s)
+	type NoMethod ReviewReplyResult
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1645,8 +1651,8 @@ type ReviewsListResponse struct {
 }
 
 func (s *ReviewsListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ReviewsListResponse
-	raw := noMethod(*s)
+	type NoMethod ReviewsListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1674,8 +1680,8 @@ type ReviewsReplyRequest struct {
 }
 
 func (s *ReviewsReplyRequest) MarshalJSON() ([]byte, error) {
-	type noMethod ReviewsReplyRequest
-	raw := noMethod(*s)
+	type NoMethod ReviewsReplyRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1704,8 +1710,8 @@ type ReviewsReplyResponse struct {
 }
 
 func (s *ReviewsReplyResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ReviewsReplyResponse
-	raw := noMethod(*s)
+	type NoMethod ReviewsReplyResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1740,8 +1746,8 @@ type Season struct {
 }
 
 func (s *Season) MarshalJSON() ([]byte, error) {
-	type noMethod Season
-	raw := noMethod(*s)
+	type NoMethod Season
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1779,8 +1785,8 @@ type SubscriptionDeferralInfo struct {
 }
 
 func (s *SubscriptionDeferralInfo) MarshalJSON() ([]byte, error) {
-	type noMethod SubscriptionDeferralInfo
-	raw := noMethod(*s)
+	type NoMethod SubscriptionDeferralInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1797,6 +1803,7 @@ type SubscriptionPurchase struct {
 	// - Subscription was cancelled by the system, for example because of a
 	// billing problem
 	// - Subscription was replaced with a new subscription
+	// - Subscription was cancelled by the developer
 	CancelReason *int64 `json:"cancelReason,omitempty"`
 
 	// CountryCode: ISO 3166-1 alpha-2 billing country/region code of the
@@ -1814,6 +1821,20 @@ type SubscriptionPurchase struct {
 	// Kind: This kind represents a subscriptionPurchase object in the
 	// androidpublisher service.
 	Kind string `json:"kind,omitempty"`
+
+	// LinkedPurchaseToken: The purchase token of the originating purchase
+	// if this subscription is one of the following:
+	// - Re-signup of a canceled but non-lapsed subscription
+	// - Upgrade/downgrade from a previous subscription  For example,
+	// suppose a user originally signs up and you receive purchase token X,
+	// then the user cancels and goes through the resignup flow (before
+	// their subscription lapses) and you receive purchase token Y, and
+	// finally the user upgrades their subscription and you receive purchase
+	// token Z. If you call this API with purchase token Z, this field will
+	// be set to Y. If you call this API with purchase token Y, this field
+	// will be set to X. If you call this API with purchase token X, this
+	// field will not be set.
+	LinkedPurchaseToken string `json:"linkedPurchaseToken,omitempty"`
 
 	// OrderId: The order id of the latest recurring order associated with
 	// the purchase of the subscription.
@@ -1836,6 +1857,12 @@ type SubscriptionPurchase struct {
 	// For example, if the price is specified in British pounds sterling,
 	// price_currency_code is "GBP".
 	PriceCurrencyCode string `json:"priceCurrencyCode,omitempty"`
+
+	// PurchaseType: The type of purchase of the subscription. This field is
+	// only set if this purchase was not made using the standard in-app
+	// billing flow. Possible values are:
+	// - Test (i.e. purchased from a license testing account)
+	PurchaseType int64 `json:"purchaseType,omitempty"`
 
 	// StartTimeMillis: Time at which the subscription was granted, in
 	// milliseconds since the Epoch.
@@ -1868,8 +1895,8 @@ type SubscriptionPurchase struct {
 }
 
 func (s *SubscriptionPurchase) MarshalJSON() ([]byte, error) {
-	type noMethod SubscriptionPurchase
-	raw := noMethod(*s)
+	type NoMethod SubscriptionPurchase
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1896,8 +1923,8 @@ type SubscriptionPurchasesDeferRequest struct {
 }
 
 func (s *SubscriptionPurchasesDeferRequest) MarshalJSON() ([]byte, error) {
-	type noMethod SubscriptionPurchasesDeferRequest
-	raw := noMethod(*s)
+	type NoMethod SubscriptionPurchasesDeferRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1929,8 +1956,8 @@ type SubscriptionPurchasesDeferResponse struct {
 }
 
 func (s *SubscriptionPurchasesDeferResponse) MarshalJSON() ([]byte, error) {
-	type noMethod SubscriptionPurchasesDeferResponse
-	raw := noMethod(*s)
+	type NoMethod SubscriptionPurchasesDeferResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1961,8 +1988,8 @@ type Testers struct {
 }
 
 func (s *Testers) MarshalJSON() ([]byte, error) {
-	type noMethod Testers
-	raw := noMethod(*s)
+	type NoMethod Testers
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1989,8 +2016,8 @@ type Timestamp struct {
 }
 
 func (s *Timestamp) MarshalJSON() ([]byte, error) {
-	type noMethod Timestamp
-	raw := noMethod(*s)
+	type NoMethod Timestamp
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2017,12 +2044,14 @@ type TokenPagination struct {
 }
 
 func (s *TokenPagination) MarshalJSON() ([]byte, error) {
-	type noMethod TokenPagination
-	raw := noMethod(*s)
+	type NoMethod TokenPagination
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 type Track struct {
+	// Track: Identifier for this track. One of "alpha", "beta",
+	// "production" or "rollout".
 	Track string `json:"track,omitempty"`
 
 	UserFraction float64 `json:"userFraction,omitempty"`
@@ -2051,18 +2080,18 @@ type Track struct {
 }
 
 func (s *Track) MarshalJSON() ([]byte, error) {
-	type noMethod Track
-	raw := noMethod(*s)
+	type NoMethod Track
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *Track) UnmarshalJSON(data []byte) error {
-	type noMethod Track
+	type NoMethod Track
 	var s1 struct {
 		UserFraction gensupport.JSONFloat64 `json:"userFraction"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -2099,8 +2128,8 @@ type TracksListResponse struct {
 }
 
 func (s *TracksListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod TracksListResponse
-	raw := noMethod(*s)
+	type NoMethod TracksListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2174,8 +2203,8 @@ type UserComment struct {
 }
 
 func (s *UserComment) MarshalJSON() ([]byte, error) {
-	type noMethod UserComment
-	raw := noMethod(*s)
+	type NoMethod UserComment
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2217,8 +2246,8 @@ type VoidedPurchase struct {
 }
 
 func (s *VoidedPurchase) MarshalJSON() ([]byte, error) {
-	type noMethod VoidedPurchase
-	raw := noMethod(*s)
+	type NoMethod VoidedPurchase
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2251,8 +2280,8 @@ type VoidedPurchasesListResponse struct {
 }
 
 func (s *VoidedPurchasesListResponse) MarshalJSON() ([]byte, error) {
-	type noMethod VoidedPurchasesListResponse
-	raw := noMethod(*s)
+	type NoMethod VoidedPurchasesListResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2353,7 +2382,7 @@ func (c *EditsCommitCall) Do(opts ...googleapi.CallOption) (*AppEdit, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2609,7 +2638,7 @@ func (c *EditsGetCall) Do(opts ...googleapi.CallOption) (*AppEdit, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2747,7 +2776,7 @@ func (c *EditsInsertCall) Do(opts ...googleapi.CallOption) (*AppEdit, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2877,7 +2906,7 @@ func (c *EditsValidateCall) Do(opts ...googleapi.CallOption) (*AppEdit, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3275,7 +3304,7 @@ func (c *EditsApklistingsGetCall) Do(opts ...googleapi.CallOption) (*ApkListing,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3441,7 +3470,7 @@ func (c *EditsApklistingsListCall) Do(opts ...googleapi.CallOption) (*ApkListing
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3597,7 +3626,7 @@ func (c *EditsApklistingsPatchCall) Do(opts ...googleapi.CallOption) (*ApkListin
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3762,7 +3791,7 @@ func (c *EditsApklistingsUpdateCall) Do(opts ...googleapi.CallOption) (*ApkListi
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3924,7 +3953,7 @@ func (c *EditsApksAddexternallyhostedCall) Do(opts ...googleapi.CallOption) (*Ap
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4074,7 +4103,7 @@ func (c *EditsApksListCall) Do(opts ...googleapi.CallOption) (*ApksListResponse,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4273,7 +4302,7 @@ func (c *EditsApksUploadCall) Do(opts ...googleapi.CallOption) (*Apk, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4497,7 +4526,7 @@ func (c *EditsDeobfuscationfilesUploadCall) Do(opts ...googleapi.CallOption) (*D
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4682,7 +4711,7 @@ func (c *EditsDetailsGetCall) Do(opts ...googleapi.CallOption) (*AppDetails, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4823,7 +4852,7 @@ func (c *EditsDetailsPatchCall) Do(opts ...googleapi.CallOption) (*AppDetails, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4966,7 +4995,7 @@ func (c *EditsDetailsUpdateCall) Do(opts ...googleapi.CallOption) (*AppDetails, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5122,7 +5151,7 @@ func (c *EditsExpansionfilesGetCall) Do(opts ...googleapi.CallOption) (*Expansio
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5292,7 +5321,7 @@ func (c *EditsExpansionfilesPatchCall) Do(opts ...googleapi.CallOption) (*Expans
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5465,7 +5494,7 @@ func (c *EditsExpansionfilesUpdateCall) Do(opts ...googleapi.CallOption) (*Expan
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5697,7 +5726,7 @@ func (c *EditsExpansionfilesUploadCall) Do(opts ...googleapi.CallOption) (*Expan
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6032,7 +6061,7 @@ func (c *EditsImagesDeleteallCall) Do(opts ...googleapi.CallOption) (*ImagesDele
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6220,7 +6249,7 @@ func (c *EditsImagesListCall) Do(opts ...googleapi.CallOption) (*ImagesListRespo
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6462,7 +6491,7 @@ func (c *EditsImagesUploadCall) Do(opts ...googleapi.CallOption) (*ImagesUploadR
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6884,7 +6913,7 @@ func (c *EditsListingsGetCall) Do(opts ...googleapi.CallOption) (*Listing, error
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7039,7 +7068,7 @@ func (c *EditsListingsListCall) Do(opts ...googleapi.CallOption) (*ListingsListR
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7183,7 +7212,7 @@ func (c *EditsListingsPatchCall) Do(opts ...googleapi.CallOption) (*Listing, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7336,7 +7365,7 @@ func (c *EditsListingsUpdateCall) Do(opts ...googleapi.CallOption) (*Listing, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7496,7 +7525,7 @@ func (c *EditsTestersGetCall) Do(opts ...googleapi.CallOption) (*Testers, error)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7522,19 +7551,9 @@ func (c *EditsTestersGetCall) Do(opts ...googleapi.CallOption) (*Testers, error)
 	//       "type": "string"
 	//     },
 	//     "track": {
-	//       "enum": [
-	//         "alpha",
-	//         "beta",
-	//         "production",
-	//         "rollout"
-	//       ],
-	//       "enumDescriptions": [
-	//         "",
-	//         "",
-	//         "",
-	//         ""
-	//       ],
+	//       "description": "The track to read or modify. Acceptable values are: \"alpha\", \"beta\", \"production\" or \"rollout\".",
 	//       "location": "path",
+	//       "pattern": "(alpha|beta|production|rollout)",
 	//       "required": true,
 	//       "type": "string"
 	//     }
@@ -7656,7 +7675,7 @@ func (c *EditsTestersPatchCall) Do(opts ...googleapi.CallOption) (*Testers, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7682,19 +7701,9 @@ func (c *EditsTestersPatchCall) Do(opts ...googleapi.CallOption) (*Testers, erro
 	//       "type": "string"
 	//     },
 	//     "track": {
-	//       "enum": [
-	//         "alpha",
-	//         "beta",
-	//         "production",
-	//         "rollout"
-	//       ],
-	//       "enumDescriptions": [
-	//         "",
-	//         "",
-	//         "",
-	//         ""
-	//       ],
+	//       "description": "The track to read or modify. Acceptable values are: \"alpha\", \"beta\", \"production\" or \"rollout\".",
 	//       "location": "path",
+	//       "pattern": "(alpha|beta|production|rollout)",
 	//       "required": true,
 	//       "type": "string"
 	//     }
@@ -7819,7 +7828,7 @@ func (c *EditsTestersUpdateCall) Do(opts ...googleapi.CallOption) (*Testers, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7845,19 +7854,9 @@ func (c *EditsTestersUpdateCall) Do(opts ...googleapi.CallOption) (*Testers, err
 	//       "type": "string"
 	//     },
 	//     "track": {
-	//       "enum": [
-	//         "alpha",
-	//         "beta",
-	//         "production",
-	//         "rollout"
-	//       ],
-	//       "enumDescriptions": [
-	//         "",
-	//         "",
-	//         "",
-	//         ""
-	//       ],
+	//       "description": "The track to read or modify. Acceptable values are: \"alpha\", \"beta\", \"production\" or \"rollout\".",
 	//       "location": "path",
+	//       "pattern": "(alpha|beta|production|rollout)",
 	//       "required": true,
 	//       "type": "string"
 	//     }
@@ -7990,7 +7989,7 @@ func (c *EditsTracksGetCall) Do(opts ...googleapi.CallOption) (*Track, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8017,20 +8016,9 @@ func (c *EditsTracksGetCall) Do(opts ...googleapi.CallOption) (*Track, error) {
 	//       "type": "string"
 	//     },
 	//     "track": {
-	//       "description": "The track type to read or modify.",
-	//       "enum": [
-	//         "alpha",
-	//         "beta",
-	//         "production",
-	//         "rollout"
-	//       ],
-	//       "enumDescriptions": [
-	//         "",
-	//         "",
-	//         "",
-	//         ""
-	//       ],
+	//       "description": "The track to read or modify. Acceptable values are: \"alpha\", \"beta\", \"production\" or \"rollout\".",
 	//       "location": "path",
+	//       "pattern": "(alpha|beta|production|rollout)",
 	//       "required": true,
 	//       "type": "string"
 	//     }
@@ -8156,7 +8144,7 @@ func (c *EditsTracksListCall) Do(opts ...googleapi.CallOption) (*TracksListRespo
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8302,7 +8290,7 @@ func (c *EditsTracksPatchCall) Do(opts ...googleapi.CallOption) (*Track, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8329,20 +8317,9 @@ func (c *EditsTracksPatchCall) Do(opts ...googleapi.CallOption) (*Track, error) 
 	//       "type": "string"
 	//     },
 	//     "track": {
-	//       "description": "The track type to read or modify.",
-	//       "enum": [
-	//         "alpha",
-	//         "beta",
-	//         "production",
-	//         "rollout"
-	//       ],
-	//       "enumDescriptions": [
-	//         "",
-	//         "",
-	//         "",
-	//         ""
-	//       ],
+	//       "description": "The track to read or modify. Acceptable values are: \"alpha\", \"beta\", \"production\" or \"rollout\".",
 	//       "location": "path",
+	//       "pattern": "(alpha|beta|production|rollout)",
 	//       "required": true,
 	//       "type": "string"
 	//     }
@@ -8469,7 +8446,7 @@ func (c *EditsTracksUpdateCall) Do(opts ...googleapi.CallOption) (*Track, error)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8496,20 +8473,9 @@ func (c *EditsTracksUpdateCall) Do(opts ...googleapi.CallOption) (*Track, error)
 	//       "type": "string"
 	//     },
 	//     "track": {
-	//       "description": "The track type to read or modify.",
-	//       "enum": [
-	//         "alpha",
-	//         "beta",
-	//         "production",
-	//         "rollout"
-	//       ],
-	//       "enumDescriptions": [
-	//         "",
-	//         "",
-	//         "",
-	//         ""
-	//       ],
+	//       "description": "The track to read or modify. Acceptable values are: \"alpha\", \"beta\", \"production\" or \"rollout\".",
 	//       "location": "path",
+	//       "pattern": "(alpha|beta|production|rollout)",
 	//       "required": true,
 	//       "type": "string"
 	//     }
@@ -8662,7 +8628,7 @@ func (c *EntitlementsListCall) Do(opts ...googleapi.CallOption) (*EntitlementsLi
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8923,7 +8889,7 @@ func (c *InappproductsGetCall) Do(opts ...googleapi.CallOption) (*InAppProduct, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9069,7 +9035,7 @@ func (c *InappproductsInsertCall) Do(opts ...googleapi.CallOption) (*InAppProduc
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9233,7 +9199,7 @@ func (c *InappproductsListCall) Do(opts ...googleapi.CallOption) (*Inappproducts
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9391,7 +9357,7 @@ func (c *InappproductsPatchCall) Do(opts ...googleapi.CallOption) (*InAppProduct
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9549,7 +9515,7 @@ func (c *InappproductsUpdateCall) Do(opts ...googleapi.CallOption) (*InAppProduc
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9707,7 +9673,7 @@ func (c *PurchasesProductsGetCall) Do(opts ...googleapi.CallOption) (*ProductPur
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9975,7 +9941,7 @@ func (c *PurchasesSubscriptionsDeferCall) Do(opts ...googleapi.CallOption) (*Sub
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10136,7 +10102,7 @@ func (c *PurchasesSubscriptionsGetCall) Do(opts ...googleapi.CallOption) (*Subsc
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10566,7 +10532,7 @@ func (c *PurchasesVoidedpurchasesListCall) Do(opts ...googleapi.CallOption) (*Vo
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10739,7 +10705,7 @@ func (c *ReviewsGetCall) Do(opts ...googleapi.CallOption) (*Review, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10912,7 +10878,7 @@ func (c *ReviewsListCall) Do(opts ...googleapi.CallOption) (*ReviewsListResponse
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -11063,7 +11029,7 @@ func (c *ReviewsReplyCall) Do(opts ...googleapi.CallOption) (*ReviewsReplyRespon
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

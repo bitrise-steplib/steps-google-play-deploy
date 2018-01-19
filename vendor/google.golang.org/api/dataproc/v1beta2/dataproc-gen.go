@@ -203,8 +203,8 @@ type AcceleratorConfig struct {
 }
 
 func (s *AcceleratorConfig) MarshalJSON() ([]byte, error) {
-	type noMethod AcceleratorConfig
-	raw := noMethod(*s)
+	type NoMethod AcceleratorConfig
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -251,8 +251,8 @@ type Binding struct {
 }
 
 func (s *Binding) MarshalJSON() ([]byte, error) {
-	type noMethod Binding
-	raw := noMethod(*s)
+	type NoMethod Binding
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -267,7 +267,7 @@ type Cluster struct {
 	// project must be unique. Names of deleted clusters can be reused.
 	ClusterName string `json:"clusterName,omitempty"`
 
-	// ClusterUuid: Output-only. A cluster UUID (Unique Universal
+	// ClusterUuid: Output only. A cluster UUID (Unique Universal
 	// Identifier). Cloud Dataproc generates this value when it creates the
 	// cluster.
 	ClusterUuid string `json:"clusterUuid,omitempty"`
@@ -293,10 +293,10 @@ type Cluster struct {
 	// cluster belongs to.
 	ProjectId string `json:"projectId,omitempty"`
 
-	// Status: Output-only. Cluster status.
+	// Status: Output only. Cluster status.
 	Status *ClusterStatus `json:"status,omitempty"`
 
-	// StatusHistory: Output-only. The previous cluster status.
+	// StatusHistory: Output only. The previous cluster status.
 	StatusHistory []*ClusterStatus `json:"statusHistory,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -321,8 +321,8 @@ type Cluster struct {
 }
 
 func (s *Cluster) MarshalJSON() ([]byte, error) {
-	type noMethod Cluster
-	raw := noMethod(*s)
+	type NoMethod Cluster
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -394,8 +394,8 @@ type ClusterConfig struct {
 }
 
 func (s *ClusterConfig) MarshalJSON() ([]byte, error) {
-	type noMethod ClusterConfig
-	raw := noMethod(*s)
+	type NoMethod ClusterConfig
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -427,11 +427,12 @@ type ClusterMetrics struct {
 }
 
 func (s *ClusterMetrics) MarshalJSON() ([]byte, error) {
-	type noMethod ClusterMetrics
-	raw := noMethod(*s)
+	type NoMethod ClusterMetrics
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// ClusterOperation: The cluster operation triggered by a workflow.
 type ClusterOperation struct {
 	// Done: Output only. Indicates the operation is done.
 	Done bool `json:"done,omitempty"`
@@ -460,35 +461,35 @@ type ClusterOperation struct {
 }
 
 func (s *ClusterOperation) MarshalJSON() ([]byte, error) {
-	type noMethod ClusterOperation
-	raw := noMethod(*s)
+	type NoMethod ClusterOperation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // ClusterOperationMetadata: Metadata describing the operation.
 type ClusterOperationMetadata struct {
-	// ClusterName: Output-only. Name of the cluster for the operation.
+	// ClusterName: Output only. Name of the cluster for the operation.
 	ClusterName string `json:"clusterName,omitempty"`
 
-	// ClusterUuid: Output-only. Cluster UUID for the operation.
+	// ClusterUuid: Output only. Cluster UUID for the operation.
 	ClusterUuid string `json:"clusterUuid,omitempty"`
 
-	// Description: Output-only. Short description of operation.
+	// Description: Output only. Short description of operation.
 	Description string `json:"description,omitempty"`
 
-	// Labels: Output-only. Labels associated with the operation
+	// Labels: Output only. Labels associated with the operation
 	Labels map[string]string `json:"labels,omitempty"`
 
-	// OperationType: Output-only. The operation type.
+	// OperationType: Output only. The operation type.
 	OperationType string `json:"operationType,omitempty"`
 
-	// Status: Output-only. Current operation status.
+	// Status: Output only. Current operation status.
 	Status *ClusterOperationStatus `json:"status,omitempty"`
 
-	// StatusHistory: Output-only. The previous operation status.
+	// StatusHistory: Output only. The previous operation status.
 	StatusHistory []*ClusterOperationStatus `json:"statusHistory,omitempty"`
 
-	// Warnings: Output-only. Errors encountered during operation execution.
+	// Warnings: Output only. Errors encountered during operation execution.
 	Warnings []string `json:"warnings,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "ClusterName") to
@@ -509,22 +510,22 @@ type ClusterOperationMetadata struct {
 }
 
 func (s *ClusterOperationMetadata) MarshalJSON() ([]byte, error) {
-	type noMethod ClusterOperationMetadata
-	raw := noMethod(*s)
+	type NoMethod ClusterOperationMetadata
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // ClusterOperationStatus: The status of the operation.
 type ClusterOperationStatus struct {
-	// Details: Output-only.A message containing any operation metadata
+	// Details: Output only. A message containing any operation metadata
 	// details.
 	Details string `json:"details,omitempty"`
 
-	// InnerState: Output-only. A message containing the detailed operation
+	// InnerState: Output only. A message containing the detailed operation
 	// state.
 	InnerState string `json:"innerState,omitempty"`
 
-	// State: Output-only. A message containing the operation state.
+	// State: Output only. A message containing the operation state.
 	//
 	// Possible values:
 	//   "UNKNOWN" - Unused.
@@ -533,7 +534,7 @@ type ClusterOperationStatus struct {
 	//   "DONE" - The operation is done; either cancelled or completed.
 	State string `json:"state,omitempty"`
 
-	// StateStartTime: Output-only. The time this state was entered.
+	// StateStartTime: Output only. The time this state was entered.
 	StateStartTime string `json:"stateStartTime,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Details") to
@@ -554,8 +555,8 @@ type ClusterOperationStatus struct {
 }
 
 func (s *ClusterOperationStatus) MarshalJSON() ([]byte, error) {
-	type noMethod ClusterOperationStatus
-	raw := noMethod(*s)
+	type NoMethod ClusterOperationStatus
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -590,17 +591,17 @@ type ClusterSelector struct {
 }
 
 func (s *ClusterSelector) MarshalJSON() ([]byte, error) {
-	type noMethod ClusterSelector
-	raw := noMethod(*s)
+	type NoMethod ClusterSelector
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // ClusterStatus: The status of a cluster and its instances.
 type ClusterStatus struct {
-	// Detail: Output-only. Optional details of cluster's state.
+	// Detail: Output only. Optional details of cluster's state.
 	Detail string `json:"detail,omitempty"`
 
-	// State: Output-only. The cluster's state.
+	// State: Output only. The cluster's state.
 	//
 	// Possible values:
 	//   "UNKNOWN" - The cluster state is unknown.
@@ -615,14 +616,14 @@ type ClusterStatus struct {
 	// and process jobs.
 	State string `json:"state,omitempty"`
 
-	// StateStartTime: Output-only. Time when this state was entered.
+	// StateStartTime: Output only. Time when this state was entered.
 	StateStartTime string `json:"stateStartTime,omitempty"`
 
-	// Substate: Output-only. Additional state information that includes
+	// Substate: Output only. Additional state information that includes
 	// status reported by the agent.
 	//
 	// Possible values:
-	//   "UNSPECIFIED"
+	//   "UNSPECIFIED" - The cluster substate is unknown.
 	//   "UNHEALTHY" - The cluster is known to be in an unhealthy state (for
 	// example, critical daemons are not running or HDFS capacity is
 	// exhausted).Applies to RUNNING state.
@@ -649,8 +650,8 @@ type ClusterStatus struct {
 }
 
 func (s *ClusterStatus) MarshalJSON() ([]byte, error) {
-	type noMethod ClusterStatus
-	raw := noMethod(*s)
+	type NoMethod ClusterStatus
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -661,7 +662,7 @@ type DiagnoseClusterRequest struct {
 
 // DiagnoseClusterResults: The location of diagnostic output.
 type DiagnoseClusterResults struct {
-	// OutputUri: Output-only. The Google Cloud Storage URI of the
+	// OutputUri: Output only. The Google Cloud Storage URI of the
 	// diagnostic output. The output report is a plain text file with a
 	// summary of collected diagnostics.
 	OutputUri string `json:"outputUri,omitempty"`
@@ -684,8 +685,8 @@ type DiagnoseClusterResults struct {
 }
 
 func (s *DiagnoseClusterResults) MarshalJSON() ([]byte, error) {
-	type noMethod DiagnoseClusterResults
-	raw := noMethod(*s)
+	type NoMethod DiagnoseClusterResults
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -695,6 +696,11 @@ type DiskConfig struct {
 	// BootDiskSizeGb: Optional. Size in GB of the boot disk (default is
 	// 500GB).
 	BootDiskSizeGb int64 `json:"bootDiskSizeGb,omitempty"`
+
+	// BootDiskType: Optional. Type of the boot disk (default is
+	// "pd-standard"). Valid values: "pd-ssd" (Persistent Disk Solid State
+	// Drive) or "pd-standard" (Persistent Disk Hard Disk Drive).
+	BootDiskType string `json:"bootDiskType,omitempty"`
 
 	// NumLocalSsds: Optional. Number of attached SSDs, from 0 to 4 (default
 	// is 0). If SSDs are not attached, the boot disk is used to store
@@ -724,8 +730,8 @@ type DiskConfig struct {
 }
 
 func (s *DiskConfig) MarshalJSON() ([]byte, error) {
-	type noMethod DiskConfig
-	raw := noMethod(*s)
+	type NoMethod DiskConfig
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -852,8 +858,8 @@ type GceClusterConfig struct {
 }
 
 func (s *GceClusterConfig) MarshalJSON() ([]byte, error) {
-	type noMethod GceClusterConfig
-	raw := noMethod(*s)
+	type NoMethod GceClusterConfig
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -923,8 +929,8 @@ type HadoopJob struct {
 }
 
 func (s *HadoopJob) MarshalJSON() ([]byte, error) {
-	type noMethod HadoopJob
-	raw := noMethod(*s)
+	type NoMethod HadoopJob
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -977,8 +983,8 @@ type HiveJob struct {
 }
 
 func (s *HiveJob) MarshalJSON() ([]byte, error) {
-	type noMethod HiveJob
-	raw := noMethod(*s)
+	type NoMethod HiveJob
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -994,7 +1000,7 @@ type InstanceGroupConfig struct {
 	// DiskConfig: Optional. Disk option config settings.
 	DiskConfig *DiskConfig `json:"diskConfig,omitempty"`
 
-	// ImageUri: Output-only. The Google Compute Engine image resource used
+	// ImageUri: Output only. The Google Compute Engine image resource used
 	// for cluster instances. Inferred from SoftwareConfig.image_version.
 	ImageUri string `json:"imageUri,omitempty"`
 
@@ -1019,10 +1025,14 @@ type InstanceGroupConfig struct {
 	// n1-standard-2
 	MachineTypeUri string `json:"machineTypeUri,omitempty"`
 
-	// ManagedGroupConfig: Output-only. The config for Google Compute Engine
+	// ManagedGroupConfig: Output only. The config for Google Compute Engine
 	// Instance Group Manager that manages this group. This is only used for
 	// preemptible instance groups.
 	ManagedGroupConfig *ManagedGroupConfig `json:"managedGroupConfig,omitempty"`
+
+	// MinCpuPlatform: Optional. Specifies the minimum cpu platform for the
+	// Instance Group. See Cloud Dataproc&rarr;Minimum CPU Platform.
+	MinCpuPlatform string `json:"minCpuPlatform,omitempty"`
 
 	// NumInstances: Optional. The number of VM instances in the instance
 	// group. For master instance groups, must be set to 1.
@@ -1046,8 +1056,8 @@ type InstanceGroupConfig struct {
 }
 
 func (s *InstanceGroupConfig) MarshalJSON() ([]byte, error) {
-	type noMethod InstanceGroupConfig
-	raw := noMethod(*s)
+	type NoMethod InstanceGroupConfig
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1088,20 +1098,20 @@ type InstantiateWorkflowTemplateRequest struct {
 }
 
 func (s *InstantiateWorkflowTemplateRequest) MarshalJSON() ([]byte, error) {
-	type noMethod InstantiateWorkflowTemplateRequest
-	raw := noMethod(*s)
+	type NoMethod InstantiateWorkflowTemplateRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // Job: A Cloud Dataproc job resource.
 type Job struct {
-	// DriverControlFilesUri: Output-only. If present, the location of
+	// DriverControlFilesUri: Output only. If present, the location of
 	// miscellaneous control files which may be used as part of job setup
 	// and handling. If not present, control files may be placed in the same
 	// location as driver_output_uri.
 	DriverControlFilesUri string `json:"driverControlFilesUri,omitempty"`
 
-	// DriverOutputResourceUri: Output-only. A URI pointing to the location
+	// DriverOutputResourceUri: Output only. A URI pointing to the location
 	// of the stdout of the job's driver program.
 	DriverOutputResourceUri string `json:"driverOutputResourceUri,omitempty"`
 
@@ -1144,15 +1154,15 @@ type Job struct {
 	// SparkSqlJob: Job is a SparkSql job.
 	SparkSqlJob *SparkSqlJob `json:"sparkSqlJob,omitempty"`
 
-	// Status: Output-only. The job status. Additional application-specific
+	// Status: Output only. The job status. Additional application-specific
 	// status information may be contained in the <code>type_job</code> and
 	// <code>yarn_applications</code> fields.
 	Status *JobStatus `json:"status,omitempty"`
 
-	// StatusHistory: Output-only. The previous job status.
+	// StatusHistory: Output only. The previous job status.
 	StatusHistory []*JobStatus `json:"statusHistory,omitempty"`
 
-	// YarnApplications: Output-only. The collection of YARN applications
+	// YarnApplications: Output only. The collection of YARN applications
 	// spun up by this job.Beta Feature: This report is available for
 	// testing purposes only. It may be changed before final release.
 	YarnApplications []*YarnApplication `json:"yarnApplications,omitempty"`
@@ -1181,8 +1191,8 @@ type Job struct {
 }
 
 func (s *Job) MarshalJSON() ([]byte, error) {
-	type noMethod Job
-	raw := noMethod(*s)
+	type NoMethod Job
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1192,7 +1202,7 @@ type JobPlacement struct {
 	// submitted.
 	ClusterName string `json:"clusterName,omitempty"`
 
-	// ClusterUuid: Output-only. A cluster UUID generated by the Cloud
+	// ClusterUuid: Output only. A cluster UUID generated by the Cloud
 	// Dataproc service when the job is submitted.
 	ClusterUuid string `json:"clusterUuid,omitempty"`
 
@@ -1214,8 +1224,8 @@ type JobPlacement struct {
 }
 
 func (s *JobPlacement) MarshalJSON() ([]byte, error) {
-	type noMethod JobPlacement
-	raw := noMethod(*s)
+	type NoMethod JobPlacement
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1251,14 +1261,12 @@ type JobReference struct {
 }
 
 func (s *JobReference) MarshalJSON() ([]byte, error) {
-	type noMethod JobReference
-	raw := noMethod(*s)
+	type NoMethod JobReference
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// JobScheduling: Job scheduling options.Beta Feature: These options are
-// available for testing purposes only. They may be changed before final
-// release.
+// JobScheduling: Job scheduling options.
 type JobScheduling struct {
 	// MaxFailuresPerHour: Optional. Maximum number of times per hour a
 	// driver may be restarted as a result of driver terminating with
@@ -1286,18 +1294,18 @@ type JobScheduling struct {
 }
 
 func (s *JobScheduling) MarshalJSON() ([]byte, error) {
-	type noMethod JobScheduling
-	raw := noMethod(*s)
+	type NoMethod JobScheduling
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // JobStatus: Cloud Dataproc job status.
 type JobStatus struct {
-	// Details: Output-only. Optional job state details, such as an error
+	// Details: Output only. Optional job state details, such as an error
 	// description if the state is <code>ERROR</code>.
 	Details string `json:"details,omitempty"`
 
-	// State: Output-only. A state message specifying the overall job state.
+	// State: Output only. A state message specifying the overall job state.
 	//
 	// Possible values:
 	//   "STATE_UNSPECIFIED" - The job state is unknown.
@@ -1319,14 +1327,14 @@ type JobStatus struct {
 	// only.
 	State string `json:"state,omitempty"`
 
-	// StateStartTime: Output-only. The time when this state was entered.
+	// StateStartTime: Output only. The time when this state was entered.
 	StateStartTime string `json:"stateStartTime,omitempty"`
 
-	// Substate: Output-only. Additional state information, which includes
+	// Substate: Output only. Additional state information, which includes
 	// status reported by the agent.
 	//
 	// Possible values:
-	//   "UNSPECIFIED"
+	//   "UNSPECIFIED" - The job substate is unknown.
 	//   "SUBMITTED" - The Job is submitted to the agent.Applies to RUNNING
 	// state.
 	//   "QUEUED" - The Job has been received and is awaiting execution (it
@@ -1356,8 +1364,8 @@ type JobStatus struct {
 }
 
 func (s *JobStatus) MarshalJSON() ([]byte, error) {
-	type noMethod JobStatus
-	raw := noMethod(*s)
+	type NoMethod JobStatus
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1395,17 +1403,17 @@ type LifecycleConfig struct {
 }
 
 func (s *LifecycleConfig) MarshalJSON() ([]byte, error) {
-	type noMethod LifecycleConfig
-	raw := noMethod(*s)
+	type NoMethod LifecycleConfig
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // ListClustersResponse: The list of all clusters in a project.
 type ListClustersResponse struct {
-	// Clusters: Output-only. The clusters in the project.
+	// Clusters: Output only. The clusters in the project.
 	Clusters []*Cluster `json:"clusters,omitempty"`
 
-	// NextPageToken: Output-only. This token is included in the response if
+	// NextPageToken: Output only. This token is included in the response if
 	// there are more results to fetch. To fetch additional results, provide
 	// this value as the page_token in a subsequent
 	// <code>ListClustersRequest</code>.
@@ -1433,14 +1441,14 @@ type ListClustersResponse struct {
 }
 
 func (s *ListClustersResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListClustersResponse
-	raw := noMethod(*s)
+	type NoMethod ListClustersResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // ListJobsResponse: A list of jobs in a project.
 type ListJobsResponse struct {
-	// Jobs: Output-only. Jobs list.
+	// Jobs: Output only. Jobs list.
 	Jobs []*Job `json:"jobs,omitempty"`
 
 	// NextPageToken: Optional. This token is included in the response if
@@ -1471,8 +1479,8 @@ type ListJobsResponse struct {
 }
 
 func (s *ListJobsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListJobsResponse
-	raw := noMethod(*s)
+	type NoMethod ListJobsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1508,8 +1516,8 @@ type ListOperationsResponse struct {
 }
 
 func (s *ListOperationsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListOperationsResponse
-	raw := noMethod(*s)
+	type NoMethod ListOperationsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1547,8 +1555,8 @@ type ListWorkflowTemplatesResponse struct {
 }
 
 func (s *ListWorkflowTemplatesResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ListWorkflowTemplatesResponse
-	raw := noMethod(*s)
+	type NoMethod ListWorkflowTemplatesResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1578,8 +1586,8 @@ type LoggingConfig struct {
 }
 
 func (s *LoggingConfig) MarshalJSON() ([]byte, error) {
-	type noMethod LoggingConfig
-	raw := noMethod(*s)
+	type NoMethod LoggingConfig
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1618,19 +1626,19 @@ type ManagedCluster struct {
 }
 
 func (s *ManagedCluster) MarshalJSON() ([]byte, error) {
-	type noMethod ManagedCluster
-	raw := noMethod(*s)
+	type NoMethod ManagedCluster
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 // ManagedGroupConfig: Specifies the resources used to actively manage
 // an instance group.
 type ManagedGroupConfig struct {
-	// InstanceGroupManagerName: Output-only. The name of the Instance Group
+	// InstanceGroupManagerName: Output only. The name of the Instance Group
 	// Manager for this group.
 	InstanceGroupManagerName string `json:"instanceGroupManagerName,omitempty"`
 
-	// InstanceTemplateName: Output-only. The name of the Instance Template
+	// InstanceTemplateName: Output only. The name of the Instance Template
 	// used for the Managed Instance Group.
 	InstanceTemplateName string `json:"instanceTemplateName,omitempty"`
 
@@ -1654,8 +1662,8 @@ type ManagedGroupConfig struct {
 }
 
 func (s *ManagedGroupConfig) MarshalJSON() ([]byte, error) {
-	type noMethod ManagedGroupConfig
-	raw := noMethod(*s)
+	type NoMethod ManagedGroupConfig
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1692,8 +1700,8 @@ type NodeInitializationAction struct {
 }
 
 func (s *NodeInitializationAction) MarshalJSON() ([]byte, error) {
-	type noMethod NodeInitializationAction
-	raw := noMethod(*s)
+	type NoMethod NodeInitializationAction
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1753,11 +1761,12 @@ type Operation struct {
 }
 
 func (s *Operation) MarshalJSON() ([]byte, error) {
-	type noMethod Operation
-	raw := noMethod(*s)
+	type NoMethod Operation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// OrderedJob: A job executed by the workflow.
 type OrderedJob struct {
 	// HadoopJob: Job is a Hadoop job.
 	HadoopJob *HadoopJob `json:"hadoopJob,omitempty"`
@@ -1817,8 +1826,8 @@ type OrderedJob struct {
 }
 
 func (s *OrderedJob) MarshalJSON() ([]byte, error) {
-	type noMethod OrderedJob
-	raw := noMethod(*s)
+	type NoMethod OrderedJob
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1875,8 +1884,8 @@ type PigJob struct {
 }
 
 func (s *PigJob) MarshalJSON() ([]byte, error) {
-	type noMethod PigJob
-	raw := noMethod(*s)
+	type NoMethod PigJob
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1904,7 +1913,7 @@ func (s *PigJob) MarshalJSON() ([]byte, error) {
 //   ]
 // }
 // For a description of IAM and its features, see the IAM developer's
-// guide (https://cloud.google.com/iam).
+// guide (https://cloud.google.com/iam/docs).
 type Policy struct {
 	// Bindings: Associates a list of members to a role. bindings with no
 	// members will result in an error.
@@ -1921,7 +1930,7 @@ type Policy struct {
 	// to setIamPolicy, then the existing policy is overwritten blindly.
 	Etag string `json:"etag,omitempty"`
 
-	// Version: Version of the Policy. The default version is 0.
+	// Version: Deprecated.
 	Version int64 `json:"version,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -1946,8 +1955,8 @@ type Policy struct {
 }
 
 func (s *Policy) MarshalJSON() ([]byte, error) {
-	type noMethod Policy
-	raw := noMethod(*s)
+	type NoMethod Policy
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2008,8 +2017,8 @@ type PySparkJob struct {
 }
 
 func (s *PySparkJob) MarshalJSON() ([]byte, error) {
-	type noMethod PySparkJob
-	raw := noMethod(*s)
+	type NoMethod PySparkJob
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2050,8 +2059,8 @@ type QueryList struct {
 }
 
 func (s *QueryList) MarshalJSON() ([]byte, error) {
-	type noMethod QueryList
-	raw := noMethod(*s)
+	type NoMethod QueryList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2081,8 +2090,8 @@ type SetIamPolicyRequest struct {
 }
 
 func (s *SetIamPolicyRequest) MarshalJSON() ([]byte, error) {
-	type noMethod SetIamPolicyRequest
-	raw := noMethod(*s)
+	type NoMethod SetIamPolicyRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2127,8 +2136,8 @@ type SoftwareConfig struct {
 }
 
 func (s *SoftwareConfig) MarshalJSON() ([]byte, error) {
-	type noMethod SoftwareConfig
-	raw := noMethod(*s)
+	type NoMethod SoftwareConfig
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2190,8 +2199,8 @@ type SparkJob struct {
 }
 
 func (s *SparkJob) MarshalJSON() ([]byte, error) {
-	type noMethod SparkJob
-	raw := noMethod(*s)
+	type NoMethod SparkJob
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2238,8 +2247,8 @@ type SparkSqlJob struct {
 }
 
 func (s *SparkSqlJob) MarshalJSON() ([]byte, error) {
-	type noMethod SparkSqlJob
-	raw := noMethod(*s)
+	type NoMethod SparkSqlJob
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2314,8 +2323,8 @@ type Status struct {
 }
 
 func (s *Status) MarshalJSON() ([]byte, error) {
-	type noMethod Status
-	raw := noMethod(*s)
+	type NoMethod Status
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2342,8 +2351,8 @@ type SubmitJobRequest struct {
 }
 
 func (s *SubmitJobRequest) MarshalJSON() ([]byte, error) {
-	type noMethod SubmitJobRequest
-	raw := noMethod(*s)
+	type NoMethod SubmitJobRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2374,8 +2383,8 @@ type TestIamPermissionsRequest struct {
 }
 
 func (s *TestIamPermissionsRequest) MarshalJSON() ([]byte, error) {
-	type noMethod TestIamPermissionsRequest
-	raw := noMethod(*s)
+	type NoMethod TestIamPermissionsRequest
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2408,8 +2417,8 @@ type TestIamPermissionsResponse struct {
 }
 
 func (s *TestIamPermissionsResponse) MarshalJSON() ([]byte, error) {
-	type noMethod TestIamPermissionsResponse
-	raw := noMethod(*s)
+	type NoMethod TestIamPermissionsResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2436,8 +2445,8 @@ type WorkflowGraph struct {
 }
 
 func (s *WorkflowGraph) MarshalJSON() ([]byte, error) {
-	type noMethod WorkflowGraph
-	raw := noMethod(*s)
+	type NoMethod WorkflowGraph
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2489,8 +2498,8 @@ type WorkflowMetadata struct {
 }
 
 func (s *WorkflowMetadata) MarshalJSON() ([]byte, error) {
-	type noMethod WorkflowMetadata
-	raw := noMethod(*s)
+	type NoMethod WorkflowMetadata
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2509,7 +2518,7 @@ type WorkflowNode struct {
 	// State: Output only. The node state.
 	//
 	// Possible values:
-	//   "NODE_STATUS_UNSPECIFIED"
+	//   "NODE_STATUS_UNSPECIFIED" - State is unspecified.
 	//   "BLOCKED" - The node is awaiting prerequisite node to finish.
 	//   "RUNNABLE" - The node is runnable but not running.
 	//   "RUNNING" - The node is running.
@@ -2539,8 +2548,8 @@ type WorkflowNode struct {
 }
 
 func (s *WorkflowNode) MarshalJSON() ([]byte, error) {
-	type noMethod WorkflowNode
-	raw := noMethod(*s)
+	type NoMethod WorkflowNode
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2609,8 +2618,8 @@ type WorkflowTemplate struct {
 }
 
 func (s *WorkflowTemplate) MarshalJSON() ([]byte, error) {
-	type noMethod WorkflowTemplate
-	raw := noMethod(*s)
+	type NoMethod WorkflowTemplate
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2644,8 +2653,8 @@ type WorkflowTemplatePlacement struct {
 }
 
 func (s *WorkflowTemplatePlacement) MarshalJSON() ([]byte, error) {
-	type noMethod WorkflowTemplatePlacement
-	raw := noMethod(*s)
+	type NoMethod WorkflowTemplatePlacement
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2700,18 +2709,18 @@ type YarnApplication struct {
 }
 
 func (s *YarnApplication) MarshalJSON() ([]byte, error) {
-	type noMethod YarnApplication
-	raw := noMethod(*s)
+	type NoMethod YarnApplication
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *YarnApplication) UnmarshalJSON(data []byte) error {
-	type noMethod YarnApplication
+	type NoMethod YarnApplication
 	var s1 struct {
 		Progress gensupport.JSONFloat64 `json:"progress"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -2819,7 +2828,7 @@ func (c *ProjectsLocationsWorkflowTemplatesCreateCall) Do(opts ...googleapi.Call
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -2956,7 +2965,7 @@ func (c *ProjectsLocationsWorkflowTemplatesDeleteCall) Do(opts ...googleapi.Call
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3110,7 +3119,7 @@ func (c *ProjectsLocationsWorkflowTemplatesGetCall) Do(opts ...googleapi.CallOpt
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3257,7 +3266,7 @@ func (c *ProjectsLocationsWorkflowTemplatesInstantiateCall) Do(opts ...googleapi
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3281,6 +3290,170 @@ func (c *ProjectsLocationsWorkflowTemplatesInstantiateCall) Do(opts ...googleapi
 	//   "path": "v1beta2/{+name}:instantiate",
 	//   "request": {
 	//     "$ref": "InstantiateWorkflowTemplateRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "Operation"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform"
+	//   ]
+	// }
+
+}
+
+// method id "dataproc.projects.locations.workflowTemplates.instantiateInline":
+
+type ProjectsLocationsWorkflowTemplatesInstantiateInlineCall struct {
+	s                *Service
+	parent           string
+	workflowtemplate *WorkflowTemplate
+	urlParams_       gensupport.URLParams
+	ctx_             context.Context
+	header_          http.Header
+}
+
+// InstantiateInline: Instantiates a template and begins execution.This
+// method is equivalent to executing the sequence
+// CreateWorkflowTemplate, InstantiateWorkflowTemplate,
+// DeleteWorkflowTemplate.The returned Operation can be used to track
+// execution of workflow by polling
+// google.cloud.dataproc.v1beta2.OperationService.GetOperation. The
+// Operation will complete when entire workflow is finished.The running
+// workflow can be aborted via
+// google.cloud.dataproc.v1beta2.OperationService.CancelOperation.The
+// google.cloud.dataproc.v1beta2.Operation.metadata will always be
+// google.cloud.dataproc.v1beta2.WorkflowMetadata.The
+// google.cloud.dataproc.v1beta2.Operation.result will always be
+// google.protobuf.Empty.
+func (r *ProjectsLocationsWorkflowTemplatesService) InstantiateInline(parent string, workflowtemplate *WorkflowTemplate) *ProjectsLocationsWorkflowTemplatesInstantiateInlineCall {
+	c := &ProjectsLocationsWorkflowTemplatesInstantiateInlineCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	c.workflowtemplate = workflowtemplate
+	return c
+}
+
+// InstanceId sets the optional parameter "instanceId": A tag that
+// prevents multiple concurrent workflow instances with the same tag
+// from running. This mitigates risk of concurrent instances started due
+// to retries.It is recommended to always set this value to a UUID
+// (https://en.wikipedia.org/wiki/Universally_unique_identifier).The tag
+// must contain only letters (a-z, A-Z), numbers (0-9), underscores (_),
+// and hyphens (-). The maximum length is 40 characters.
+func (c *ProjectsLocationsWorkflowTemplatesInstantiateInlineCall) InstanceId(instanceId string) *ProjectsLocationsWorkflowTemplatesInstantiateInlineCall {
+	c.urlParams_.Set("instanceId", instanceId)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ProjectsLocationsWorkflowTemplatesInstantiateInlineCall) Fields(s ...googleapi.Field) *ProjectsLocationsWorkflowTemplatesInstantiateInlineCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ProjectsLocationsWorkflowTemplatesInstantiateInlineCall) Context(ctx context.Context) *ProjectsLocationsWorkflowTemplatesInstantiateInlineCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ProjectsLocationsWorkflowTemplatesInstantiateInlineCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ProjectsLocationsWorkflowTemplatesInstantiateInlineCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.workflowtemplate)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+parent}/workflowTemplates:instantiateInline")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "dataproc.projects.locations.workflowTemplates.instantiateInline" call.
+// Exactly one of *Operation or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *Operation.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *ProjectsLocationsWorkflowTemplatesInstantiateInlineCall) Do(opts ...googleapi.CallOption) (*Operation, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &Operation{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Instantiates a template and begins execution.This method is equivalent to executing the sequence CreateWorkflowTemplate, InstantiateWorkflowTemplate, DeleteWorkflowTemplate.The returned Operation can be used to track execution of workflow by polling google.cloud.dataproc.v1beta2.OperationService.GetOperation. The Operation will complete when entire workflow is finished.The running workflow can be aborted via google.cloud.dataproc.v1beta2.OperationService.CancelOperation.The google.cloud.dataproc.v1beta2.Operation.metadata will always be google.cloud.dataproc.v1beta2.WorkflowMetadata.The google.cloud.dataproc.v1beta2.Operation.result will always be google.protobuf.Empty.",
+	//   "flatPath": "v1beta2/projects/{projectsId}/locations/{locationsId}/workflowTemplates:instantiateInline",
+	//   "httpMethod": "POST",
+	//   "id": "dataproc.projects.locations.workflowTemplates.instantiateInline",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "instanceId": {
+	//       "description": "Optional. A tag that prevents multiple concurrent workflow instances with the same tag from running. This mitigates risk of concurrent instances started due to retries.It is recommended to always set this value to a UUID (https://en.wikipedia.org/wiki/Universally_unique_identifier).The tag must contain only letters (a-z, A-Z), numbers (0-9), underscores (_), and hyphens (-). The maximum length is 40 characters.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "parent": {
+	//       "description": "Required. The \"resource name\" of the workflow template region, as described in https://cloud.google.com/apis/design/resource_names of the form projects/{project_id}/regions/{region}",
+	//       "location": "path",
+	//       "pattern": "^projects/[^/]+/locations/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v1beta2/{+parent}/workflowTemplates:instantiateInline",
+	//   "request": {
+	//     "$ref": "WorkflowTemplate"
 	//   },
 	//   "response": {
 	//     "$ref": "Operation"
@@ -3413,7 +3586,7 @@ func (c *ProjectsLocationsWorkflowTemplatesListCall) Do(opts ...googleapi.CallOp
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3578,7 +3751,7 @@ func (c *ProjectsLocationsWorkflowTemplatesUpdateCall) Do(opts ...googleapi.Call
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3716,7 +3889,7 @@ func (c *ProjectsRegionsClustersCreateCall) Do(opts ...googleapi.CallOption) (*O
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3864,7 +4037,7 @@ func (c *ProjectsRegionsClustersDeleteCall) Do(opts ...googleapi.CallOption) (*O
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4022,7 +4195,7 @@ func (c *ProjectsRegionsClustersDiagnoseCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4183,7 +4356,7 @@ func (c *ProjectsRegionsClustersGetCall) Do(opts ...googleapi.CallOption) (*Clus
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4337,7 +4510,7 @@ func (c *ProjectsRegionsClustersGetIamPolicyCall) Do(opts ...googleapi.CallOptio
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4511,7 +4684,7 @@ func (c *ProjectsRegionsClustersListCall) Do(opts ...googleapi.CallOption) (*Lis
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4739,7 +4912,7 @@ func (c *ProjectsRegionsClustersPatchCall) Do(opts ...googleapi.CallOption) (*Op
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4900,7 +5073,7 @@ func (c *ProjectsRegionsClustersSetIamPolicyCall) Do(opts ...googleapi.CallOptio
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5040,7 +5213,7 @@ func (c *ProjectsRegionsClustersTestIamPermissionsCall) Do(opts ...googleapi.Cal
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5183,7 +5356,7 @@ func (c *ProjectsRegionsJobsCancelCall) Do(opts ...googleapi.CallOption) (*Job, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5331,7 +5504,7 @@ func (c *ProjectsRegionsJobsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5489,7 +5662,7 @@ func (c *ProjectsRegionsJobsGetCall) Do(opts ...googleapi.CallOption) (*Job, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5692,7 +5865,7 @@ func (c *ProjectsRegionsJobsListCall) Do(opts ...googleapi.CallOption) (*ListJob
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5900,7 +6073,7 @@ func (c *ProjectsRegionsJobsPatchCall) Do(opts ...googleapi.CallOption) (*Job, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6057,7 +6230,7 @@ func (c *ProjectsRegionsJobsSubmitCall) Do(opts ...googleapi.CallOption) (*Job, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6200,7 +6373,7 @@ func (c *ProjectsRegionsOperationsCancelCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6328,7 +6501,7 @@ func (c *ProjectsRegionsOperationsDeleteCall) Do(opts ...googleapi.CallOption) (
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6469,7 +6642,7 @@ func (c *ProjectsRegionsOperationsGetCall) Do(opts ...googleapi.CallOption) (*Op
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6638,7 +6811,7 @@ func (c *ProjectsRegionsOperationsListCall) Do(opts ...googleapi.CallOption) (*L
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6807,7 +6980,7 @@ func (c *ProjectsRegionsWorkflowTemplatesCreateCall) Do(opts ...googleapi.CallOp
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6944,7 +7117,7 @@ func (c *ProjectsRegionsWorkflowTemplatesDeleteCall) Do(opts ...googleapi.CallOp
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7098,7 +7271,7 @@ func (c *ProjectsRegionsWorkflowTemplatesGetCall) Do(opts ...googleapi.CallOptio
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7245,7 +7418,7 @@ func (c *ProjectsRegionsWorkflowTemplatesInstantiateCall) Do(opts ...googleapi.C
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7269,6 +7442,170 @@ func (c *ProjectsRegionsWorkflowTemplatesInstantiateCall) Do(opts ...googleapi.C
 	//   "path": "v1beta2/{+name}:instantiate",
 	//   "request": {
 	//     "$ref": "InstantiateWorkflowTemplateRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "Operation"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/cloud-platform"
+	//   ]
+	// }
+
+}
+
+// method id "dataproc.projects.regions.workflowTemplates.instantiateInline":
+
+type ProjectsRegionsWorkflowTemplatesInstantiateInlineCall struct {
+	s                *Service
+	parent           string
+	workflowtemplate *WorkflowTemplate
+	urlParams_       gensupport.URLParams
+	ctx_             context.Context
+	header_          http.Header
+}
+
+// InstantiateInline: Instantiates a template and begins execution.This
+// method is equivalent to executing the sequence
+// CreateWorkflowTemplate, InstantiateWorkflowTemplate,
+// DeleteWorkflowTemplate.The returned Operation can be used to track
+// execution of workflow by polling
+// google.cloud.dataproc.v1beta2.OperationService.GetOperation. The
+// Operation will complete when entire workflow is finished.The running
+// workflow can be aborted via
+// google.cloud.dataproc.v1beta2.OperationService.CancelOperation.The
+// google.cloud.dataproc.v1beta2.Operation.metadata will always be
+// google.cloud.dataproc.v1beta2.WorkflowMetadata.The
+// google.cloud.dataproc.v1beta2.Operation.result will always be
+// google.protobuf.Empty.
+func (r *ProjectsRegionsWorkflowTemplatesService) InstantiateInline(parent string, workflowtemplate *WorkflowTemplate) *ProjectsRegionsWorkflowTemplatesInstantiateInlineCall {
+	c := &ProjectsRegionsWorkflowTemplatesInstantiateInlineCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	c.workflowtemplate = workflowtemplate
+	return c
+}
+
+// InstanceId sets the optional parameter "instanceId": A tag that
+// prevents multiple concurrent workflow instances with the same tag
+// from running. This mitigates risk of concurrent instances started due
+// to retries.It is recommended to always set this value to a UUID
+// (https://en.wikipedia.org/wiki/Universally_unique_identifier).The tag
+// must contain only letters (a-z, A-Z), numbers (0-9), underscores (_),
+// and hyphens (-). The maximum length is 40 characters.
+func (c *ProjectsRegionsWorkflowTemplatesInstantiateInlineCall) InstanceId(instanceId string) *ProjectsRegionsWorkflowTemplatesInstantiateInlineCall {
+	c.urlParams_.Set("instanceId", instanceId)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ProjectsRegionsWorkflowTemplatesInstantiateInlineCall) Fields(s ...googleapi.Field) *ProjectsRegionsWorkflowTemplatesInstantiateInlineCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ProjectsRegionsWorkflowTemplatesInstantiateInlineCall) Context(ctx context.Context) *ProjectsRegionsWorkflowTemplatesInstantiateInlineCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ProjectsRegionsWorkflowTemplatesInstantiateInlineCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ProjectsRegionsWorkflowTemplatesInstantiateInlineCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.workflowtemplate)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	urls := googleapi.ResolveRelative(c.s.BasePath, "v1beta2/{+parent}/workflowTemplates:instantiateInline")
+	urls += "?" + c.urlParams_.Encode()
+	req, _ := http.NewRequest("POST", urls, body)
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "dataproc.projects.regions.workflowTemplates.instantiateInline" call.
+// Exactly one of *Operation or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *Operation.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *ProjectsRegionsWorkflowTemplatesInstantiateInlineCall) Do(opts ...googleapi.CallOption) (*Operation, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	ret := &Operation{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Instantiates a template and begins execution.This method is equivalent to executing the sequence CreateWorkflowTemplate, InstantiateWorkflowTemplate, DeleteWorkflowTemplate.The returned Operation can be used to track execution of workflow by polling google.cloud.dataproc.v1beta2.OperationService.GetOperation. The Operation will complete when entire workflow is finished.The running workflow can be aborted via google.cloud.dataproc.v1beta2.OperationService.CancelOperation.The google.cloud.dataproc.v1beta2.Operation.metadata will always be google.cloud.dataproc.v1beta2.WorkflowMetadata.The google.cloud.dataproc.v1beta2.Operation.result will always be google.protobuf.Empty.",
+	//   "flatPath": "v1beta2/projects/{projectsId}/regions/{regionsId}/workflowTemplates:instantiateInline",
+	//   "httpMethod": "POST",
+	//   "id": "dataproc.projects.regions.workflowTemplates.instantiateInline",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "instanceId": {
+	//       "description": "Optional. A tag that prevents multiple concurrent workflow instances with the same tag from running. This mitigates risk of concurrent instances started due to retries.It is recommended to always set this value to a UUID (https://en.wikipedia.org/wiki/Universally_unique_identifier).The tag must contain only letters (a-z, A-Z), numbers (0-9), underscores (_), and hyphens (-). The maximum length is 40 characters.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "parent": {
+	//       "description": "Required. The \"resource name\" of the workflow template region, as described in https://cloud.google.com/apis/design/resource_names of the form projects/{project_id}/regions/{region}",
+	//       "location": "path",
+	//       "pattern": "^projects/[^/]+/regions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "v1beta2/{+parent}/workflowTemplates:instantiateInline",
+	//   "request": {
+	//     "$ref": "WorkflowTemplate"
 	//   },
 	//   "response": {
 	//     "$ref": "Operation"
@@ -7401,7 +7738,7 @@ func (c *ProjectsRegionsWorkflowTemplatesListCall) Do(opts ...googleapi.CallOpti
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7566,7 +7903,7 @@ func (c *ProjectsRegionsWorkflowTemplatesUpdateCall) Do(opts ...googleapi.CallOp
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

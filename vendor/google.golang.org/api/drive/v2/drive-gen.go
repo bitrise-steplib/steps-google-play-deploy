@@ -384,8 +384,8 @@ type About struct {
 }
 
 func (s *About) MarshalJSON() ([]byte, error) {
-	type noMethod About
-	raw := noMethod(*s)
+	type NoMethod About
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -414,8 +414,8 @@ type AboutAdditionalRoleInfo struct {
 }
 
 func (s *AboutAdditionalRoleInfo) MarshalJSON() ([]byte, error) {
-	type noMethod AboutAdditionalRoleInfo
-	raw := noMethod(*s)
+	type NoMethod AboutAdditionalRoleInfo
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -446,8 +446,8 @@ type AboutAdditionalRoleInfoRoleSets struct {
 }
 
 func (s *AboutAdditionalRoleInfoRoleSets) MarshalJSON() ([]byte, error) {
-	type noMethod AboutAdditionalRoleInfoRoleSets
-	raw := noMethod(*s)
+	type NoMethod AboutAdditionalRoleInfoRoleSets
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -476,8 +476,8 @@ type AboutExportFormats struct {
 }
 
 func (s *AboutExportFormats) MarshalJSON() ([]byte, error) {
-	type noMethod AboutExportFormats
-	raw := noMethod(*s)
+	type NoMethod AboutExportFormats
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -507,18 +507,18 @@ type AboutFeatures struct {
 }
 
 func (s *AboutFeatures) MarshalJSON() ([]byte, error) {
-	type noMethod AboutFeatures
-	raw := noMethod(*s)
+	type NoMethod AboutFeatures
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *AboutFeatures) UnmarshalJSON(data []byte) error {
-	type noMethod AboutFeatures
+	type NoMethod AboutFeatures
 	var s1 struct {
 		FeatureRate gensupport.JSONFloat64 `json:"featureRate"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -551,8 +551,8 @@ type AboutImportFormats struct {
 }
 
 func (s *AboutImportFormats) MarshalJSON() ([]byte, error) {
-	type noMethod AboutImportFormats
-	raw := noMethod(*s)
+	type NoMethod AboutImportFormats
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -581,8 +581,8 @@ type AboutMaxUploadSizes struct {
 }
 
 func (s *AboutMaxUploadSizes) MarshalJSON() ([]byte, error) {
-	type noMethod AboutMaxUploadSizes
-	raw := noMethod(*s)
+	type NoMethod AboutMaxUploadSizes
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -611,8 +611,8 @@ type AboutQuotaBytesByService struct {
 }
 
 func (s *AboutQuotaBytesByService) MarshalJSON() ([]byte, error) {
-	type noMethod AboutQuotaBytesByService
-	raw := noMethod(*s)
+	type NoMethod AboutQuotaBytesByService
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -646,8 +646,8 @@ type AboutTeamDriveThemes struct {
 }
 
 func (s *AboutTeamDriveThemes) MarshalJSON() ([]byte, error) {
-	type noMethod AboutTeamDriveThemes
-	raw := noMethod(*s)
+	type NoMethod AboutTeamDriveThemes
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -759,8 +759,8 @@ type App struct {
 }
 
 func (s *App) MarshalJSON() ([]byte, error) {
-	type noMethod App
-	raw := noMethod(*s)
+	type NoMethod App
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -796,8 +796,8 @@ type AppIcons struct {
 }
 
 func (s *AppIcons) MarshalJSON() ([]byte, error) {
-	type noMethod AppIcons
-	raw := noMethod(*s)
+	type NoMethod AppIcons
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -842,8 +842,8 @@ type AppList struct {
 }
 
 func (s *AppList) MarshalJSON() ([]byte, error) {
-	type noMethod AppList
-	raw := noMethod(*s)
+	type NoMethod AppList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -905,8 +905,8 @@ type Change struct {
 }
 
 func (s *Change) MarshalJSON() ([]byte, error) {
-	type noMethod Change
-	raw := noMethod(*s)
+	type NoMethod Change
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -965,8 +965,8 @@ type ChangeList struct {
 }
 
 func (s *ChangeList) MarshalJSON() ([]byte, error) {
-	type noMethod ChangeList
-	raw := noMethod(*s)
+	type NoMethod ChangeList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1031,8 +1031,8 @@ type Channel struct {
 }
 
 func (s *Channel) MarshalJSON() ([]byte, error) {
-	type noMethod Channel
-	raw := noMethod(*s)
+	type NoMethod Channel
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1083,8 +1083,8 @@ type ChildList struct {
 }
 
 func (s *ChildList) MarshalJSON() ([]byte, error) {
-	type noMethod ChildList
-	raw := noMethod(*s)
+	type NoMethod ChildList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1124,8 +1124,8 @@ type ChildReference struct {
 }
 
 func (s *ChildReference) MarshalJSON() ([]byte, error) {
-	type noMethod ChildReference
-	raw := noMethod(*s)
+	type NoMethod ChildReference
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1208,8 +1208,8 @@ type Comment struct {
 }
 
 func (s *Comment) MarshalJSON() ([]byte, error) {
-	type noMethod Comment
-	raw := noMethod(*s)
+	type NoMethod Comment
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1241,8 +1241,8 @@ type CommentContext struct {
 }
 
 func (s *CommentContext) MarshalJSON() ([]byte, error) {
-	type noMethod CommentContext
-	raw := noMethod(*s)
+	type NoMethod CommentContext
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1290,8 +1290,8 @@ type CommentList struct {
 }
 
 func (s *CommentList) MarshalJSON() ([]byte, error) {
-	type noMethod CommentList
-	raw := noMethod(*s)
+	type NoMethod CommentList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1355,8 +1355,8 @@ type CommentReply struct {
 }
 
 func (s *CommentReply) MarshalJSON() ([]byte, error) {
-	type noMethod CommentReply
-	raw := noMethod(*s)
+	type NoMethod CommentReply
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1405,8 +1405,8 @@ type CommentReplyList struct {
 }
 
 func (s *CommentReplyList) MarshalJSON() ([]byte, error) {
-	type noMethod CommentReplyList
-	raw := noMethod(*s)
+	type NoMethod CommentReplyList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1583,11 +1583,12 @@ type File struct {
 	// files.
 	Owners []*User `json:"owners,omitempty"`
 
-	// Parents: Collection of parent folders which contain this
-	// file.
-	// Setting this field will put the file in all of the provided folders.
-	// On insert, if no folders are provided, the file will be placed in the
-	// default root folder.
+	// Parents: Collection of parent folders which contain this file.
+	// If not specified as part of an insert request, the file will be
+	// placed directly in the user's My Drive folder. If not specified as
+	// part of a copy request, the file will inherit any discoverable
+	// parents of the source file. Update requests can also use the
+	// addParents and removeParents parameters to modify the parents list.
 	Parents []*ParentReference `json:"parents,omitempty"`
 
 	// PermissionIds: List of permission IDs for users with access to this
@@ -1705,8 +1706,8 @@ type File struct {
 }
 
 func (s *File) MarshalJSON() ([]byte, error) {
-	type noMethod File
-	raw := noMethod(*s)
+	type NoMethod File
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1801,8 +1802,8 @@ type FileCapabilities struct {
 }
 
 func (s *FileCapabilities) MarshalJSON() ([]byte, error) {
-	type noMethod FileCapabilities
-	raw := noMethod(*s)
+	type NoMethod FileCapabilities
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -1894,22 +1895,22 @@ type FileImageMediaMetadata struct {
 }
 
 func (s *FileImageMediaMetadata) MarshalJSON() ([]byte, error) {
-	type noMethod FileImageMediaMetadata
-	raw := noMethod(*s)
+	type NoMethod FileImageMediaMetadata
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *FileImageMediaMetadata) UnmarshalJSON(data []byte) error {
-	type noMethod FileImageMediaMetadata
+	type NoMethod FileImageMediaMetadata
 	var s1 struct {
 		Aperture         gensupport.JSONFloat64 `json:"aperture"`
 		ExposureBias     gensupport.JSONFloat64 `json:"exposureBias"`
 		ExposureTime     gensupport.JSONFloat64 `json:"exposureTime"`
 		FocalLength      gensupport.JSONFloat64 `json:"focalLength"`
 		MaxApertureValue gensupport.JSONFloat64 `json:"maxApertureValue"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1951,20 +1952,20 @@ type FileImageMediaMetadataLocation struct {
 }
 
 func (s *FileImageMediaMetadataLocation) MarshalJSON() ([]byte, error) {
-	type noMethod FileImageMediaMetadataLocation
-	raw := noMethod(*s)
+	type NoMethod FileImageMediaMetadataLocation
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *FileImageMediaMetadataLocation) UnmarshalJSON(data []byte) error {
-	type noMethod FileImageMediaMetadataLocation
+	type NoMethod FileImageMediaMetadataLocation
 	var s1 struct {
 		Altitude  gensupport.JSONFloat64 `json:"altitude"`
 		Latitude  gensupport.JSONFloat64 `json:"latitude"`
 		Longitude gensupport.JSONFloat64 `json:"longitude"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -1998,8 +1999,8 @@ type FileIndexableText struct {
 }
 
 func (s *FileIndexableText) MarshalJSON() ([]byte, error) {
-	type noMethod FileIndexableText
-	raw := noMethod(*s)
+	type NoMethod FileIndexableText
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2044,8 +2045,8 @@ type FileLabels struct {
 }
 
 func (s *FileLabels) MarshalJSON() ([]byte, error) {
-	type noMethod FileLabels
-	raw := noMethod(*s)
+	type NoMethod FileLabels
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2077,8 +2078,8 @@ type FileThumbnail struct {
 }
 
 func (s *FileThumbnail) MarshalJSON() ([]byte, error) {
-	type noMethod FileThumbnail
-	raw := noMethod(*s)
+	type NoMethod FileThumbnail
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2113,8 +2114,8 @@ type FileVideoMediaMetadata struct {
 }
 
 func (s *FileVideoMediaMetadata) MarshalJSON() ([]byte, error) {
-	type noMethod FileVideoMediaMetadata
-	raw := noMethod(*s)
+	type NoMethod FileVideoMediaMetadata
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2174,8 +2175,8 @@ type FileList struct {
 }
 
 func (s *FileList) MarshalJSON() ([]byte, error) {
-	type noMethod FileList
-	raw := noMethod(*s)
+	type NoMethod FileList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2214,8 +2215,8 @@ type GeneratedIds struct {
 }
 
 func (s *GeneratedIds) MarshalJSON() ([]byte, error) {
-	type noMethod GeneratedIds
-	raw := noMethod(*s)
+	type NoMethod GeneratedIds
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2255,8 +2256,8 @@ type ParentList struct {
 }
 
 func (s *ParentList) MarshalJSON() ([]byte, error) {
-	type noMethod ParentList
-	raw := noMethod(*s)
+	type NoMethod ParentList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2299,8 +2300,8 @@ type ParentReference struct {
 }
 
 func (s *ParentReference) MarshalJSON() ([]byte, error) {
-	type noMethod ParentReference
-	raw := noMethod(*s)
+	type NoMethod ParentReference
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2411,8 +2412,8 @@ type Permission struct {
 }
 
 func (s *Permission) MarshalJSON() ([]byte, error) {
-	type noMethod Permission
-	raw := noMethod(*s)
+	type NoMethod Permission
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2463,8 +2464,8 @@ type PermissionTeamDrivePermissionDetails struct {
 }
 
 func (s *PermissionTeamDrivePermissionDetails) MarshalJSON() ([]byte, error) {
-	type noMethod PermissionTeamDrivePermissionDetails
-	raw := noMethod(*s)
+	type NoMethod PermissionTeamDrivePermissionDetails
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2498,8 +2499,8 @@ type PermissionId struct {
 }
 
 func (s *PermissionId) MarshalJSON() ([]byte, error) {
-	type noMethod PermissionId
-	raw := noMethod(*s)
+	type NoMethod PermissionId
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2546,8 +2547,8 @@ type PermissionList struct {
 }
 
 func (s *PermissionList) MarshalJSON() ([]byte, error) {
-	type noMethod PermissionList
-	raw := noMethod(*s)
+	type NoMethod PermissionList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2600,8 +2601,8 @@ type Property struct {
 }
 
 func (s *Property) MarshalJSON() ([]byte, error) {
-	type noMethod Property
-	raw := noMethod(*s)
+	type NoMethod Property
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2642,8 +2643,8 @@ type PropertyList struct {
 }
 
 func (s *PropertyList) MarshalJSON() ([]byte, error) {
-	type noMethod PropertyList
-	raw := noMethod(*s)
+	type NoMethod PropertyList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2740,8 +2741,8 @@ type Revision struct {
 }
 
 func (s *Revision) MarshalJSON() ([]byte, error) {
-	type noMethod Revision
-	raw := noMethod(*s)
+	type NoMethod Revision
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2790,8 +2791,8 @@ type RevisionList struct {
 }
 
 func (s *RevisionList) MarshalJSON() ([]byte, error) {
-	type noMethod RevisionList
-	raw := noMethod(*s)
+	type NoMethod RevisionList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2825,8 +2826,8 @@ type StartPageToken struct {
 }
 
 func (s *StartPageToken) MarshalJSON() ([]byte, error) {
-	type noMethod StartPageToken
-	raw := noMethod(*s)
+	type NoMethod StartPageToken
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2897,8 +2898,8 @@ type TeamDrive struct {
 }
 
 func (s *TeamDrive) MarshalJSON() ([]byte, error) {
-	type noMethod TeamDrive
-	raw := noMethod(*s)
+	type NoMethod TeamDrive
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -2950,20 +2951,20 @@ type TeamDriveBackgroundImageFile struct {
 }
 
 func (s *TeamDriveBackgroundImageFile) MarshalJSON() ([]byte, error) {
-	type noMethod TeamDriveBackgroundImageFile
-	raw := noMethod(*s)
+	type NoMethod TeamDriveBackgroundImageFile
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
 func (s *TeamDriveBackgroundImageFile) UnmarshalJSON(data []byte) error {
-	type noMethod TeamDriveBackgroundImageFile
+	type NoMethod TeamDriveBackgroundImageFile
 	var s1 struct {
 		Width       gensupport.JSONFloat64 `json:"width"`
 		XCoordinate gensupport.JSONFloat64 `json:"xCoordinate"`
 		YCoordinate gensupport.JSONFloat64 `json:"yCoordinate"`
-		*noMethod
+		*NoMethod
 	}
-	s1.noMethod = (*noMethod)(s)
+	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
@@ -3050,8 +3051,8 @@ type TeamDriveCapabilities struct {
 }
 
 func (s *TeamDriveCapabilities) MarshalJSON() ([]byte, error) {
-	type noMethod TeamDriveCapabilities
-	raw := noMethod(*s)
+	type NoMethod TeamDriveCapabilities
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3088,8 +3089,8 @@ type TeamDriveList struct {
 }
 
 func (s *TeamDriveList) MarshalJSON() ([]byte, error) {
-	type noMethod TeamDriveList
-	raw := noMethod(*s)
+	type NoMethod TeamDriveList
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3132,8 +3133,8 @@ type User struct {
 }
 
 func (s *User) MarshalJSON() ([]byte, error) {
-	type noMethod User
-	raw := noMethod(*s)
+	type NoMethod User
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3160,8 +3161,8 @@ type UserPicture struct {
 }
 
 func (s *UserPicture) MarshalJSON() ([]byte, error) {
-	type noMethod UserPicture
-	raw := noMethod(*s)
+	type NoMethod UserPicture
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -3183,11 +3184,10 @@ func (r *AboutService) Get() *AboutGetCall {
 }
 
 // IncludeSubscribed sets the optional parameter "includeSubscribed":
-// When calculating the number of remaining change IDs, whether to
-// include public files the user has opened and shared files. When set
-// to false, this counts only change IDs for owned files and any shared
-// or public files that the user has explicitly added to a folder they
-// own.
+// Whether to count changes outside the My Drive hierarchy. When set to
+// false, changes to files such as those in the Application Data folder
+// or shared files which have not been added to My Drive will be omitted
+// from the maxChangeIdCount.
 func (c *AboutGetCall) IncludeSubscribed(includeSubscribed bool) *AboutGetCall {
 	c.urlParams_.Set("includeSubscribed", fmt.Sprint(includeSubscribed))
 	return c
@@ -3294,7 +3294,7 @@ func (c *AboutGetCall) Do(opts ...googleapi.CallOption) (*About, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3305,7 +3305,7 @@ func (c *AboutGetCall) Do(opts ...googleapi.CallOption) (*About, error) {
 	//   "parameters": {
 	//     "includeSubscribed": {
 	//       "default": "true",
-	//       "description": "When calculating the number of remaining change IDs, whether to include public files the user has opened and shared files. When set to false, this counts only change IDs for owned files and any shared or public files that the user has explicitly added to a folder they own.",
+	//       "description": "Whether to count changes outside the My Drive hierarchy. When set to false, changes to files such as those in the Application Data folder or shared files which have not been added to My Drive will be omitted from the maxChangeIdCount.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     },
@@ -3447,7 +3447,7 @@ func (c *AppsGetCall) Do(opts ...googleapi.CallOption) (*App, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3615,7 +3615,7 @@ func (c *AppsListCall) Do(opts ...googleapi.CallOption) (*AppList, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -3664,7 +3664,8 @@ type ChangesGetCall struct {
 	header_      http.Header
 }
 
-// Get: Gets a specific change.
+// Get: Deprecated - Use changes.getStartPageToken and changes.list to
+// retrieve recent changes.
 func (r *ChangesService) Get(changeId string) *ChangesGetCall {
 	c := &ChangesGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.changeId = changeId
@@ -3774,12 +3775,12 @@ func (c *ChangesGetCall) Do(opts ...googleapi.CallOption) (*Change, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Gets a specific change.",
+	//   "description": "Deprecated - Use changes.getStartPageToken and changes.list to retrieve recent changes.",
 	//   "httpMethod": "GET",
 	//   "id": "drive.changes.get",
 	//   "parameterOrder": [
@@ -3940,7 +3941,7 @@ func (c *ChangesGetStartPageTokenCall) Do(opts ...googleapi.CallOption) (*StartP
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4014,9 +4015,10 @@ func (c *ChangesListCall) IncludeDeleted(includeDeleted bool) *ChangesListCall {
 }
 
 // IncludeSubscribed sets the optional parameter "includeSubscribed":
-// Whether to include public files the user has opened and shared files.
-// When set to false, the list only includes owned files plus any shared
-// or public files the user has explicitly added to a folder they own.
+// Whether to include changes outside the My Drive hierarchy in the
+// result. When set to false, changes to files such as those in the
+// Application Data folder or shared files which have not been added to
+// My Drive will be omitted from the result.
 func (c *ChangesListCall) IncludeSubscribed(includeSubscribed bool) *ChangesListCall {
 	c.urlParams_.Set("includeSubscribed", fmt.Sprint(includeSubscribed))
 	return c
@@ -4054,8 +4056,8 @@ func (c *ChangesListCall) Spaces(spaces string) *ChangesListCall {
 	return c
 }
 
-// StartChangeId sets the optional parameter "startChangeId": Change ID
-// to start listing changes from.
+// StartChangeId sets the optional parameter "startChangeId": Deprecated
+// - use pageToken instead.
 func (c *ChangesListCall) StartChangeId(startChangeId int64) *ChangesListCall {
 	c.urlParams_.Set("startChangeId", fmt.Sprint(startChangeId))
 	return c
@@ -4163,7 +4165,7 @@ func (c *ChangesListCall) Do(opts ...googleapi.CallOption) (*ChangeList, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4186,7 +4188,7 @@ func (c *ChangesListCall) Do(opts ...googleapi.CallOption) (*ChangeList, error) 
 	//     },
 	//     "includeSubscribed": {
 	//       "default": "true",
-	//       "description": "Whether to include public files the user has opened and shared files. When set to false, the list only includes owned files plus any shared or public files the user has explicitly added to a folder they own.",
+	//       "description": "Whether to include changes outside the My Drive hierarchy in the result. When set to false, changes to files such as those in the Application Data folder or shared files which have not been added to My Drive will be omitted from the result.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     },
@@ -4215,7 +4217,7 @@ func (c *ChangesListCall) Do(opts ...googleapi.CallOption) (*ChangeList, error) 
 	//       "type": "string"
 	//     },
 	//     "startChangeId": {
-	//       "description": "Change ID to start listing changes from.",
+	//       "description": "Deprecated - use pageToken instead.",
 	//       "format": "int64",
 	//       "location": "query",
 	//       "type": "string"
@@ -4308,9 +4310,10 @@ func (c *ChangesWatchCall) IncludeDeleted(includeDeleted bool) *ChangesWatchCall
 }
 
 // IncludeSubscribed sets the optional parameter "includeSubscribed":
-// Whether to include public files the user has opened and shared files.
-// When set to false, the list only includes owned files plus any shared
-// or public files the user has explicitly added to a folder they own.
+// Whether to include changes outside the My Drive hierarchy in the
+// result. When set to false, changes to files such as those in the
+// Application Data folder or shared files which have not been added to
+// My Drive will be omitted from the result.
 func (c *ChangesWatchCall) IncludeSubscribed(includeSubscribed bool) *ChangesWatchCall {
 	c.urlParams_.Set("includeSubscribed", fmt.Sprint(includeSubscribed))
 	return c
@@ -4348,8 +4351,8 @@ func (c *ChangesWatchCall) Spaces(spaces string) *ChangesWatchCall {
 	return c
 }
 
-// StartChangeId sets the optional parameter "startChangeId": Change ID
-// to start listing changes from.
+// StartChangeId sets the optional parameter "startChangeId": Deprecated
+// - use pageToken instead.
 func (c *ChangesWatchCall) StartChangeId(startChangeId int64) *ChangesWatchCall {
 	c.urlParams_.Set("startChangeId", fmt.Sprint(startChangeId))
 	return c
@@ -4449,7 +4452,7 @@ func (c *ChangesWatchCall) Do(opts ...googleapi.CallOption) (*Channel, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -4472,7 +4475,7 @@ func (c *ChangesWatchCall) Do(opts ...googleapi.CallOption) (*Channel, error) {
 	//     },
 	//     "includeSubscribed": {
 	//       "default": "true",
-	//       "description": "Whether to include public files the user has opened and shared files. When set to false, the list only includes owned files plus any shared or public files the user has explicitly added to a folder they own.",
+	//       "description": "Whether to include changes outside the My Drive hierarchy in the result. When set to false, changes to files such as those in the Application Data folder or shared files which have not been added to My Drive will be omitted from the result.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     },
@@ -4501,7 +4504,7 @@ func (c *ChangesWatchCall) Do(opts ...googleapi.CallOption) (*Channel, error) {
 	//       "type": "string"
 	//     },
 	//     "startChangeId": {
-	//       "description": "Change ID to start listing changes from.",
+	//       "description": "Deprecated - use pageToken instead.",
 	//       "format": "int64",
 	//       "location": "query",
 	//       "type": "string"
@@ -4854,7 +4857,7 @@ func (c *ChildrenGetCall) Do(opts ...googleapi.CallOption) (*ChildReference, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5004,7 +5007,7 @@ func (c *ChildrenInsertCall) Do(opts ...googleapi.CallOption) (*ChildReference, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5187,7 +5190,7 @@ func (c *ChildrenListCall) Do(opts ...googleapi.CallOption) (*ChildList, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5491,7 +5494,7 @@ func (c *CommentsGetCall) Do(opts ...googleapi.CallOption) (*Comment, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5636,7 +5639,7 @@ func (c *CommentsInsertCall) Do(opts ...googleapi.CallOption) (*Comment, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5809,7 +5812,7 @@ func (c *CommentsListCall) Do(opts ...googleapi.CallOption) (*CommentList, error
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -5991,7 +5994,7 @@ func (c *CommentsPatchCall) Do(opts ...googleapi.CallOption) (*Comment, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6135,7 +6138,7 @@ func (c *CommentsUpdateCall) Do(opts ...googleapi.CallOption) (*Comment, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6339,7 +6342,7 @@ func (c *FilesCopyCall) Do(opts ...googleapi.CallOption) (*File, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -6876,7 +6879,7 @@ func (c *FilesGenerateIdsCall) Do(opts ...googleapi.CallOption) (*GeneratedIds, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7079,7 +7082,7 @@ func (c *FilesGetCall) Do(opts ...googleapi.CallOption) (*File, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7386,7 +7389,7 @@ func (c *FilesInsertCall) Do(opts ...googleapi.CallOption) (*File, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7691,7 +7694,7 @@ func (c *FilesListCall) Do(opts ...googleapi.CallOption) (*FileList, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -7912,7 +7915,11 @@ func (c *FilesPatchCall) RemoveParents(removeParents string) *FilesPatchCall {
 }
 
 // SetModifiedDate sets the optional parameter "setModifiedDate":
-// Whether to set the modified date with the supplied modified date.
+// Whether to set the modified date using the value supplied in the
+// request body. Setting this field to true is equivalent to
+// modifiedDateBehavior=fromBodyOrNow, and false is equivalent to
+// modifiedDateBehavior=now. To prevent any changes to the modified date
+// set modifiedDateBehavior=noChange.
 func (c *FilesPatchCall) SetModifiedDate(setModifiedDate bool) *FilesPatchCall {
 	c.urlParams_.Set("setModifiedDate", fmt.Sprint(setModifiedDate))
 	return c
@@ -8035,7 +8042,7 @@ func (c *FilesPatchCall) Do(opts ...googleapi.CallOption) (*File, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8115,7 +8122,7 @@ func (c *FilesPatchCall) Do(opts ...googleapi.CallOption) (*File, error) {
 	//     },
 	//     "setModifiedDate": {
 	//       "default": "false",
-	//       "description": "Whether to set the modified date with the supplied modified date.",
+	//       "description": "Whether to set the modified date using the value supplied in the request body. Setting this field to true is equivalent to modifiedDateBehavior=fromBodyOrNow, and false is equivalent to modifiedDateBehavior=now. To prevent any changes to the modified date set modifiedDateBehavior=noChange.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     },
@@ -8267,7 +8274,7 @@ func (c *FilesTouchCall) Do(opts ...googleapi.CallOption) (*File, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8409,7 +8416,7 @@ func (c *FilesTrashCall) Do(opts ...googleapi.CallOption) (*File, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8548,7 +8555,7 @@ func (c *FilesUntrashCall) Do(opts ...googleapi.CallOption) (*File, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8683,7 +8690,11 @@ func (c *FilesUpdateCall) RemoveParents(removeParents string) *FilesUpdateCall {
 }
 
 // SetModifiedDate sets the optional parameter "setModifiedDate":
-// Whether to set the modified date with the supplied modified date.
+// Whether to set the modified date using the value supplied in the
+// request body. Setting this field to true is equivalent to
+// modifiedDateBehavior=fromBodyOrNow, and false is equivalent to
+// modifiedDateBehavior=now. To prevent any changes to the modified date
+// set modifiedDateBehavior=noChange.
 func (c *FilesUpdateCall) SetModifiedDate(setModifiedDate bool) *FilesUpdateCall {
 	c.urlParams_.Set("setModifiedDate", fmt.Sprint(setModifiedDate))
 	return c
@@ -8872,7 +8883,7 @@ func (c *FilesUpdateCall) Do(opts ...googleapi.CallOption) (*File, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -8968,7 +8979,7 @@ func (c *FilesUpdateCall) Do(opts ...googleapi.CallOption) (*File, error) {
 	//     },
 	//     "setModifiedDate": {
 	//       "default": "false",
-	//       "description": "Whether to set the modified date with the supplied modified date.",
+	//       "description": "Whether to set the modified date using the value supplied in the request body. Setting this field to true is equivalent to modifiedDateBehavior=fromBodyOrNow, and false is equivalent to modifiedDateBehavior=now. To prevent any changes to the modified date set modifiedDateBehavior=noChange.",
 	//       "location": "query",
 	//       "type": "boolean"
 	//     },
@@ -9179,7 +9190,7 @@ func (c *FilesWatchCall) Do(opts ...googleapi.CallOption) (*Channel, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9474,7 +9485,7 @@ func (c *ParentsGetCall) Do(opts ...googleapi.CallOption) (*ParentReference, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9624,7 +9635,7 @@ func (c *ParentsInsertCall) Do(opts ...googleapi.CallOption) (*ParentReference, 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -9772,7 +9783,7 @@ func (c *ParentsListCall) Do(opts ...googleapi.CallOption) (*ParentList, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10070,7 +10081,7 @@ func (c *PermissionsGetCall) Do(opts ...googleapi.CallOption) (*Permission, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10231,7 +10242,7 @@ func (c *PermissionsGetIdForEmailCall) Do(opts ...googleapi.CallOption) (*Permis
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10287,8 +10298,8 @@ func (r *PermissionsService) Insert(fileId string, permission *Permission) *Perm
 	return c
 }
 
-// EmailMessage sets the optional parameter "emailMessage": A custom
-// message to include in notification emails.
+// EmailMessage sets the optional parameter "emailMessage": A plain text
+// custom message to include in notification emails.
 func (c *PermissionsInsertCall) EmailMessage(emailMessage string) *PermissionsInsertCall {
 	c.urlParams_.Set("emailMessage", emailMessage)
 	return c
@@ -10401,7 +10412,7 @@ func (c *PermissionsInsertCall) Do(opts ...googleapi.CallOption) (*Permission, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10414,7 +10425,7 @@ func (c *PermissionsInsertCall) Do(opts ...googleapi.CallOption) (*Permission, e
 	//   ],
 	//   "parameters": {
 	//     "emailMessage": {
-	//       "description": "A custom message to include in notification emails.",
+	//       "description": "A plain text custom message to include in notification emails.",
 	//       "location": "query",
 	//       "type": "string"
 	//     },
@@ -10599,7 +10610,7 @@ func (c *PermissionsListCall) Do(opts ...googleapi.CallOption) (*PermissionList,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -10815,7 +10826,7 @@ func (c *PermissionsPatchCall) Do(opts ...googleapi.CallOption) (*Permission, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -11015,7 +11026,7 @@ func (c *PermissionsUpdateCall) Do(opts ...googleapi.CallOption) (*Permission, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -11318,7 +11329,7 @@ func (c *PropertiesGetCall) Do(opts ...googleapi.CallOption) (*Property, error) 
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -11468,7 +11479,7 @@ func (c *PropertiesInsertCall) Do(opts ...googleapi.CallOption) (*Property, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -11611,7 +11622,7 @@ func (c *PropertiesListCall) Do(opts ...googleapi.CallOption) (*PropertyList, er
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -11758,7 +11769,7 @@ func (c *PropertiesPatchCall) Do(opts ...googleapi.CallOption) (*Property, error
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -11917,7 +11928,7 @@ func (c *PropertiesUpdateCall) Do(opts ...googleapi.CallOption) (*Property, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -12544,7 +12555,7 @@ func (c *RepliesGetCall) Do(opts ...googleapi.CallOption) (*CommentReply, error)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -12699,7 +12710,7 @@ func (c *RepliesInsertCall) Do(opts ...googleapi.CallOption) (*CommentReply, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -12874,7 +12885,7 @@ func (c *RepliesListCall) Do(opts ...googleapi.CallOption) (*CommentReplyList, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -13061,7 +13072,7 @@ func (c *RepliesPatchCall) Do(opts ...googleapi.CallOption) (*CommentReply, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -13215,7 +13226,7 @@ func (c *RepliesUpdateCall) Do(opts ...googleapi.CallOption) (*CommentReply, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -13480,7 +13491,7 @@ func (c *RevisionsGetCall) Do(opts ...googleapi.CallOption) (*Revision, error) {
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -13645,7 +13656,7 @@ func (c *RevisionsListCall) Do(opts ...googleapi.CallOption) (*RevisionList, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -13819,7 +13830,7 @@ func (c *RevisionsPatchCall) Do(opts ...googleapi.CallOption) (*Revision, error)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -13964,7 +13975,7 @@ func (c *RevisionsUpdateCall) Do(opts ...googleapi.CallOption) (*Revision, error
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -14219,7 +14230,7 @@ func (c *TeamdrivesGetCall) Do(opts ...googleapi.CallOption) (*TeamDrive, error)
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -14352,7 +14363,7 @@ func (c *TeamdrivesInsertCall) Do(opts ...googleapi.CallOption) (*TeamDrive, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -14518,7 +14529,7 @@ func (c *TeamdrivesListCall) Do(opts ...googleapi.CallOption) (*TeamDriveList, e
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -14686,7 +14697,7 @@ func (c *TeamdrivesUpdateCall) Do(opts ...googleapi.CallOption) (*TeamDrive, err
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil

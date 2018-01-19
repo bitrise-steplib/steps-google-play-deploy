@@ -163,8 +163,8 @@ type ImportSshPublicKeyResponse struct {
 }
 
 func (s *ImportSshPublicKeyResponse) MarshalJSON() ([]byte, error) {
-	type noMethod ImportSshPublicKeyResponse
-	raw := noMethod(*s)
+	type NoMethod ImportSshPublicKeyResponse
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -172,19 +172,15 @@ func (s *ImportSshPublicKeyResponse) MarshalJSON() ([]byte, error) {
 // virtual machine on
 // Google Compute Engine.
 type LoginProfile struct {
-	// Name: A unique user ID for identifying the user.
+	// Name: A unique user ID.
 	Name string `json:"name,omitempty"`
 
-	// PosixAccounts: The list of POSIX accounts associated with the
-	// Directory API user.
+	// PosixAccounts: The list of POSIX accounts associated with the user.
 	PosixAccounts []*PosixAccount `json:"posixAccounts,omitempty"`
 
 	// SshPublicKeys: A map from SSH public key fingerprint to the
 	// associated key object.
 	SshPublicKeys map[string]SshPublicKey `json:"sshPublicKeys,omitempty"`
-
-	// Suspended: Indicates if the user is suspended.
-	Suspended bool `json:"suspended,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
@@ -208,8 +204,8 @@ type LoginProfile struct {
 }
 
 func (s *LoginProfile) MarshalJSON() ([]byte, error) {
-	type noMethod LoginProfile
-	raw := noMethod(*s)
+	type NoMethod LoginProfile
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -263,8 +259,8 @@ type PosixAccount struct {
 }
 
 func (s *PosixAccount) MarshalJSON() ([]byte, error) {
-	type noMethod PosixAccount
-	raw := noMethod(*s)
+	type NoMethod PosixAccount
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -307,8 +303,8 @@ type SshPublicKey struct {
 }
 
 func (s *SshPublicKey) MarshalJSON() ([]byte, error) {
-	type noMethod SshPublicKey
-	raw := noMethod(*s)
+	type NoMethod SshPublicKey
+	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
@@ -421,7 +417,7 @@ func (c *UsersGetLoginProfileCall) Do(opts ...googleapi.CallOption) (*LoginProfi
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -567,7 +563,7 @@ func (c *UsersImportSshPublicKeyCall) Do(opts ...googleapi.CallOption) (*ImportS
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -701,7 +697,7 @@ func (c *UsersProjectsDeleteCall) Do(opts ...googleapi.CallOption) (*Empty, erro
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -827,7 +823,7 @@ func (c *UsersSshPublicKeysDeleteCall) Do(opts ...googleapi.CallOption) (*Empty,
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -967,7 +963,7 @@ func (c *UsersSshPublicKeysGetCall) Do(opts ...googleapi.CallOption) (*SshPublic
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -1109,7 +1105,7 @@ func (c *UsersSshPublicKeysPatchCall) Do(opts ...googleapi.CallOption) (*SshPubl
 		},
 	}
 	target := &ret
-	if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+	if err := gensupport.DecodeResponse(target, res); err != nil {
 		return nil, err
 	}
 	return ret, nil
