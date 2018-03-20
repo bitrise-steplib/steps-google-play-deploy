@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.4.1)
+## Changelog (Current version: 1.4.2)
 
 -----------------
+
+### 1.4.2 (2018 Mar 20)
+
+* [9d4b04e] Prepare for 1.4.2
+* [d41c711] added internal option (#34)
 
 ### 1.4.1 (2018 Jan 19)
 
@@ -98,4 +103,4 @@
 
 -----------------
 
-Updated: 2018 Jan 19
+Updated: 2018 Mar 20
