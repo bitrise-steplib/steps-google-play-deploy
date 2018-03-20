@@ -85,6 +85,7 @@ inputs:
       description: |-
         Track to assign the APK(s).
       value_options:
+      - internal
       - alpha
       - beta
       - rollout
