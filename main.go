@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -467,8 +468,6 @@ func main() {
 		fmt.Println()
 		log.Infof("Deactivating blocking apk versions")
 
-		heighestVersion := versionCodes[0]
-
 		// List all tracks
 		tracksService := androidpublisher.NewEditsTracksService(service)
 
@@ -509,30 +508,31 @@ func main() {
 
 			log.Printf(" checking apk versions on track: %s", track.Track)
 
-			versionCodesToKeep := []int64{}
-			versionCodes := track.VersionCodes
+			log.Infof(" versionCodes: %v", track.VersionCodes)
 
-			log.Infof(" versionCodes: %v", versionCodes)
+			var cleanTrack bool
 
-			for _, versionCode := range versionCodes {
-				if versionCode > heighestVersion {
-					log.Donef(" - keeping apk with version: %d", versionCode)
-					versionCodesToKeep = append(versionCodesToKeep, versionCode)
-				} else {
-					log.Warnf(" - removing apk with version: %d", versionCode)
+			if len(track.VersionCodes) != len(versionCodes) {
+				log.Warnf("Mismatching apk count, removing (%v) versions from track: %s", track.VersionCodes, track.Track)
+				cleanTrack = true
+			} else {
+				sort.Slice(track.VersionCodes, func(a, b int) bool { return track.VersionCodes[a] < track.VersionCodes[b] })
+				sort.Slice(versionCodes, func(a, b int) bool { return versionCodes[a] < versionCodes[b] })
+
+				for i := 0; i < len(versionCodes); i++ {
+					if track.VersionCodes[i] < versionCodes[i] {
+						log.Warnf("Shadowing APK found, removing (%v) versions from track: %s", track.VersionCodes, track.Track)
+						cleanTrack = true
+						break
+					}
 				}
 			}
 
-			if len(versionCodes) != len(versionCodesToKeep) {
+			if cleanTrack {
 				anyTrackUpdated = true
 
-				if len(versionCodesToKeep) > 0 {
-					track.VersionCodes = versionCodesToKeep
-				} else {
-					track.VersionCodes = []int64{}
-					track.NullFields = []string{"VersionCodes"}
-				}
-
+				track.VersionCodes = []int64{}
+				track.NullFields = []string{"VersionCodes"}
 				track.ForceSendFields = []string{"VersionCodes"}
 
 				tracksUpdateCall := tracksService.Patch(configs.PackageName, appEdit.Id, trackName, track)
