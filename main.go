@@ -183,12 +183,6 @@ func (configs ConfigsModel) validate() error {
 	return nil
 }
 
-func sortSlice(i []int64) {
-	sort.Slice(i, func(a, b int) bool {
-		return i[a] < i[b]
-	})
-}
-
 func downloadFile(downloadURL, targetPath string) error {
 	outFile, err := os.Create(targetPath)
 	if err != nil {
@@ -516,25 +510,25 @@ func main() {
 
 			log.Infof(" versionCodes: %v", track.VersionCodes)
 
-			var updateTrack bool
+			var cleanTrack bool
 
 			if len(track.VersionCodes) != len(versionCodes) {
 				log.Warnf("Mismatching apk count, removing (%v) versions from track: %s", track.VersionCodes, track.Track)
-				updateTrack = true
+				cleanTrack = true
 			} else {
-				sortSlice(track.VersionCodes)
-				sortSlice(versionCodes)
+				sort.Slice(track.VersionCodes, func(a, b int) bool { return track.VersionCodes[a] < track.VersionCodes[b] })
+				sort.Slice(versionCodes, func(a, b int) bool { return versionCodes[a] < versionCodes[b] })
 
 				for i := 0; i < len(versionCodes); i++ {
 					if track.VersionCodes[i] < versionCodes[i] {
-						log.Warnf("APK found with wrong version, removing (%v) versions from track: %s", track.VersionCodes, track.Track)
-						updateTrack = true
+						log.Warnf("Shadowing APK found, removing (%v) versions from track: %s", track.VersionCodes, track.Track)
+						cleanTrack = true
 						break
 					}
 				}
 			}
 
-			if updateTrack {
+			if cleanTrack {
 				anyTrackUpdated = true
 
 				track.VersionCodes = []int64{}
