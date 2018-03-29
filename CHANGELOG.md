@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.4.2)
+## Changelog (Current version: 1.4.3)
 
 -----------------
+
+### 1.4.3 (2018 Mar 29)
+
+* [7be29a2] Prepare for 1.4.3
+* [d3d946d] updated unblocking logic (#36)
 
 ### 1.4.2 (2018 Mar 20)
 
@@ -103,4 +108,4 @@
 
 -----------------
 
-Updated: 2018 Mar 20
+Updated: 2018 Mar 29
