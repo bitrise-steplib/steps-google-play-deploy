@@ -394,7 +394,7 @@ func main() {
 			editsBundlesService := androidpublisher.NewEditsBundlesService(service)
 
 			editsBundlesUploadCall := editsBundlesService.Upload(configs.PackageName, appEdit.Id)
-			editsBundlesUploadCall.Media(apkFile, googleapi.ContentType("application/vnd.android.package-archive"))
+			editsBundlesUploadCall.Media(apkFile, googleapi.ContentType("application/octet-stream"))
 
 			bundle, err := editsBundlesUploadCall.Do()
 			if err != nil {
