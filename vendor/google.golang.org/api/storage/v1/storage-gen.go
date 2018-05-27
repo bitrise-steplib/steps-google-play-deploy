@@ -222,8 +222,7 @@ type Bucket struct {
 	// when no ACL is provided.
 	DefaultObjectAcl []*ObjectAccessControl `json:"defaultObjectAcl,omitempty"`
 
-	// Encryption: Encryption configuration used by default for newly
-	// inserted objects, when no encryption config is specified.
+	// Encryption: Encryption configuration for a bucket.
 	Encryption *BucketEncryption `json:"encryption,omitempty"`
 
 	// Etag: HTTP 1.1 Entity tag for the bucket.
@@ -405,12 +404,11 @@ func (s *BucketCors) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// BucketEncryption: Encryption configuration used by default for newly
-// inserted objects, when no encryption config is specified.
+// BucketEncryption: Encryption configuration for a bucket.
 type BucketEncryption struct {
 	// DefaultKmsKeyName: A Cloud KMS key that will be used to encrypt
 	// objects inserted into this bucket, if no encryption method is
-	// specified. Limited availability; usable only by enabled projects.
+	// specified.
 	DefaultKmsKeyName string `json:"defaultKmsKeyName,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "DefaultKmsKeyName")
@@ -2513,8 +2511,7 @@ type BucketAccessControlsPatchCall struct {
 	header_             http.Header
 }
 
-// Patch: Updates an ACL entry on the specified bucket. This method
-// supports patch semantics.
+// Patch: Patches an ACL entry on the specified bucket.
 func (r *BucketAccessControlsService) Patch(bucket string, entity string, bucketaccesscontrol *BucketAccessControl) *BucketAccessControlsPatchCall {
 	c := &BucketAccessControlsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -2617,7 +2614,7 @@ func (c *BucketAccessControlsPatchCall) Do(opts ...googleapi.CallOption) (*Bucke
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates an ACL entry on the specified bucket. This method supports patch semantics.",
+	//   "description": "Patches an ACL entry on the specified bucket.",
 	//   "httpMethod": "PATCH",
 	//   "id": "storage.bucketAccessControls.patch",
 	//   "parameterOrder": [
@@ -5524,8 +5521,7 @@ type DefaultObjectAccessControlsPatchCall struct {
 	header_             http.Header
 }
 
-// Patch: Updates a default object ACL entry on the specified bucket.
-// This method supports patch semantics.
+// Patch: Patches a default object ACL entry on the specified bucket.
 func (r *DefaultObjectAccessControlsService) Patch(bucket string, entity string, objectaccesscontrol *ObjectAccessControl) *DefaultObjectAccessControlsPatchCall {
 	c := &DefaultObjectAccessControlsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -5628,7 +5624,7 @@ func (c *DefaultObjectAccessControlsPatchCall) Do(opts ...googleapi.CallOption) 
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates a default object ACL entry on the specified bucket. This method supports patch semantics.",
+	//   "description": "Patches a default object ACL entry on the specified bucket.",
 	//   "httpMethod": "PATCH",
 	//   "id": "storage.defaultObjectAccessControls.patch",
 	//   "parameterOrder": [
@@ -7093,8 +7089,7 @@ type ObjectAccessControlsPatchCall struct {
 	header_             http.Header
 }
 
-// Patch: Updates an ACL entry on the specified object. This method
-// supports patch semantics.
+// Patch: Patches an ACL entry on the specified object.
 func (r *ObjectAccessControlsService) Patch(bucket string, object string, entity string, objectaccesscontrol *ObjectAccessControl) *ObjectAccessControlsPatchCall {
 	c := &ObjectAccessControlsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.bucket = bucket
@@ -7207,7 +7202,7 @@ func (c *ObjectAccessControlsPatchCall) Do(opts ...googleapi.CallOption) (*Objec
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates an ACL entry on the specified object. This method supports patch semantics.",
+	//   "description": "Patches an ACL entry on the specified object.",
 	//   "httpMethod": "PATCH",
 	//   "id": "storage.objectAccessControls.patch",
 	//   "parameterOrder": [
@@ -8931,11 +8926,12 @@ func (c *ObjectsInsertCall) doRequest(alt string) (*http.Response, error) {
 		body = new(bytes.Buffer)
 		reqHeaders.Set("Content-Type", "application/json")
 	}
-	body, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
+	body, getBody, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
 	defer cleanup()
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
 	req.Header = reqHeaders
+	gensupport.SetGetBody(req, getBody)
 	googleapi.Expand(req.URL, map[string]string{
 		"bucket": c.bucket,
 	})
