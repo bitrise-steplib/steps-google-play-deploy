@@ -64,13 +64,13 @@ inputs:
     opts:
       title: Package name
       description: |-
-        Package name of the APK to deploy.
+        Package name of the APK or App bundle to deploy.
       is_required: true
   - apk_path: "$BITRISE_APK_PATH"
     opts:
-      title: APK file path
+      title: APK or App Bundle file path
       description: |-
-        Path to the APK to deploy.
+        Path to the APK or App Bundle to deploy.
 
         You can provide multiple APK paths separated by `|` character.
 
@@ -78,6 +78,7 @@ inputs:
 
         - `/path/to/my/app.apk`
         - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
+        - `/path/to/my/bundle.aab`
       is_required: true
   - track: alpha
     opts:
