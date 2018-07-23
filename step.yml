@@ -91,6 +91,7 @@ inputs:
       - beta
       - rollout
       - production
+      - pre-release
       is_required: true
   - user_fraction: "0.5"
     opts:
