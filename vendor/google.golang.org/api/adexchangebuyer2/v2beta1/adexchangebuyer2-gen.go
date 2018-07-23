@@ -1065,6 +1065,8 @@ func (s *Correction) MarshalJSON() ([]byte, error) {
 }
 
 // Creative: A creative and its classification data.
+//
+// Next ID: 35
 type Creative struct {
 	// AccountId: The account that this creative belongs to.
 	// Can be used to filter the response of the
@@ -1388,7 +1390,9 @@ type Date struct {
 	// if specifying a year/month where the day is not significant.
 	Day int64 `json:"day,omitempty"`
 
-	// Month: Month of year. Must be from 1 to 12.
+	// Month: Month of year. Must be from 1 to 12, or 0 if specifying a date
+	// without a
+	// month.
 	Month int64 `json:"month,omitempty"`
 
 	// Year: Year of date. Must be from 1 to 9999, or 0 if specifying a date
@@ -1585,6 +1589,10 @@ type Disapproval struct {
 	// specifications.
 	//   "UNSUPPORTED_FLASH_CONTENT" - Flash content was found in an
 	// unsupported context.
+	//   "MISUSE_BY_OMID_SCRIPT" - Misuse by an Open Measurement SDK script.
+	//   "NON_WHITELISTED_OMID_VENDOR" - Use of an Open Measurement SDK
+	// vendor not on approved whitelist.
+	//   "DESTINATION_EXPERIENCE" - Unacceptable landing page.
 	Reason string `json:"reason,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "Details") to
@@ -1673,17 +1681,6 @@ type FilterSet struct {
 	//   "APP" - The ad impression appears in an app.
 	Environment string `json:"environment,omitempty"`
 
-	// Format: DEPRECATED: use repeated formats field instead.
-	// The format on which to filter; optional.
-	//
-	// Possible values:
-	//   "FORMAT_UNSPECIFIED" - A placeholder for an undefined format;
-	// indicates that no format filter
-	// will be applied.
-	//   "DISPLAY" - The ad impression is display format (i.e. an image).
-	//   "VIDEO" - The ad impression is video format.
-	Format string `json:"format,omitempty"`
-
 	// Formats: The list of formats on which to filter; may be empty. The
 	// filters
 	// represented by multiple formats are ORed together (i.e. if
@@ -1694,8 +1691,14 @@ type FilterSet struct {
 	//   "FORMAT_UNSPECIFIED" - A placeholder for an undefined format;
 	// indicates that no format filter
 	// will be applied.
-	//   "DISPLAY" - The ad impression is display format (i.e. an image).
-	//   "VIDEO" - The ad impression is video format.
+	//   "NATIVE_DISPLAY" - The ad impression is a native ad, and display
+	// (i.e. image) format.
+	//   "NATIVE_VIDEO" - The ad impression is a native ad, and video
+	// format.
+	//   "NON_NATIVE_DISPLAY" - The ad impression is not a native ad, and
+	// display (i.e. image) format.
+	//   "NON_NATIVE_VIDEO" - The ad impression is not a native ad, and
+	// video format.
 	Formats []string `json:"formats,omitempty"`
 
 	// Name: A user-defined name of the filter set. Filter set names must be
@@ -1727,6 +1730,14 @@ type FilterSet struct {
 	//   "MOBILE" - The ad impression appears on a mobile device.
 	Platforms []string `json:"platforms,omitempty"`
 
+	// PublisherIdentifiers: For Exchange Bidding buyers only.
+	// The list of publisher identifiers on which to filter; may be
+	// empty.
+	// The filters represented by multiple publisher identifiers are
+	// ORed
+	// together.
+	PublisherIdentifiers []string `json:"publisherIdentifiers,omitempty"`
+
 	// RealtimeTimeRange: An open-ended realtime time range, defined by the
 	// aggregation start
 	// timestamp.
@@ -1737,8 +1748,9 @@ type FilterSet struct {
 	// Interpreted relative to Pacific time zone.
 	RelativeDateRange *RelativeDateRange `json:"relativeDateRange,omitempty"`
 
-	// SellerNetworkIds: The list of IDs of the seller (publisher) networks
-	// on which to filter;
+	// SellerNetworkIds: For Ad Exchange buyers only.
+	// The list of IDs of the seller (publisher) networks on which to
+	// filter;
 	// may be empty. The filters represented by multiple seller network IDs
 	// are
 	// ORed together (i.e. if non-empty, results must match any one of
@@ -3346,6 +3358,10 @@ func (s *TimeInterval) MarshalJSON() ([]byte, error) {
 type VideoContent struct {
 	// VideoUrl: The URL to fetch a video ad.
 	VideoUrl string `json:"videoUrl,omitempty"`
+
+	// VideoVastXml: The contents of a VAST document for a video ad.
+	// This document should conform to the VAST 2.0 or 3.0 standard.
+	VideoVastXml string `json:"videoVastXml,omitempty"`
 
 	// ForceSendFields is a list of field names (e.g. "VideoUrl") to
 	// unconditionally include in API requests. By default, fields with
@@ -5095,13 +5111,6 @@ func (r *AccountsCreativesService) Create(accountId string, creative *Creative) 
 	return c
 }
 
-// AccountId1 sets the optional parameter "accountId1": The account the
-// creative belongs to.
-func (c *AccountsCreativesCreateCall) AccountId1(accountId1 string) *AccountsCreativesCreateCall {
-	c.urlParams_.Set("accountId1", accountId1)
-	return c
-}
-
 // DuplicateIdMode sets the optional parameter "duplicateIdMode":
 // Indicates if multiple creatives can share an ID or not. Default
 // is
@@ -5213,11 +5222,6 @@ func (c *AccountsCreativesCreateCall) Do(opts ...googleapi.CallOption) (*Creativ
 	//       "description": "The account that this creative belongs to.\nCan be used to filter the response of the\ncreatives.list\nmethod.",
 	//       "location": "path",
 	//       "required": true,
-	//       "type": "string"
-	//     },
-	//     "accountId1": {
-	//       "description": "The account the creative belongs to.",
-	//       "location": "query",
 	//       "type": "string"
 	//     },
 	//     "duplicateIdMode": {
@@ -5784,13 +5788,6 @@ func (r *AccountsCreativesService) Update(accountId string, creativeId string, c
 	return c
 }
 
-// AccountId1 sets the optional parameter "accountId1": The account the
-// creative belongs to.
-func (c *AccountsCreativesUpdateCall) AccountId1(accountId1 string) *AccountsCreativesUpdateCall {
-	c.urlParams_.Set("accountId1", accountId1)
-	return c
-}
-
 // Fields allows partial responses to be retrieved. See
 // https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
 // for more information.
@@ -5891,11 +5888,6 @@ func (c *AccountsCreativesUpdateCall) Do(opts ...googleapi.CallOption) (*Creativ
 	//       "description": "The account that this creative belongs to.\nCan be used to filter the response of the\ncreatives.list\nmethod.",
 	//       "location": "path",
 	//       "required": true,
-	//       "type": "string"
-	//     },
-	//     "accountId1": {
-	//       "description": "The account the creative belongs to.",
-	//       "location": "query",
 	//       "type": "string"
 	//     },
 	//     "creativeId": {

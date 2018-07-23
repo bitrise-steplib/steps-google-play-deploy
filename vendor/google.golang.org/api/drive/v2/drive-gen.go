@@ -271,6 +271,9 @@ type About struct {
 	// file type. The most specific type takes precedence.
 	AdditionalRoleInfo []*AboutAdditionalRoleInfo `json:"additionalRoleInfo,omitempty"`
 
+	// CanCreateTeamDrives: Whether the user can create Team Drives.
+	CanCreateTeamDrives bool `json:"canCreateTeamDrives,omitempty"`
+
 	// DomainSharingPolicy: The domain sharing policy for the current user.
 	// Possible values are:
 	// - allowed
@@ -2337,7 +2340,8 @@ type Permission struct {
 	// - They can only be set on user and group permissions
 	// - The date must be in the future
 	// - The date cannot be more than a year in the future
-	// - The date can only be set on drive.permissions.update requests
+	// - The date can only be set on drive.permissions.update or
+	// drive.permissions.patch requests
 	ExpirationDate string `json:"expirationDate,omitempty"`
 
 	// Id: The ID of the user this permission refers to, and identical to
@@ -2576,7 +2580,8 @@ type Property struct {
 	// Value: The value of this property.
 	Value string `json:"value,omitempty"`
 
-	// Visibility: The visibility of this property.
+	// Visibility: The visibility of this property. Allowed values are
+	// PRIVATE and PUBLIC. (Default: PRIVATE)
 	Visibility string `json:"visibility,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -7331,11 +7336,12 @@ func (c *FilesInsertCall) doRequest(alt string) (*http.Response, error) {
 		body = new(bytes.Buffer)
 		reqHeaders.Set("Content-Type", "application/json")
 	}
-	body, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
+	body, getBody, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
 	defer cleanup()
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("POST", urls, body)
 	req.Header = reqHeaders
+	gensupport.SetGetBody(req, getBody)
 	return gensupport.SendRequest(c.ctx_, c.s.client, req)
 }
 
@@ -8822,11 +8828,12 @@ func (c *FilesUpdateCall) doRequest(alt string) (*http.Response, error) {
 		body = new(bytes.Buffer)
 		reqHeaders.Set("Content-Type", "application/json")
 	}
-	body, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
+	body, getBody, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
 	defer cleanup()
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
 	req.Header = reqHeaders
+	gensupport.SetGetBody(req, getBody)
 	googleapi.Expand(req.URL, map[string]string{
 		"fileId": c.fileId,
 	})
@@ -11670,8 +11677,7 @@ type PropertiesPatchCall struct {
 	header_     http.Header
 }
 
-// Patch: Updates a property, or adds it if it doesn't exist. This
-// method supports patch semantics.
+// Patch: Updates a property.
 func (r *PropertiesService) Patch(fileId string, propertyKey string, property *Property) *PropertiesPatchCall {
 	c := &PropertiesPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.fileId = fileId
@@ -11681,7 +11687,8 @@ func (r *PropertiesService) Patch(fileId string, propertyKey string, property *P
 }
 
 // Visibility sets the optional parameter "visibility": The visibility
-// of the property.
+// of the property. Allowed values are PRIVATE and PUBLIC. (Default:
+// PRIVATE)
 func (c *PropertiesPatchCall) Visibility(visibility string) *PropertiesPatchCall {
 	c.urlParams_.Set("visibility", visibility)
 	return c
@@ -11774,7 +11781,7 @@ func (c *PropertiesPatchCall) Do(opts ...googleapi.CallOption) (*Property, error
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates a property, or adds it if it doesn't exist. This method supports patch semantics.",
+	//   "description": "Updates a property.",
 	//   "httpMethod": "PATCH",
 	//   "id": "drive.properties.patch",
 	//   "parameterOrder": [
@@ -11796,7 +11803,7 @@ func (c *PropertiesPatchCall) Do(opts ...googleapi.CallOption) (*Property, error
 	//     },
 	//     "visibility": {
 	//       "default": "private",
-	//       "description": "The visibility of the property.",
+	//       "description": "The visibility of the property. Allowed values are PRIVATE and PUBLIC. (Default: PRIVATE)",
 	//       "location": "query",
 	//       "type": "string"
 	//     }
@@ -11830,7 +11837,7 @@ type PropertiesUpdateCall struct {
 	header_     http.Header
 }
 
-// Update: Updates a property, or adds it if it doesn't exist.
+// Update: Updates a property.
 func (r *PropertiesService) Update(fileId string, propertyKey string, property *Property) *PropertiesUpdateCall {
 	c := &PropertiesUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.fileId = fileId
@@ -11840,7 +11847,8 @@ func (r *PropertiesService) Update(fileId string, propertyKey string, property *
 }
 
 // Visibility sets the optional parameter "visibility": The visibility
-// of the property.
+// of the property. Allowed values are PRIVATE and PUBLIC. (Default:
+// PRIVATE)
 func (c *PropertiesUpdateCall) Visibility(visibility string) *PropertiesUpdateCall {
 	c.urlParams_.Set("visibility", visibility)
 	return c
@@ -11933,7 +11941,7 @@ func (c *PropertiesUpdateCall) Do(opts ...googleapi.CallOption) (*Property, erro
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates a property, or adds it if it doesn't exist.",
+	//   "description": "Updates a property.",
 	//   "httpMethod": "PUT",
 	//   "id": "drive.properties.update",
 	//   "parameterOrder": [
@@ -11955,7 +11963,7 @@ func (c *PropertiesUpdateCall) Do(opts ...googleapi.CallOption) (*Property, erro
 	//     },
 	//     "visibility": {
 	//       "default": "private",
-	//       "description": "The visibility of the property.",
+	//       "description": "The visibility of the property. Allowed values are PRIVATE and PUBLIC. (Default: PRIVATE)",
 	//       "location": "query",
 	//       "type": "string"
 	//     }
@@ -12233,11 +12241,12 @@ func (c *RealtimeUpdateCall) doRequest(alt string) (*http.Response, error) {
 		body = new(bytes.Buffer)
 		reqHeaders.Set("Content-Type", "application/json")
 	}
-	body, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
+	body, getBody, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
 	defer cleanup()
 	urls += "?" + c.urlParams_.Encode()
 	req, _ := http.NewRequest("PUT", urls, body)
 	req.Header = reqHeaders
+	gensupport.SetGetBody(req, getBody)
 	googleapi.Expand(req.URL, map[string]string{
 		"fileId": c.fileId,
 	})

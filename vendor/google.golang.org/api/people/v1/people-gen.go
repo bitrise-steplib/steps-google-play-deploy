@@ -1,4 +1,4 @@
-// Package people provides access to the Google People API.
+// Package people provides access to the People API.
 //
 // See https://developers.google.com/people/
 //
@@ -668,7 +668,9 @@ type Date struct {
 	// if specifying a year/month where the day is not significant.
 	Day int64 `json:"day,omitempty"`
 
-	// Month: Month of year. Must be from 1 to 12.
+	// Month: Month of year. Must be from 1 to 12, or 0 if specifying a date
+	// without a
+	// month.
 	Month int64 `json:"month,omitempty"`
 
 	// Year: Year of date. Must be from 1 to 9999, or 0 if specifying a date
@@ -1214,7 +1216,10 @@ func (s *Membership) MarshalJSON() ([]byte, error) {
 }
 
 // ModifyContactGroupMembersRequest: A request to modify an existing
-// contact group's members.
+// contact group's members. Contacts can be
+// removed from any group but they can only be added to a user group
+// or
+// myContacts or starred system groups.
 type ModifyContactGroupMembersRequest struct {
 	// ResourceNamesToAdd: The resource names of the contact people to add
 	// in the form of in the form
@@ -2360,8 +2365,9 @@ func (s *Tagline) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// UpdateContactGroupRequest: A request to update an existing contact
-// group. Only the name can be updated.
+// UpdateContactGroupRequest: A request to update an existing user
+// contact group. All updated fields will
+// be replaced.
 type UpdateContactGroupRequest struct {
 	// ContactGroup: The contact group to update.
 	ContactGroup *ContactGroup `json:"contactGroup,omitempty"`
@@ -3793,7 +3799,9 @@ func (r *PeopleService) Get(resourceName string) *PeopleGetCall {
 // PersonFields sets the optional parameter "personFields":
 // **Required.** A field mask to restrict which fields on the person
 // are
-// returned. Valid values are:
+// returned. Multiple fields can be specified by separating them with
+// commas.
+// Valid values are:
 //
 // * addresses
 // * ageRanges
@@ -3822,6 +3830,7 @@ func (r *PeopleService) Get(resourceName string) *PeopleGetCall {
 // * skills
 // * taglines
 // * urls
+// * userDefined
 func (c *PeopleGetCall) PersonFields(personFields string) *PeopleGetCall {
 	c.urlParams_.Set("personFields", personFields)
 	return c
@@ -3941,7 +3950,7 @@ func (c *PeopleGetCall) Do(opts ...googleapi.CallOption) (*Person, error) {
 	//   ],
 	//   "parameters": {
 	//     "personFields": {
-	//       "description": "**Required.** A field mask to restrict which fields on the person are\nreturned. Valid values are:\n\n* addresses\n* ageRanges\n* biographies\n* birthdays\n* braggingRights\n* coverPhotos\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* memberships\n* metadata\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* photos\n* relations\n* relationshipInterests\n* relationshipStatuses\n* residences\n* skills\n* taglines\n* urls",
+	//       "description": "**Required.** A field mask to restrict which fields on the person are\nreturned. Multiple fields can be specified by separating them with commas.\nValid values are:\n\n* addresses\n* ageRanges\n* biographies\n* birthdays\n* braggingRights\n* coverPhotos\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* memberships\n* metadata\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* photos\n* relations\n* relationshipInterests\n* relationshipStatuses\n* residences\n* skills\n* taglines\n* urls\n* userDefined",
 	//       "format": "google-fieldmask",
 	//       "location": "query",
 	//       "type": "string"
@@ -4004,7 +4013,9 @@ func (r *PeopleService) GetBatchGet() *PeopleGetBatchGetCall {
 // PersonFields sets the optional parameter "personFields":
 // **Required.** A field mask to restrict which fields on each person
 // are
-// returned. Valid values are:
+// returned. Multiple fields can be specified by separating them with
+// commas.
+// Valid values are:
 //
 // * addresses
 // * ageRanges
@@ -4033,6 +4044,7 @@ func (r *PeopleService) GetBatchGet() *PeopleGetBatchGetCall {
 // * skills
 // * taglines
 // * urls
+// * userDefined
 func (c *PeopleGetBatchGetCall) PersonFields(personFields string) *PeopleGetBatchGetCall {
 	c.urlParams_.Set("personFields", personFields)
 	return c
@@ -4166,7 +4178,7 @@ func (c *PeopleGetBatchGetCall) Do(opts ...googleapi.CallOption) (*GetPeopleResp
 	//   "parameterOrder": [],
 	//   "parameters": {
 	//     "personFields": {
-	//       "description": "**Required.** A field mask to restrict which fields on each person are\nreturned. Valid values are:\n\n* addresses\n* ageRanges\n* biographies\n* birthdays\n* braggingRights\n* coverPhotos\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* memberships\n* metadata\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* photos\n* relations\n* relationshipInterests\n* relationshipStatuses\n* residences\n* skills\n* taglines\n* urls",
+	//       "description": "**Required.** A field mask to restrict which fields on each person are\nreturned. Multiple fields can be specified by separating them with commas.\nValid values are:\n\n* addresses\n* ageRanges\n* biographies\n* birthdays\n* braggingRights\n* coverPhotos\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* memberships\n* metadata\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* photos\n* relations\n* relationshipInterests\n* relationshipStatuses\n* residences\n* skills\n* taglines\n* urls\n* userDefined",
 	//       "format": "google-fieldmask",
 	//       "location": "query",
 	//       "type": "string"
@@ -4242,12 +4254,13 @@ func (r *PeopleService) UpdateContact(resourceName string, person *Person) *Peop
 // UpdatePersonFields sets the optional parameter "updatePersonFields":
 // **Required.** A field mask to restrict which fields on the person
 // are
-// updated. Valid values are:
+// updated. Multiple fields can be specified by separating them with
+// commas.
+// All updated fields will be replaced. Valid values are:
 //
 // * addresses
 // * biographies
 // * birthdays
-// * braggingRights
 // * emailAddresses
 // * events
 // * genders
@@ -4261,8 +4274,8 @@ func (r *PeopleService) UpdateContact(resourceName string, person *Person) *Peop
 // * phoneNumbers
 // * relations
 // * residences
-// * skills
 // * urls
+// * userDefined
 func (c *PeopleUpdateContactCall) UpdatePersonFields(updatePersonFields string) *PeopleUpdateContactCall {
 	c.urlParams_.Set("updatePersonFields", updatePersonFields)
 	return c
@@ -4370,7 +4383,7 @@ func (c *PeopleUpdateContactCall) Do(opts ...googleapi.CallOption) (*Person, err
 	//       "type": "string"
 	//     },
 	//     "updatePersonFields": {
-	//       "description": "**Required.** A field mask to restrict which fields on the person are\nupdated. Valid values are:\n\n* addresses\n* biographies\n* birthdays\n* braggingRights\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* relations\n* residences\n* skills\n* urls",
+	//       "description": "**Required.** A field mask to restrict which fields on the person are\nupdated. Multiple fields can be specified by separating them with commas.\nAll updated fields will be replaced. Valid values are:\n\n* addresses\n* biographies\n* birthdays\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* relations\n* residences\n* urls\n* userDefined",
 	//       "format": "google-fieldmask",
 	//       "location": "query",
 	//       "type": "string"
@@ -4430,7 +4443,9 @@ func (c *PeopleConnectionsListCall) PageToken(pageToken string) *PeopleConnectio
 // PersonFields sets the optional parameter "personFields":
 // **Required.** A field mask to restrict which fields on each person
 // are
-// returned. Valid values are:
+// returned. Multiple fields can be specified by separating them with
+// commas.
+// Valid values are:
 //
 // * addresses
 // * ageRanges
@@ -4459,6 +4474,7 @@ func (c *PeopleConnectionsListCall) PageToken(pageToken string) *PeopleConnectio
 // * skills
 // * taglines
 // * urls
+// * userDefined
 func (c *PeopleConnectionsListCall) PersonFields(personFields string) *PeopleConnectionsListCall {
 	c.urlParams_.Set("personFields", personFields)
 	return c
@@ -4627,7 +4643,7 @@ func (c *PeopleConnectionsListCall) Do(opts ...googleapi.CallOption) (*ListConne
 	//       "type": "string"
 	//     },
 	//     "personFields": {
-	//       "description": "**Required.** A field mask to restrict which fields on each person are\nreturned. Valid values are:\n\n* addresses\n* ageRanges\n* biographies\n* birthdays\n* braggingRights\n* coverPhotos\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* memberships\n* metadata\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* photos\n* relations\n* relationshipInterests\n* relationshipStatuses\n* residences\n* skills\n* taglines\n* urls",
+	//       "description": "**Required.** A field mask to restrict which fields on each person are\nreturned. Multiple fields can be specified by separating them with commas.\nValid values are:\n\n* addresses\n* ageRanges\n* biographies\n* birthdays\n* braggingRights\n* coverPhotos\n* emailAddresses\n* events\n* genders\n* imClients\n* interests\n* locales\n* memberships\n* metadata\n* names\n* nicknames\n* occupations\n* organizations\n* phoneNumbers\n* photos\n* relations\n* relationshipInterests\n* relationshipStatuses\n* residences\n* skills\n* taglines\n* urls\n* userDefined",
 	//       "format": "google-fieldmask",
 	//       "location": "query",
 	//       "type": "string"

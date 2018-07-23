@@ -378,45 +378,62 @@ func main() {
 	//
 	// Upload APKs
 	fmt.Println()
-	log.Infof("Upload apks")
+	log.Infof("Upload apks or app bundle")
 
 	versionCodes := []int64{}
 	apkPaths := strings.Split(configs.ApkPath, "|")
 
 	for i, apkPath := range apkPaths {
+		versionCode := int64(0)
 		apkFile, err := os.Open(apkPath)
 		if err != nil {
 			failf("Failed to read apk (%s), error: %s", apkPath, err)
 		}
 
-		editsApksService := androidpublisher.NewEditsApksService(service)
+		if strings.HasSuffix(apkPath, "aab") {
+			editsBundlesService := androidpublisher.NewEditsBundlesService(service)
 
-		editsApksUloadCall := editsApksService.Upload(configs.PackageName, appEdit.Id)
-		editsApksUloadCall.Media(apkFile, googleapi.ContentType("application/vnd.android.package-archive"))
+			editsBundlesUploadCall := editsBundlesService.Upload(configs.PackageName, appEdit.Id)
+			editsBundlesUploadCall.Media(apkFile, googleapi.ContentType("application/octet-stream"))
 
-		apk, err := editsApksUloadCall.Do()
-		if err != nil {
-			failf("Failed to upload apk, error: %s", err)
+			bundle, err := editsBundlesUploadCall.Do()
+			if err != nil {
+				failf("Failed to upload app bundle, error: %s", err)
+			}
+			log.Printf(" uploaded app bundle version: %d", bundle.VersionCode)
+			versionCodes = append(versionCodes, bundle.VersionCode)
+			versionCode = bundle.VersionCode
+		} else {
+			editsApksService := androidpublisher.NewEditsApksService(service)
+
+			editsApksUploadCall := editsApksService.Upload(configs.PackageName, appEdit.Id)
+			editsApksUploadCall.Media(apkFile, googleapi.ContentType("application/vnd.android.package-archive"))
+
+			apk, err := editsApksUploadCall.Do()
+			if err != nil {
+				failf("Failed to upload apk, error: %s", err)
+			}
+
+			log.Printf(" uploaded apk version: %d", apk.VersionCode)
+			versionCodes = append(versionCodes, apk.VersionCode)
+			versionCode = apk.VersionCode
 		}
 
-		log.Printf(" uploaded apk version: %d", apk.VersionCode)
-		versionCodes = append(versionCodes, apk.VersionCode)
-
 		// Upload mapping.txt
-		if configs.MappingFile != "" {
+		if configs.MappingFile != "" && versionCode != 0 {
 			mappingFile, err := os.Open(configs.MappingFile)
 			if err != nil {
 				failf("Failed to read mapping file (%s), error: %s", configs.MappingFile, err)
 			}
 			editsDeobfuscationfilesService := androidpublisher.NewEditsDeobfuscationfilesService(service)
-			editsDeobfuscationfilesUloadCall := editsDeobfuscationfilesService.Upload(configs.PackageName, appEdit.Id, apk.VersionCode, "proguard")
+			editsDeobfuscationfilesUloadCall := editsDeobfuscationfilesService.Upload(configs.PackageName, appEdit.Id, versionCode, "proguard")
 			editsDeobfuscationfilesUloadCall.Media(mappingFile, googleapi.ContentType("application/octet-stream"))
 
 			if _, err = editsDeobfuscationfilesUloadCall.Do(); err != nil {
 				failf("Failed to upload mapping file, error: %s", err)
 			}
 
-			log.Printf(" uploaded mapping file for apk version: %d", apk.VersionCode)
+			log.Printf(" uploaded mapping file for apk version: %d", versionCode)
 			if i < len(apkPaths)-1 {
 				fmt.Println()
 			}
