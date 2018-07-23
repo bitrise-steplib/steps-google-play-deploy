@@ -42,6 +42,7 @@ type ConfigsModel struct {
 	JSONKeyPath             string
 	PackageName             string
 	ApkPath                 string
+	ExpansionfilePath       string
 	Track                   string
 	UserFraction            string
 	WhatsnewsDir            string
@@ -54,6 +55,7 @@ func createConfigsModelFromEnvs() ConfigsModel {
 		JSONKeyPath:             os.Getenv("service_account_json_key_path"),
 		PackageName:             os.Getenv("package_name"),
 		ApkPath:                 os.Getenv("apk_path"),
+		ExpansionfilePath:       os.Getenv("expansionfile_path"),
 		Track:                   os.Getenv("track"),
 		UserFraction:            os.Getenv("user_fraction"),
 		WhatsnewsDir:            os.Getenv("whatsnews_dir"),
@@ -114,6 +116,7 @@ func (configs ConfigsModel) print() {
 	log.Printf("- JSONKeyPath: %s", secureInput(configs.JSONKeyPath))
 	log.Printf("- PackageName: %s", configs.PackageName)
 	log.Printf("- ApkPath: %s", configs.ApkPath)
+	log.Printf("- ExpansionfilePath: %s", configs.ExpansionfilePath)
 	log.Printf("- Track: %s", configs.Track)
 	log.Printf("- UserFraction: %s", configs.UserFraction)
 	log.Printf("- WhatsnewsDir: %s", configs.WhatsnewsDir)
@@ -383,6 +386,14 @@ func main() {
 	versionCodes := []int64{}
 	apkPaths := strings.Split(configs.ApkPath, "|")
 
+	// "main:/file/path/1.obb|patch:/file/path/2.obb"
+	expansionfileUpload := strings.TrimSpace(configs.ExpansionfilePath) != ""
+	expansionfilePaths := strings.Split(configs.ExpansionfilePath, "|")
+
+	if expansionfileUpload && (len(apkPaths) != len(expansionfilePaths)) {
+		failf("Mismatching number of APKs(%d) or Expansionfiles(%d)", len(apkPaths), len(expansionfilePaths))
+	}
+
 	for i, apkPath := range apkPaths {
 		versionCode := int64(0)
 		apkFile, err := os.Open(apkPath)
@@ -417,6 +428,33 @@ func main() {
 			log.Printf(" uploaded apk version: %d", apk.VersionCode)
 			versionCodes = append(versionCodes, apk.VersionCode)
 			versionCode = apk.VersionCode
+
+			// "main:/file/path/1.obb"
+			cleanExpfilePath := strings.TrimSpace(expansionfilePaths[i])
+			if !strings.HasPrefix(cleanExpfilePath, "main:") && !strings.HasPrefix(cleanExpfilePath, "patch:") {
+				failf("Invalid expansion file config: %s", expansionfilePaths[i])
+			}
+
+			// [0]: "main" [1]:"/file/path/1.obb"
+			expansionfilePathSplit := strings.Split(cleanExpfilePath, ":")
+
+			// "main"
+			expfileType := strings.TrimSpace(expansionfilePathSplit[0])
+
+			// "/file/path/1.obb"
+			expfilePth := strings.TrimSpace(strings.Join(expansionfilePathSplit[1:], ""))
+
+			expansionFile, err := os.Open(expfilePth)
+			if err != nil {
+				failf("Failed to read expansion file (%s), error: %s", expansionFile, err)
+			}
+			editsExpansionfilesService := androidpublisher.NewEditsExpansionfilesService(service)
+			editsExpansionfilesCall := editsExpansionfilesService.Upload(configs.PackageName, appEdit.Id, versionCode, expfileType)
+			editsExpansionfilesCall.Media(expansionFile, googleapi.ContentType("application/vnd.android.package-archive"))
+			_, err = editsExpansionfilesCall.Do()
+			if err != nil {
+				failf("Failed to upload expansion file, error: %s", err)
+			}
 		}
 
 		// Upload mapping.txt

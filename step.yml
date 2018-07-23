@@ -74,12 +74,25 @@ inputs:
 
         You can provide multiple APK paths separated by `|` character.
 
-        Format emxamples:
+        Format examples:
 
         - `/path/to/my/app.apk`
         - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
         - `/path/to/my/bundle.aab`
       is_required: true
+  - expansionfile_path: ""
+    opts:
+      title: Expansion file Path
+      description: |-
+        Path to the expansion file.
+
+        Leave empty or provide exactly the same number of paths as in apk_path, separated by `|` character and start each path with the expansion file's type
+        separated by a `:`. (main, patch)
+
+        Format examples:
+
+        - `main:/path/to/my/app.obb`
+        - `patch:/path/to/my/app1.obb|main:/path/to/my/app2.obb|main:/path/to/my/app3.obb`
   - track: alpha
     opts:
       title: Track
