@@ -429,31 +429,33 @@ func main() {
 			versionCodes = append(versionCodes, apk.VersionCode)
 			versionCode = apk.VersionCode
 
-			// "main:/file/path/1.obb"
-			cleanExpfilePath := strings.TrimSpace(expansionfilePaths[i])
-			if !strings.HasPrefix(cleanExpfilePath, "main:") && !strings.HasPrefix(cleanExpfilePath, "patch:") {
-				failf("Invalid expansion file config: %s", expansionfilePaths[i])
-			}
+			if expansionfileUpload {
+				// "main:/file/path/1.obb"
+				cleanExpfilePath := strings.TrimSpace(expansionfilePaths[i])
+				if !strings.HasPrefix(cleanExpfilePath, "main:") && !strings.HasPrefix(cleanExpfilePath, "patch:") {
+					failf("Invalid expansion file config: %s", expansionfilePaths[i])
+				}
 
-			// [0]: "main" [1]:"/file/path/1.obb"
-			expansionfilePathSplit := strings.Split(cleanExpfilePath, ":")
+				// [0]: "main" [1]:"/file/path/1.obb"
+				expansionfilePathSplit := strings.Split(cleanExpfilePath, ":")
 
-			// "main"
-			expfileType := strings.TrimSpace(expansionfilePathSplit[0])
+				// "main"
+				expfileType := strings.TrimSpace(expansionfilePathSplit[0])
 
-			// "/file/path/1.obb"
-			expfilePth := strings.TrimSpace(strings.Join(expansionfilePathSplit[1:], ""))
+				// "/file/path/1.obb"
+				expfilePth := strings.TrimSpace(strings.Join(expansionfilePathSplit[1:], ""))
 
-			expansionFile, err := os.Open(expfilePth)
-			if err != nil {
-				failf("Failed to read expansion file (%s), error: %s", expansionFile, err)
-			}
-			editsExpansionfilesService := androidpublisher.NewEditsExpansionfilesService(service)
-			editsExpansionfilesCall := editsExpansionfilesService.Upload(configs.PackageName, appEdit.Id, versionCode, expfileType)
-			editsExpansionfilesCall.Media(expansionFile, googleapi.ContentType("application/vnd.android.package-archive"))
-			_, err = editsExpansionfilesCall.Do()
-			if err != nil {
-				failf("Failed to upload expansion file, error: %s", err)
+				expansionFile, err := os.Open(expfilePth)
+				if err != nil {
+					failf("Failed to read expansion file (%s), error: %s", expansionFile, err)
+				}
+				editsExpansionfilesService := androidpublisher.NewEditsExpansionfilesService(service)
+				editsExpansionfilesCall := editsExpansionfilesService.Upload(configs.PackageName, appEdit.Id, versionCode, expfileType)
+				editsExpansionfilesCall.Media(expansionFile, googleapi.ContentType("application/vnd.android.package-archive"))
+				_, err = editsExpansionfilesCall.Do()
+				if err != nil {
+					failf("Failed to upload expansion file, error: %s", err)
+				}
 			}
 		}
 
