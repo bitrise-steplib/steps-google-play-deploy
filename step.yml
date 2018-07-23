@@ -83,15 +83,15 @@ inputs:
   - track: alpha
     opts:
       title: Track
+      summary: The track in which you want to assign the uploaded APK(s).
       description: |-
-        Track to assign the APK(s).
-      value_options:
-      - internal
-      - alpha
-      - beta
-      - rollout
-      - production
-      - pre-release
+        The track in which you want to assign the uploaded APK(s). 
+        
+        Can be one of the built-in tracks: internal, alpha, beta, rollout, production.
+        
+        Or you can set your custom track name as well. 
+        
+        For example: `pre-release`, or any of your closed track you added in Google Play Developer Console.
       is_required: true
   - user_fraction: "0.5"
     opts:
