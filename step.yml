@@ -7,11 +7,11 @@ description: |-
     See: https://play.google.com/apps/publish -> All applications -> Add new application
 
   2. You must link your Google Play Developer Console to an API project.
-    See: https://developers.google.com/android-publisher/getting_started (Linking your API Project section)
+    See: https://developers.google.com/android-publisher/getting_started. Check the __Linking your API Project section__.
 
   3. Setting Up API Access Clients, using a service account:
-    See: https://developers.google.com/android-publisher/getting_started (Using a service account)
-    When you create your service account on the google developer console choose json as Key Type.
+    See: https://developers.google.com/android-publisher/getting_started. Check the __Using a service account__ section.
+    When you create your service account on the google developer console, choose json as `Key Type`.
 
   4. Grant Access to provide the service account the necessary rights.
     See: https://play.google.com/apps/publish -> Settings -> User account & rights -> Invite new user and give the privileges.
@@ -20,9 +20,9 @@ description: |-
      - Manage Production APKs
      - Manage Alpha & Beta APKs
      - Manage Alpha & Beta users
-  
+
   5. OPTIONAL - Add translations for your Store Listing.
-    To allow the step to assign your whats news to the uploaded apk version.
+    To allow the step to assign your 'whatsnew' files to the uploaded apk version.
     See: https://support.google.com/googleplay/android-developer/answer/3125566?hl=en (Add translations for your Store Listing)
 website: https://github.com/bitrise-io/steps-google-play-deploy
 source_code_url: https://github.com/bitrise-io/steps-google-play-deploy
@@ -107,11 +107,11 @@ inputs:
       is_required: true
   - whatsnews_dir:
     opts:
-      title: "Directory of localised whatsnew files"
+      title: "Directory of localized whatsnew files"
       description: |-
-        Use this input to specify localised whatsnew files directory.
+        Use this input to specify localized 'whatsnew' files directory.
 
-        This directory should contain whatsnew files postfixed with the locale.
+        This directory should contain 'whatsnew' files postfixed with the locale.
 
         whatsnew file name pattern: `whatsnew-LOCALE`
 
@@ -142,7 +142,7 @@ inputs:
 
         E.g.: 
         If you have an __active apk on alpha__ track with version code: `42`.
-        And you try to __upload a new version (`43`), to the beta track__, you will see error, like this:
+        And you try to __upload a new version (`43`), to the beta track__, you will see an error:
 
         `Version 42 of this app can not be downloaded by any devices as they will all receive APKs with higher version codes`
 
