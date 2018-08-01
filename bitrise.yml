@@ -36,6 +36,16 @@ workflows:
             #!/usr/bin/env bash
             set -ex
             rm -rf ./_tmp
+
+            if [ ! -d "$ANDROID_HOME/ndk-bundle/toolchains/mips64el-linux-android-4.9" ]
+            then
+                curl "https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip" -o /tmp/ndk.zip
+                rm -rf $ANDROID_HOME/ndk-bundle
+                unzip -q /tmp/ndk.zip -d $ANDROID_HOME/
+                mv $ANDROID_HOME/android-ndk-r16b $ANDROID_HOME/ndk-bundle
+                rm -rf /tmp/ndk.zip
+                envman add --key "ANDROID_NDK_HOME" --value "$ANDROID_HOME/ndk-bundle"
+            fi
     - change-workdir:
         title: Switch working dir to test/_tmp dir
         run_if: true
