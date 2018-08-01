@@ -391,7 +391,7 @@ func main() {
 	expansionfilePaths := strings.Split(configs.ExpansionfilePath, "|")
 
 	if expansionfileUpload && (len(apkPaths) != len(expansionfilePaths)) {
-		failf("Mismatching number of APKs(%d) or Expansionfiles(%d)", len(apkPaths), len(expansionfilePaths))
+		failf("Mismatching number of APKs(%d) and Expansionfiles(%d)", len(apkPaths), len(expansionfilePaths))
 	}
 
 	for i, apkPath := range apkPaths {
@@ -452,8 +452,7 @@ func main() {
 				editsExpansionfilesService := androidpublisher.NewEditsExpansionfilesService(service)
 				editsExpansionfilesCall := editsExpansionfilesService.Upload(configs.PackageName, appEdit.Id, versionCode, expfileType)
 				editsExpansionfilesCall.Media(expansionFile, googleapi.ContentType("application/vnd.android.package-archive"))
-				_, err = editsExpansionfilesCall.Do()
-				if err != nil {
+				if _, err := editsExpansionfilesCall.Do(); err != nil {
 					failf("Failed to upload expansion file, error: %s", err)
 				}
 			}
