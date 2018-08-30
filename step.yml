@@ -67,7 +67,6 @@ inputs:
       description: |-
         Package name of the APK or App bundle to deploy.
       is_required: true
-      is_sensitive: true
   - apk_path: "$BITRISE_APK_PATH"
     opts:
       title: APK or App Bundle file path
