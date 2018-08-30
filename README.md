@@ -2,6 +2,11 @@
 
 Deploy your Android .apk file to Google Play
 
+## Trigger a new release
+
+- __merge every code changes__ to the `master` branch
+- __push the new version tag__ to the `master` branch
+
 ## How to use this Step
 
 Can be run directly with the [bitrise CLI](https://github.com/bitrise-io/bitrise),
