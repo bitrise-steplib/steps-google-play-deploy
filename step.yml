@@ -60,6 +60,7 @@ inputs:
         For remote JSON key file you can provide any download location (ex: `https://URL/TO/key.json`).
         For local JSON key file provide file path url. (ex: `file://PATH/TO/key.json`).
       is_required: true
+      is_sensitive: true
   - package_name:
     opts:
       title: Package name

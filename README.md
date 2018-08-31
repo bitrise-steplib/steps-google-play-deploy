@@ -90,3 +90,8 @@ You can share your Step or step version with the [bitrise CLI](https://github.co
 1. Send the Pull Request, as described in the logs of `bitrise run share-this-step`
 
 That's all ;)
+
+## Trigger a new release
+
+- __merge every code changes__ to the `master` branch
+- __push the new version tag__ to the `master` branch
