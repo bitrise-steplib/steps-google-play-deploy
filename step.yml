@@ -1,29 +1,41 @@
 title: Google Play Deploy
-summary: Google Play Deploy
+summary: Uploads and releases apps to Google Play Store
 description: |-
+  Uploads and releases apps to Google Play Store.
+
+  The step supports single APK, [multiple APK](https://developer.android.com/google/play/publishing/multiple-apks.html) and Bundle deploys.
+
   To use this step:
 
-  1. You have to upload the first apk manually (using the web interface).
-    See: https://play.google.com/apps/publish -> All applications -> Add new application
+  1. Upload the first apk manually (using the web interface):
+  
+    Visit the [Google Play Console](https://play.google.com/apps/publish) -> All applications -> CREATE APPLICATION
 
-  2. You must link your Google Play Developer Console to an API project.
-    See: https://developers.google.com/android-publisher/getting_started. Check the __Linking your API Project section__.
+  2. Link your Google Play Developer Console to an API project:
+  
+    Described in [Google Play Developer API](https://developers.google.com/android-publisher/getting_started)'s __Linking your API Project__ section
 
-  3. Setting Up API Access Clients, using a service account:
-    See: https://developers.google.com/android-publisher/getting_started. Check the __Using a service account__ section.
-    When you create your service account on the google developer console, choose json as `Key Type`.
+  3. Setup API Access Clients, using a service account:
+  
+    Described in [Google Play Developer API](https://developers.google.com/android-publisher/getting_started)'s __Using a service account__ section
 
-  4. Grant Access to provide the service account the necessary rights.
-    See: https://play.google.com/apps/publish -> Settings -> User account & rights -> Invite new user and give the privileges.
+    __NOTE__: When you create your service account on the google developer console, choose json as `Key Type`.
+
+  4. Grant the necessary rights to the service account:
+  
+    Visit the [Google Play Console](https://play.google.com/apps/publish) -> Settings -> Users & permissions -> Invite new user.
+
     Due to the way the Google Play Publisher API works, you have to grant at least the following permissions to that service account:
-     - Edit store listing, pricing & distribution
-     - Manage Production APKs
-     - Manage Alpha & Beta APKs
-     - Manage Alpha & Beta users
 
-  5. OPTIONAL - Add translations for your Store Listing.
+      - ACCESS LEVEL: View app information
+      - RELEASE MANAGEMENT: Manage production releases, Manage testing track releases
+      - STORE PRESENCE: Edit store listing, pricing & distribution
+
+  5. OPTIONAL - Add translations for your Store Listing:
+  
     To allow the step to assign your 'whatsnew' files to the uploaded apk version.
-    See: https://support.google.com/googleplay/android-developer/answer/3125566?hl=en (Add translations for your Store Listing)
+
+    Visit [Play Console Help](https://support.google.com/googleplay/android-developer/answer/3125566?hl=en)'s __Add translations for your Store Listing__ section
 website: https://github.com/bitrise-io/steps-google-play-deploy
 source_code_url: https://github.com/bitrise-io/steps-google-play-deploy
 support_url: https://github.com/bitrise-io/steps-google-play-deploy/issues
@@ -57,7 +69,7 @@ inputs:
       description: |-
         Path to the Service Account's JSON key file.
 
-        For remote JSON key file you can provide any download location (ex: `https://URL/TO/key.json`).
+        For remote JSON key file you can provide any download location (ex: `https://URL/TO/key.json`).  
         For local JSON key file provide file path url. (ex: `file://PATH/TO/key.json`).
       is_required: true
       is_sensitive: true
@@ -65,21 +77,15 @@ inputs:
     opts:
       title: Package name
       description: |-
-        Package name of the APK or App bundle to deploy.
+        Package name of the app.
       is_required: true
-  - apk_path: "$BITRISE_APK_PATH"
+  - app_path: $BITRISE_APK_PATH\n$BITRISE_AAB_PATH
     opts:
-      title: APK or App Bundle file path
+      title: App file path.
       description: |-
-        Path to the APK or App Bundle to deploy.
+        Path to the App Bundle or APK file(s) to deploy.
 
-        You can provide multiple APK paths separated by `|` character.
-
-        Format examples:
-
-        - `/path/to/my/app.apk`
-        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
-        - `/path/to/my/bundle.aab`
+        In case of [multiple APK](https://developer.android.com/google/play/publishing/multiple-apks.html) deploy, you can specify multiple APKs as a newline `\n` separated list.
       is_required: true
   - expansionfile_path: ""
     opts:
@@ -87,7 +93,7 @@ inputs:
       description: |-
         Path to the expansion file.
 
-        Leave empty or provide exactly the same number of paths as in apk_path, separated by `|` character and start each path with the expansion file's type
+        Leave empty or provide exactly the same number of paths as in app_path, separated by `|` character and start each path with the expansion file's type
         separated by a `:`. (main, patch)
 
         Format examples:
@@ -97,9 +103,9 @@ inputs:
   - track: alpha
     opts:
       title: Track
-      summary: The track in which you want to assign the uploaded APK(s).
+      summary: The track in which you want to assign the uploaded app.
       description: |-
-        The track in which you want to assign the uploaded APK(s). 
+        The track in which you want to assign the uploaded app. 
         
         Can be one of the built-in tracks: internal, alpha, beta, rollout, production.
         
@@ -113,7 +119,7 @@ inputs:
       description: |-
         __Only available if `track` is `rollout`.__
 
-        Portion of the users who should get the staged rollout version of the APK.
+        Portion of the users who should get the staged rollout version of the app.
       value_options:
       - "0.05"
       - "0.1"
@@ -122,18 +128,18 @@ inputs:
       is_required: true
   - whatsnews_dir:
     opts:
-      title: "Directory of localized whatsnew files"
+      title: "Directory of localized what's new files"
       description: |-
-        Use this input to specify localized 'whatsnew' files directory.
+        Use this input to specify localized 'what's new' files directory.
 
         This directory should contain 'whatsnew' files postfixed with the locale.
 
-        whatsnew file name pattern: `whatsnew-LOCALE`
+        what's new file name pattern: `whatsnew-LOCALE`
 
         Example:
         
         ```
-        + - [PATH/TO/WHATSNEWS]
+        + - [PATH/TO/WHATSNEW]
             |
             + - whatsnew-en-US
             |
@@ -142,8 +148,8 @@ inputs:
 
         Format examples:
 
-        - "./"         # whatsnew files are in the repo root directory
-        - "./whatsnew" # whatsnew files are in the whatsnew directory
+        - "./"         # what's new files are in the repo root directory
+        - "./whatsnew" # what's new files are in the whatsnew directory
   - mapping_file: "$BITRISE_MAPPING_PATH"
     opts:
       title: Location of your mapping.txt file
@@ -153,7 +159,7 @@ inputs:
     opts:
       title: "Untrack blocking versions?"
       description: |-
-        Should deactivate apks, with lower version code, on lower level tracks?
+        Should deactivate apps, with lower version code, on lower level tracks?
 
         E.g.: 
         If you have an __active apk on alpha__ track with version code: `42`.
@@ -161,9 +167,22 @@ inputs:
 
         `Version 42 of this app can not be downloaded by any devices as they will all receive APKs with higher version codes`
 
-        To avoid this issue set this input to: `"true"` and the step will deactivate every apk with lower version code, on lower level tracks.
+        To avoid this issue set this input to: `"true"` and the step will deactivate every app with lower version code, on lower level tracks.
       value_options:
       - "true"
       - "false"
       is_required: true
+  - apk_path: "$BITRISE_APK_PATH"
+    opts:
+      title: APK file path
+      description: |-
+        Path to the APK to deploy.
 
+        You can provide multiple APK paths separated by `|` character.
+
+        Format examples:
+
+        - `/path/to/my/app.apk`
+        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
+        - `/path/to/my/bundle.aab`
+      category: deprecated
