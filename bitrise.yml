@@ -24,9 +24,18 @@ app:
 
 workflows:
   test:
-    before_run:
-    - audit-this-step
-    - go-tests
+    steps:
+    - script:
+        inputs:
+        - content: stepman audit --step-yml ./step.yml
+    - go-list:
+    - golint:
+    - errcheck:
+    - go-test:
+    after_run:
+    - apk_deploy_test
+
+  apk_deploy_test:
     steps:
     - script:
         inputs:
@@ -91,64 +100,6 @@ workflows:
         - apk_path: $BITRISE_SIGNED_APK_PATH
         - track: $TRACK
 
-  go-tests:
-    before_run:
-    - _install-test-tools
-    steps:
-    - script:
-        title: Export go files to test
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-
-            no_vendor_paths="$(go list ./... | grep -v vendor)"
-            envman add --key GOLIST_WITHOUT_VENDOR --value "$no_vendor_paths"
-    - script:
-        title: Err check
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-
-            errcheck -asserts=true -blank=true $GOLIST_WITHOUT_VENDOR
-    - script:
-        title: Go lint
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-
-            while read -r line; do
-              echo "-> Linting: $line"
-              golint_out="$(golint $line)"
-              if [[ "${golint_out}" != "" ]] ; then
-                echo "=> Golint issues found:"
-                echo "${golint_out}"
-                exit 1
-              fi
-            done <<< "$GOLIST_WITHOUT_VENDOR"
-    - script:
-        title: Go test
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-
-            go test ./...
-
-  _install-test-tools:
-    steps:
-    - script:
-        title: Install required testing tools
-        inputs:
-        - content: |-
-            #!/usr/bin/env bash
-            set -ex
-
-            go get -u -v github.com/kisielk/errcheck
-            go get -u -v github.com/golang/lint/golint
-
   # ----------------------------------------------------------------
   # --- Utility workflows
   dep-update:
@@ -162,14 +113,3 @@ workflows:
 
             go get -u -v github.com/golang/dep/cmd/dep
             dep ensure -update -v
-
-  # ----------------------------------------------------------------
-  # --- workflow to Share this step into a Step Library
-  audit-this-step:
-    steps:
-    - script:
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-            stepman audit --step-yml ./step.yml

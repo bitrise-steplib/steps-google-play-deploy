@@ -40,7 +40,6 @@ const (
 type Configs struct {
 	JSONKeyPath             stepconf.Secret `env:"service_account_json_key_path,required"`
 	PackageName             string          `env:"package_name,required"`
-	ApkPath                 string          `env:"apk_path"`
 	AppPath                 string          `env:"app_path,required"`
 	ExpansionfilePath       string          `env:"expansionfile_path"`
 	Track                   string          `env:"track,required"`
@@ -49,6 +48,10 @@ type Configs struct {
 	MappingFile             string          `env:"mapping_file"`
 	UntrackBlockingVersions string          `env:"untrack_blocking_versions,opt[true,false]"`
 
+	// Deprecated
+	ApkPath string `env:"apk_path"`
+
+	// Internal fields, set by Configs.validateAndSelectApp
 	apks []string
 	aab  string
 }
@@ -169,6 +172,28 @@ func (c *Configs) validateAndSelectApp() ([]string, error) {
 	return warnings, nil
 }
 
+// parseAppList parses the given app list and returns the APK and AAB file paths.
+func parseAppList(appList string) (apks []string, aabs []string, err error) {
+	apps := strings.Split(appList, "\n")
+	for _, app := range apps {
+		app = strings.TrimSpace(app)
+		if app == "" {
+			continue
+		}
+
+		ext := filepath.Ext(app)
+		switch ext {
+		case ".aab":
+			aabs = append(aabs, app)
+		case ".apk":
+			apks = append(apks, app)
+		default:
+			return nil, nil, fmt.Errorf("unknown app extension (%s) in path: %s, should be either .aab or .apk", ext, app)
+		}
+	}
+	return
+}
+
 func downloadFile(downloadURL, targetPath string) error {
 	outFile, err := os.Create(targetPath)
 	if err != nil {
@@ -266,7 +291,7 @@ func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, err
 	return recentChangesMap, nil
 }
 
-func prepareKeyPath(keyPath string) (string, bool, error) {
+func parseURI(keyPath string) (string, bool, error) {
 	url, err := url.Parse(keyPath)
 	if err != nil {
 		return "", false, fmt.Errorf("failed to parse url (%s), error: %s", keyPath, err)
@@ -274,7 +299,6 @@ func prepareKeyPath(keyPath string) (string, bool, error) {
 
 	return strings.TrimPrefix(keyPath, "file://"), (url.Scheme == "http" || url.Scheme == "https"), nil
 }
-
 
 func failf(format string, v ...interface{}) {
 	log.Errorf(format, v...)
@@ -302,7 +326,7 @@ func main() {
 	log.Infof("Authenticating")
 
 	jwtConfig := new(jwt.Config)
-	jsonKeyPth, isRemote, err := prepareKeyPath(string(configs.JSONKeyPath))
+	jsonKeyPth, isRemote, err := parseURI(string(configs.JSONKeyPath))
 	if err != nil {
 		failf("Failed to prepare key path (%s), error: %s", configs.JSONKeyPath, err)
 	}

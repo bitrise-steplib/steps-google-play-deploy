@@ -185,4 +185,4 @@ inputs:
         - `/path/to/my/app.apk`
         - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
         - `/path/to/my/bundle.aab`
-      category: deprecated
+      category: Deprecated
