@@ -62,6 +62,8 @@ workflows:
         inputs:
         - content: curl -o "./app/google-services.json" "$BITRISEIO_GOOGLE_SERVICES_JSON_URL"
     - install-missing-android-tools:
+        inputs:
+        - gradlew_path: ./gradlew
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
