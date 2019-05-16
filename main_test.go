@@ -177,11 +177,11 @@ func TestConfigs_validateAndSelectApp(t *testing.T) {
 				t.Errorf("Configs.validateAndSelectApp() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if c.aab != tt.aab {
-				t.Errorf("Configs.aab = %v, want %v", c.aab, tt.aab)
+			if c.AAB != tt.aab {
+				t.Errorf("Configs.aab = %v, want %v", c.AAB, tt.aab)
 			}
-			if !reflect.DeepEqual(c.apks, tt.apks) {
-				t.Errorf("Configs.apks = %v, want %v", c.apks, tt.apks)
+			if !reflect.DeepEqual(c.APKs, tt.apks) {
+				t.Errorf("Configs.apks = %v, want %v", c.APKs, tt.apks)
 			}
 			if !reflect.DeepEqual(got, tt.warnings) {
 				t.Errorf("Configs.validateAndSelectApp() = %v, want %v", got, tt.warnings)
@@ -298,11 +298,11 @@ func TestConfigs_validateAndSelectApp_deprecation(t *testing.T) {
 				t.Errorf("Configs.validateAndSelectApp() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if c.aab != tt.aab {
-				t.Errorf("Configs.aab = %v, want %v", c.aab, tt.aab)
+			if c.AAB != tt.aab {
+				t.Errorf("Configs.aab = %v, want %v", c.AAB, tt.aab)
 			}
-			if !reflect.DeepEqual(c.apks, tt.apks) {
-				t.Errorf("Configs.apks = %v, want %v", c.apks, tt.apks)
+			if !reflect.DeepEqual(c.APKs, tt.apks) {
+				t.Errorf("Configs.apks = %v, want %v", c.APKs, tt.apks)
 			}
 			if !reflect.DeepEqual(got, tt.warnings) {
 				t.Errorf("Configs.validateAndSelectApp() = %v, want %v", got, tt.warnings)

@@ -52,17 +52,17 @@ type Configs struct {
 	ApkPath string `env:"apk_path"`
 
 	// Internal fields, set by Configs.validateAndSelectApp
-	apks []string
-	aab  string
+	APKs []string
+	AAB  string
 }
 
 // Apps returns an AAB file path or APK file path(s) as an array.
 func (c Configs) Apps() []string {
 	// Config.validateAndSelectApp makes sure we either have an AAB or APK file(s)
-	if len(c.aab) > 0 {
-		return []string{c.aab}
+	if len(c.AAB) > 0 {
+		return []string{c.AAB}
 	}
-	return c.apks
+	return c.APKs
 }
 
 // ParseAppList parses the given app list and returns the APK and AAB file paths.
@@ -150,8 +150,8 @@ func (c *Configs) validateAndSelectApp() ([]string, error) {
 	if len(aabs) > 1 {
 		warnings = append(warnings, fmt.Sprintf("multiple AAB (%s) provided for Google Play deploy, using first: %s", strings.Join(aabs, ","), aab))
 	}
-	c.apks = apks
-	c.aab = aab
+	c.APKs = apks
+	c.AAB = aab
 
 	if c.WhatsnewsDir != "" {
 		if exist, err := pathutil.IsDirExists(c.WhatsnewsDir); err != nil {
