@@ -57,7 +57,7 @@ workflows:
         - path: ./_tmp
     - script:
         inputs:
-        - content: git clone $SAMPLE_APP_URL $SAMPLE_APP_BRANCH
+        - content: git clone --branch $SAMPLE_APP_BRANCH $SAMPLE_APP_URL
     - script:
         inputs:
         - content: curl -o "./app/google-services.json" "$BITRISEIO_GOOGLE_SERVICES_JSON_URL"
