@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Google Inc. All Rights Reserved.
+Copyright 2017 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,11 +17,13 @@ limitations under the License.
 package spanner
 
 import (
+	"context"
 	"fmt"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 // Error is the structured error returned by Cloud Spanner client.
@@ -43,6 +45,13 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("spanner: code = %q, desc = %q", e.Code, e.Desc)
 }
 
+// GRPCStatus returns the corresponding gRPC Status of this Spanner error.
+// This allows the error to be converted to a gRPC status using
+// `status.Convert(error)`.
+func (e *Error) GRPCStatus() *status.Status {
+	return status.New(e.Code, e.Desc)
+}
+
 // decorate decorates an existing spanner.Error with more information.
 func (e *Error) decorate(info string) {
 	e.Desc = fmt.Sprintf("%v, %v", info, e.Desc)
@@ -62,8 +71,10 @@ func toSpannerError(err error) error {
 	return toSpannerErrorWithMetadata(err, nil)
 }
 
-// toSpannerErrorWithMetadata converts general Go error and grpc trailers to *spanner.Error.
-// Note: modifies original error if trailers aren't nil
+// toSpannerErrorWithMetadata converts general Go error and grpc trailers to
+// *spanner.Error.
+//
+// Note: modifies original error if trailers aren't nil.
 func toSpannerErrorWithMetadata(err error, trailers metadata.MD) error {
 	if err == nil {
 		return nil
@@ -74,10 +85,16 @@ func toSpannerErrorWithMetadata(err error, trailers metadata.MD) error {
 		}
 		return se
 	}
-	if grpc.Code(err) == codes.Unknown {
+	switch {
+	case err == context.DeadlineExceeded:
+		return &Error{codes.DeadlineExceeded, err.Error(), trailers}
+	case err == context.Canceled:
+		return &Error{codes.Canceled, err.Error(), trailers}
+	case grpc.Code(err) == codes.Unknown:
 		return &Error{codes.Unknown, err.Error(), trailers}
+	default:
+		return &Error{grpc.Code(err), grpc.ErrorDesc(err), trailers}
 	}
-	return &Error{grpc.Code(err), grpc.ErrorDesc(err), trailers}
 }
 
 // ErrCode extracts the canonical error code from a Go error.

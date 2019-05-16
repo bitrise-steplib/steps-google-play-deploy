@@ -1,5 +1,5 @@
 /*
-Copyright 2017 Google Inc. All Rights Reserved.
+Copyright 2017 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,6 +30,18 @@ import (
 	proto3 "github.com/golang/protobuf/ptypes/struct"
 	sppb "google.golang.org/genproto/googleapis/spanner/v1"
 	"google.golang.org/grpc/codes"
+)
+
+const commitTimestampPlaceholderString = "spanner.commit_timestamp()"
+
+var (
+	// CommitTimestamp is a special value used to tell Cloud Spanner to insert
+	// the commit timestamp of the transaction into a column. It can be used in
+	// a Mutation, or directly used in InsertStruct or InsertMap. See
+	// ExampleCommitTimestamp. This is just a placeholder and the actual value
+	// stored in this variable has no meaning.
+	CommitTimestamp = commitTimestamp
+	commitTimestamp = time.Unix(0, 0).In(time.FixedZone("CommitTimestamp placeholder", 0xDB))
 )
 
 // NullInt64 represents a Cloud Spanner INT64 that may be NULL.
@@ -97,7 +109,7 @@ type NullTime struct {
 // String implements Stringer.String for NullTime
 func (n NullTime) String() string {
 	if !n.Valid {
-		return fmt.Sprintf("%s", "<null>")
+		return "<null>"
 	}
 	return fmt.Sprintf("%q", n.Time.Format(time.RFC3339Nano))
 }
@@ -111,7 +123,7 @@ type NullDate struct {
 // String implements Stringer.String for NullDate
 func (n NullDate) String() string {
 	if !n.Valid {
-		return fmt.Sprintf("%s", "<null>")
+		return "<null>"
 	}
 	return fmt.Sprintf("%q", n.Date)
 }
@@ -181,6 +193,12 @@ func errNilDst(dst interface{}) error {
 // non-nil array element type.
 func errNilArrElemType(t *sppb.Type) error {
 	return spannerErrorf(codes.FailedPrecondition, "array type %v is with nil array element type", t)
+}
+
+func errUnsupportedEmbeddedStructFields(fname string) error {
+	return spannerErrorf(codes.InvalidArgument, "Embedded field: %s. Embedded and anonymous fields are not allowed "+
+		"when converting Go structs to Cloud Spanner STRUCT values. To create a STRUCT value with an "+
+		"unnamed field, use a `spanner:\"\"` field tag.", fname)
 }
 
 // errDstNotForNull returns error for decoding a SQL NULL value into a destination which doesn't
@@ -1041,7 +1059,7 @@ func errNotStructElement(i int, v *proto3.Value) error {
 }
 
 // decodeRowArray decodes proto3.ListValue pb into a NullRow slice according to
-// the structual information given in sppb.StructType ty.
+// the structural information given in sppb.StructType ty.
 func decodeRowArray(ty *sppb.StructType, pb *proto3.ListValue) ([]NullRow, error) {
 	if pb == nil {
 		return nil, errNilListValue("STRUCT")
@@ -1068,28 +1086,33 @@ func decodeRowArray(ty *sppb.StructType, pb *proto3.ListValue) ([]NullRow, error
 	return a, nil
 }
 
-// errNilSpannerStructType returns error for unexpected nil Cloud Spanner STRUCT schema type in decoding.
+// errNilSpannerStructType returns error for unexpected nil Cloud Spanner STRUCT
+// schema type in decoding.
 func errNilSpannerStructType() error {
 	return spannerErrorf(codes.FailedPrecondition, "unexpected nil StructType in decoding Cloud Spanner STRUCT")
 }
 
-// errUnnamedField returns error for decoding a Cloud Spanner STRUCT with unnamed field into a Go struct.
+// errUnnamedField returns error for decoding a Cloud Spanner STRUCT with
+// unnamed field into a Go struct.
 func errUnnamedField(ty *sppb.StructType, i int) error {
 	return spannerErrorf(codes.InvalidArgument, "unnamed field %v in Cloud Spanner STRUCT %+v", i, ty)
 }
 
 // errNoOrDupGoField returns error for decoding a Cloud Spanner
-// STRUCT into a Go struct which is either missing a field, or has duplicate fields.
+// STRUCT into a Go struct which is either missing a field, or has duplicate
+// fields.
 func errNoOrDupGoField(s interface{}, f string) error {
 	return spannerErrorf(codes.InvalidArgument, "Go struct %+v(type %T) has no or duplicate fields for Cloud Spanner STRUCT field %v", s, s, f)
 }
 
-// errDupColNames returns error for duplicated Cloud Spanner STRUCT field names found in decoding a Cloud Spanner STRUCT into a Go struct.
+// errDupColNames returns error for duplicated Cloud Spanner STRUCT field names
+// found in decoding a Cloud Spanner STRUCT into a Go struct.
 func errDupSpannerField(f string, ty *sppb.StructType) error {
 	return spannerErrorf(codes.InvalidArgument, "duplicated field name %q in Cloud Spanner STRUCT %+v", f, ty)
 }
 
-// errDecodeStructField returns error for failure in decoding a single field of a Cloud Spanner STRUCT.
+// errDecodeStructField returns error for failure in decoding a single field of
+// a Cloud Spanner STRUCT.
 func errDecodeStructField(ty *sppb.StructType, f string, err error) error {
 	se, ok := toSpannerError(err).(*Error)
 	if !ok {
@@ -1100,8 +1123,9 @@ func errDecodeStructField(ty *sppb.StructType, f string, err error) error {
 	return se
 }
 
-// decodeStruct decodes proto3.ListValue pb into struct referenced by pointer ptr, according to
-// the structual information given in sppb.StructType ty.
+// decodeStruct decodes proto3.ListValue pb into struct referenced by pointer
+// ptr, according to
+// the structural information given in sppb.StructType ty.
 func decodeStruct(ty *sppb.StructType, pb *proto3.ListValue, ptr interface{}) error {
 	if reflect.ValueOf(ptr).IsNil() {
 		return errNilDst(ptr)
@@ -1109,7 +1133,7 @@ func decodeStruct(ty *sppb.StructType, pb *proto3.ListValue, ptr interface{}) er
 	if ty == nil {
 		return errNilSpannerStructType()
 	}
-	// t holds the structual information of ptr.
+	// t holds the structural information of ptr.
 	t := reflect.TypeOf(ptr).Elem()
 	// v is the actual value that ptr points to.
 	v := reflect.ValueOf(ptr).Elem()
@@ -1154,8 +1178,9 @@ func isPtrStructPtrSlice(t reflect.Type) bool {
 	return true
 }
 
-// decodeStructArray decodes proto3.ListValue pb into struct slice referenced by pointer ptr, according to the
-// structual information given in a sppb.StructType.
+// decodeStructArray decodes proto3.ListValue pb into struct slice referenced by
+// pointer ptr, according to the
+// structural information given in a sppb.StructType.
 func decodeStructArray(ty *sppb.StructType, pb *proto3.ListValue, ptr interface{}) error {
 	if pb == nil {
 		return errNilListValue("STRUCT")
@@ -1191,8 +1216,8 @@ func decodeStructArray(ty *sppb.StructType, pb *proto3.ListValue, ptr interface{
 	return nil
 }
 
-// errEncoderUnsupportedType returns error for not being able to encode a value of
-// certain type.
+// errEncoderUnsupportedType returns error for not being able to encode a value
+// of certain type.
 func errEncoderUnsupportedType(v interface{}) error {
 	return spannerErrorf(codes.InvalidArgument, "client doesn't support type %T", v)
 }
@@ -1327,7 +1352,11 @@ func encodeValue(v interface{}) (*proto3.Value, *sppb.Type, error) {
 		}
 		pt = listType(floatType())
 	case time.Time:
-		pb.Kind = stringKind(v.UTC().Format(time.RFC3339Nano))
+		if v == commitTimestamp {
+			pb.Kind = stringKind(commitTimestampPlaceholderString)
+		} else {
+			pb.Kind = stringKind(v.UTC().Format(time.RFC3339Nano))
+		}
 		pt = timeType()
 	case []time.Time:
 		if v != nil {
@@ -1379,10 +1408,148 @@ func encodeValue(v interface{}) (*proto3.Value, *sppb.Type, error) {
 		// transmission don't affect our encoded value.
 		pb = proto.Clone(v.Value).(*proto3.Value)
 		pt = proto.Clone(v.Type).(*sppb.Type)
-	default:
+	case []GenericColumnValue:
 		return nil, nil, errEncoderUnsupportedType(v)
+	default:
+		if !isStructOrArrayOfStructValue(v) {
+			return nil, nil, errEncoderUnsupportedType(v)
+		}
+		typ := reflect.TypeOf(v)
+
+		// Value is a Go struct value/ptr.
+		if (typ.Kind() == reflect.Struct) ||
+			(typ.Kind() == reflect.Ptr && typ.Elem().Kind() == reflect.Struct) {
+			return encodeStruct(v)
+		}
+
+		// Value is a slice of Go struct values/ptrs.
+		if typ.Kind() == reflect.Slice {
+			return encodeStructArray(v)
+		}
 	}
 	return pb, pt, nil
+}
+
+// Encodes a Go struct value/ptr in v to the spanner Value and Type protos. v
+// itself must be non-nil.
+func encodeStruct(v interface{}) (*proto3.Value, *sppb.Type, error) {
+	typ := reflect.TypeOf(v)
+	val := reflect.ValueOf(v)
+
+	// Pointer to struct.
+	if typ.Kind() == reflect.Ptr && typ.Elem().Kind() == reflect.Struct {
+		typ = typ.Elem()
+		if val.IsNil() {
+			// nil pointer to struct, representing a NULL STRUCT value. Use a
+			// dummy value to get the type.
+			_, st, err := encodeStruct(reflect.Zero(typ).Interface())
+			if err != nil {
+				return nil, nil, err
+			}
+			return nullProto(), st, nil
+		}
+		val = val.Elem()
+	}
+
+	if typ.Kind() != reflect.Struct {
+		return nil, nil, errEncoderUnsupportedType(v)
+	}
+
+	stf := make([]*sppb.StructType_Field, 0, typ.NumField())
+	stv := make([]*proto3.Value, 0, typ.NumField())
+
+	for i := 0; i < typ.NumField(); i++ {
+		// If the field has a 'spanner' tag, use the value of that tag as the field name.
+		// This is used to build STRUCT types with unnamed/duplicate fields.
+		sf := typ.Field(i)
+		fval := val.Field(i)
+
+		// Embedded fields are not allowed.
+		if sf.Anonymous {
+			return nil, nil, errUnsupportedEmbeddedStructFields(sf.Name)
+		}
+
+		// Unexported fields are ignored.
+		if !fval.CanInterface() {
+			continue
+		}
+
+		fname, ok := sf.Tag.Lookup("spanner")
+		if !ok {
+			fname = sf.Name
+		}
+
+		eval, etype, err := encodeValue(fval.Interface())
+		if err != nil {
+			return nil, nil, err
+		}
+
+		stf = append(stf, mkField(fname, etype))
+		stv = append(stv, eval)
+	}
+
+	return listProto(stv...), structType(stf...), nil
+}
+
+// Encodes a slice of Go struct values/ptrs in v to the spanner Value and Type
+// protos. v itself must be non-nil.
+func encodeStructArray(v interface{}) (*proto3.Value, *sppb.Type, error) {
+	etyp := reflect.TypeOf(v).Elem()
+	sliceval := reflect.ValueOf(v)
+
+	// Slice of pointers to structs.
+	if etyp.Kind() == reflect.Ptr {
+		etyp = etyp.Elem()
+	}
+
+	// Use a dummy struct value to get the element type.
+	_, elemTyp, err := encodeStruct(reflect.Zero(etyp).Interface())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// nil slice represents a NULL array-of-struct.
+	if sliceval.IsNil() {
+		return nullProto(), listType(elemTyp), nil
+	}
+
+	values := make([]*proto3.Value, 0, sliceval.Len())
+
+	for i := 0; i < sliceval.Len(); i++ {
+		ev, _, err := encodeStruct(sliceval.Index(i).Interface())
+		if err != nil {
+			return nil, nil, err
+		}
+		values = append(values, ev)
+	}
+	return listProto(values...), listType(elemTyp), nil
+}
+
+func isStructOrArrayOfStructValue(v interface{}) bool {
+	typ := reflect.TypeOf(v)
+	if typ.Kind() == reflect.Slice {
+		typ = typ.Elem()
+	}
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+	return typ.Kind() == reflect.Struct
+}
+
+func isSupportedMutationType(v interface{}) bool {
+	switch v.(type) {
+	case nil, string, NullString, []string, []NullString,
+		[]byte, [][]byte,
+		int, []int, int64, []int64, NullInt64, []NullInt64,
+		bool, []bool, NullBool, []NullBool,
+		float64, []float64, NullFloat64, []NullFloat64,
+		time.Time, []time.Time, NullTime, []NullTime,
+		civil.Date, []civil.Date, NullDate, []NullDate,
+		GenericColumnValue:
+		return true
+	default:
+		return false
+	}
 }
 
 // encodeValueArray encodes a Value array into a proto3.ListValue.
@@ -1390,6 +1557,9 @@ func encodeValueArray(vs []interface{}) (*proto3.ListValue, error) {
 	lv := &proto3.ListValue{}
 	lv.Values = make([]*proto3.Value, 0, len(vs))
 	for _, v := range vs {
+		if !isSupportedMutationType(v) {
+			return nil, errEncoderUnsupportedType(v)
+		}
 		pb, _, err := encodeValue(v)
 		if err != nil {
 			return nil, err
@@ -1399,7 +1569,8 @@ func encodeValueArray(vs []interface{}) (*proto3.ListValue, error) {
 	return lv, nil
 }
 
-// encodeArray assumes that all values of the array element type encode without error.
+// encodeArray assumes that all values of the array element type encode without
+// error.
 func encodeArray(len int, at func(int) interface{}) (*proto3.Value, error) {
 	vs := make([]*proto3.Value, len)
 	var err error

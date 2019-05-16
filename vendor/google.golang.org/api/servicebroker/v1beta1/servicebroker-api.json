@@ -60,11 +60,6 @@
       "location": "query",
       "type": "string"
     },
-    "bearer_token": {
-      "description": "OAuth bearer token.",
-      "location": "query",
-      "type": "string"
-    },
     "callback": {
       "description": "JSONP",
       "location": "query",
@@ -84,12 +79,6 @@
       "description": "OAuth 2.0 token for the current user.",
       "location": "query",
       "type": "string"
-    },
-    "pp": {
-      "default": "true",
-      "description": "Pretty-print response.",
-      "location": "query",
-      "type": "boolean"
     },
     "prettyPrint": {
       "default": "true",
@@ -876,7 +865,7 @@
       }
     }
   },
-  "revision": "20180427",
+  "revision": "20190415",
   "rootUrl": "https://servicebroker.googleapis.com/",
   "schemas": {
     "GoogleCloudServicebrokerV1beta1__Binding": {
@@ -900,6 +889,10 @@
           "format": "google-datetime",
           "type": "string"
         },
+        "deploymentName": {
+          "description": "Output only.\nString containing the Deployment Manager deployment name that was created\nfor this binding,",
+          "type": "string"
+        },
         "parameters": {
           "additionalProperties": {
             "description": "Properties of the object.",
@@ -910,6 +903,10 @@
         },
         "plan_id": {
           "description": "The ID of the plan. See `Service` and `Plan` resources for details.\nMaximum length is 64, GUID recommended.\nRequired.",
+          "type": "string"
+        },
+        "resourceName": {
+          "description": "Output only.\nThe resource name of the binding, e.g.\nprojects/project_id/brokers/broker_id/service_instances/instance_id/bindings/binding_id.",
           "type": "string"
         },
         "service_id": {
@@ -1061,8 +1058,16 @@
           "description": "Credentials to use the binding.",
           "type": "object"
         },
+        "deploymentName": {
+          "description": "String containing the Deployment Manager deployment name that was created\nfor this binding,",
+          "type": "string"
+        },
         "description": {
           "description": "Used to communicate description of the response. Usually for non-standard\nerror codes.\nhttps://github.com/openservicebrokerapi/servicebroker/blob/master/spec.md#service-broker-errors",
+          "type": "string"
+        },
+        "resourceName": {
+          "description": "Output only.\nThe resource name of the binding, e.g.\nprojects/project_id/brokers/broker_id/service_instances/instance_id/bindings/binding_id.",
           "type": "string"
         },
         "route_service_url": {
@@ -1311,6 +1316,10 @@
           "format": "google-datetime",
           "type": "string"
         },
+        "deploymentName": {
+          "description": "Output only.\nString containing the Deployment Manager deployment name that was created\nfor this instance,",
+          "type": "string"
+        },
         "description": {
           "description": "To return errors when GetInstance call is done via HTTP to be unified with\nother methods.",
           "type": "string"
@@ -1377,15 +1386,19 @@
       "description": "Associates `members` with a `role`.",
       "id": "GoogleIamV1__Binding",
       "properties": {
+        "condition": {
+          "$ref": "GoogleType__Expr",
+          "description": "The condition that is associated with this binding.\nNOTE: An unsatisfied condition will not allow user access via current\nbinding. Different bindings, including their conditions, are examined\nindependently."
+        },
         "members": {
-          "description": "Specifies the identities requesting access for a Cloud Platform resource.\n`members` can have the following values:\n\n* `allUsers`: A special identifier that represents anyone who is\n   on the internet; with or without a Google account.\n\n* `allAuthenticatedUsers`: A special identifier that represents anyone\n   who is authenticated with a Google account or a service account.\n\n* `user:{emailid}`: An email address that represents a specific Google\n   account. For example, `alice@gmail.com` .\n\n\n* `serviceAccount:{emailid}`: An email address that represents a service\n   account. For example, `my-other-app@appspot.gserviceaccount.com`.\n\n* `group:{emailid}`: An email address that represents a Google group.\n   For example, `admins@example.com`.\n\n\n* `domain:{domain}`: A Google Apps domain name that represents all the\n   users of that domain. For example, `google.com` or `example.com`.\n\n",
+          "description": "Specifies the identities requesting access for a Cloud Platform resource.\n`members` can have the following values:\n\n* `allUsers`: A special identifier that represents anyone who is\n   on the internet; with or without a Google account.\n\n* `allAuthenticatedUsers`: A special identifier that represents anyone\n   who is authenticated with a Google account or a service account.\n\n* `user:{emailid}`: An email address that represents a specific Google\n   account. For example, `alice@gmail.com` .\n\n\n* `serviceAccount:{emailid}`: An email address that represents a service\n   account. For example, `my-other-app@appspot.gserviceaccount.com`.\n\n* `group:{emailid}`: An email address that represents a Google group.\n   For example, `admins@example.com`.\n\n\n* `domain:{domain}`: The G Suite domain (primary) that represents all the\n   users of that domain. For example, `google.com` or `example.com`.\n\n",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "role": {
-          "description": "Role that is assigned to `members`.\nFor example, `roles/viewer`, `roles/editor`, or `roles/owner`.\nRequired",
+          "description": "Role that is assigned to `members`.\nFor example, `roles/viewer`, `roles/editor`, or `roles/owner`.",
           "type": "string"
         }
       },
@@ -1458,6 +1471,29 @@
       "description": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
       "id": "GoogleProtobuf__Empty",
       "properties": {},
+      "type": "object"
+    },
+    "GoogleType__Expr": {
+      "description": "Represents an expression text. Example:\n\n    title: \"User account presence\"\n    description: \"Determines whether the request has a user account\"\n    expression: \"size(request.user) \u003e 0\"",
+      "id": "GoogleType__Expr",
+      "properties": {
+        "description": {
+          "description": "An optional description of the expression. This is a longer text which\ndescribes the expression, e.g. when hovered over it in a UI.",
+          "type": "string"
+        },
+        "expression": {
+          "description": "Textual representation of an expression in\nCommon Expression Language syntax.\n\nThe application context of the containing message determines which\nwell-known feature set of CEL is supported.",
+          "type": "string"
+        },
+        "location": {
+          "description": "An optional string indicating the location of the expression for error\nreporting, e.g. a file name and a position in the file.",
+          "type": "string"
+        },
+        "title": {
+          "description": "An optional title for the expression, i.e. a short string describing\nits purpose. This can be used e.g. in UIs which allow to enter the\nexpression.",
+          "type": "string"
+        }
+      },
       "type": "object"
     }
   },

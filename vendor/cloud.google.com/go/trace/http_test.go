@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,8 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-// +build go1.7
 
 package trace
 
@@ -109,7 +107,7 @@ func TestHTTPHandler_response(t *testing.T) {
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
 
-	tests := []struct {
+	for _, test := range []struct {
 		name            string
 		traceHeader     string
 		wantTraceHeader string
@@ -134,18 +132,21 @@ func TestHTTPHandler_response(t *testing.T) {
 			traceHeader:     "",
 			wantTraceHeader: "",
 		},
-	}
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			req, err := http.NewRequest("GET", ts.URL, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.Header.Set(httpHeader, test.traceHeader)
 
-	for _, tt := range tests {
-		req, _ := http.NewRequest("GET", ts.URL, nil)
-		req.Header.Set(httpHeader, tt.traceHeader)
-
-		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Errorf("failed to request: %v", err)
-		}
-		if got, want := res.Header.Get(httpHeader), tt.wantTraceHeader; got != want {
-			t.Errorf("%v: response context header = %q; want %q", tt.name, got, want)
-		}
+			res, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got, want := res.Header.Get(httpHeader), test.wantTraceHeader; got != want {
+				t.Fatalf("%v: response context header = %q; want %q", test.name, got, want)
+			}
+		})
 	}
 }

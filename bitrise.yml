@@ -81,16 +81,13 @@ workflows:
         - apk_path: $BITRISE_SIGNED_APK_PATH
         - track: $TRACK
 
-  # ----------------------------------------------------------------
-  # --- Utility workflows
   dep-update:
-    title: Update the locked versions of all dependencies
     steps:
     - script:
         inputs:
         - content: |-
-            #!/usr/bin/env bash
-            set -x
-
+            #!/bin/bash
+            set -ex
             go get -u -v github.com/golang/dep/cmd/dep
-            dep ensure -update -v
+            dep ensure -v
+            dep ensure -v -update
