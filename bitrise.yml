@@ -81,6 +81,7 @@ workflows:
         - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
         - package_name: $PACKAGE_NAME
         - apk_path: $BITRISE_SIGNED_APK_PATH
+        - app_path: ""
         - track: $TRACK
 
   dep-update:
