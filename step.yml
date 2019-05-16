@@ -53,12 +53,6 @@ type_tags:
 is_requires_admin_user: false
 is_always_run: false
 is_skippable: false
-deps:
-  brew:
-  - name: go
-  apt_get:
-  - name: golang
-    bin_name: go
 toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-google-play-deploy
