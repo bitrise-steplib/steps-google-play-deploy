@@ -1,26 +1,5 @@
-format_version: "2"
+format_version: "7"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
-
-app:
-  envs:
-  - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-android-realmtasks.git
-  - BRANCH: master
-
-  - GRADLE_TASK: assembleRelease
-  - GRADLEW_PATH: "./gradlew"
-  - PACKAGE_NAME: "io.bitrise.realmtasks"
-
-  # define these in your .bitrise.secrets.yml
-  - SERVICE_ACCOUNT_JSON_KEY_PATH: $SERVICE_ACCOUNT_JSON_KEY_PATH
-  - VERSION_CODE: "$VERSION_CODE"
-  - TRACK: $TRACK
-
-  - BITRISEIO_GOOGLE_SERVICES_JSON_URL: $BITRISEIO_GOOGLE_SERVICES_JSON_URL
-
-  - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
-  - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
-  - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
-  - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
 
 workflows:
   test:
@@ -36,14 +15,33 @@ workflows:
     - apk_deploy_test
 
   apk_deploy_test:
+    envs:
+    # sample app
+    - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-android-realmtasks.git
+    - SAMPLE_APP_BRANCH: master
+    # google services
+    - BITRISEIO_GOOGLE_SERVICES_JSON_URL: $BITRISEIO_GOOGLE_SERVICES_JSON_URL
+    # codesigning
+    - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
+    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
+    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
+    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
+    # google play deploy
+    - PACKAGE_NAME: "io.bitrise.realmtasks"
+    - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
+    - TRACK: another-track
+
     steps:
+    - script: 
+        inputs:
+        - content: rm -rf ./_tmp
     - script:
         inputs:
         - content: |-
             #!/usr/bin/env bash
             set -ex
-            rm -rf ./_tmp
-
+            
+            # install Android NDK
             if [ ! -d "$ANDROID_HOME/ndk-bundle/toolchains/mips64el-linux-android-4.9" ]
             then
                 curl "https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip" -o /tmp/ndk.zip
@@ -54,48 +52,31 @@ workflows:
                 envman add --key "ANDROID_NDK_HOME" --value "$ANDROID_HOME/ndk-bundle"
             fi
     - change-workdir:
-        title: Switch working dir to test/_tmp dir
         run_if: true
         inputs:
         - path: ./_tmp
-        - is_create_path: true
     - script:
         inputs:
-        - content: |-
-            #!/usr/bin/env bash
-            if [[ -z "${SAMPLE_APP_URL}" ]]; then
-              echo "error: there is no SAMPLE_APP_URL env var specified"
-              exit 1
-            elif [[ -z "${COMMIT}" && -z "${BRANCH}" ]]; then
-              echo "error: can't checkout: there is no BRANCH or COMMIT env var specified"
-              exit 1
-            fi
-            git init
-            git remote add origin "${SAMPLE_APP_URL}"
-            git fetch || exit 1
-            [[ -n "${COMMIT}" ]] && git checkout "${COMMIT}" || git checkout "${BRANCH}"
+        - content: git clone $SAMPLE_APP_URL $SAMPLE_APP_BRANCH
+    - script:
+        inputs:
+        - content: curl -o "./app/google-services.json" "$BITRISEIO_GOOGLE_SERVICES_JSON_URL"
     - install-missing-android-tools:
-    - script:
-        inputs:
-        - content: |-
-            #!/usr/bin/env bash
-            set -ex
-            curl -o "./app/google-services.json" "$BITRISEIO_GOOGLE_SERVICES_JSON_URL"
     - change-android-versioncode-and-versionname:
         inputs:
-        - build_gradle_path: "./app/build.gradle"
-        - new_version_code: $VERSION_CODE
+        - build_gradle_path: ./app/build.gradle
+        - new_version_code: 5$BITRISE_BUILD_NUMBER
     - gradle-runner:
         inputs:
-        - gradle_task: "$GRADLE_TASK"
-        - gradlew_path: "$GRADLEW_PATH"
+        - gradle_task: assembleRelease
+        - gradlew_path: ./gradlew
     - sign-apk:
         inputs:
         - apk_path: $BITRISE_APK_PATH_LIST
     - path::./:
         title: Step Test
         inputs:
-        - service_account_json_key_path: $SERVICE_ACCOUNT_JSON_KEY_PATH
+        - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
         - package_name: $PACKAGE_NAME
         - apk_path: $BITRISE_SIGNED_APK_PATH
         - track: $TRACK
