@@ -68,6 +68,10 @@ func (c Configs) Apps() []string {
 // ParseAppList parses the given app list and returns the APK and AAB file paths.
 func ParseAppList(appList string) (apks []string, aabs []string, err error) {
 	apps := strings.Split(appList, "\n")
+	if len(apps) == 0 {
+		apps = strings.Split(appList, "|")
+	}
+	
 	for _, app := range apps {
 		app = strings.TrimSpace(app)
 		if app == "" {

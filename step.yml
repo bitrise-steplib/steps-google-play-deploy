@@ -79,7 +79,7 @@ inputs:
       description: |-
         Path to the App Bundle or APK file(s) to deploy.
 
-        In case of [multiple APK](https://developer.android.com/google/play/publishing/multiple-apks.html) deploy, you can specify multiple APKs as a newline `\n` separated list.
+        In case of [multiple APK](https://developer.android.com/google/play/publishing/multiple-apks.html) deploy, you can specify multiple APKs as a newline `\n` or pipe `|` separated list.
       is_required: true
   - expansionfile_path: ""
     opts:
