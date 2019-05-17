@@ -166,7 +166,7 @@ inputs:
       - "true"
       - "false"
       is_required: true
-  - apk_path: "$BITRISE_APK_PATH"
+  - apk_path: 
     opts:
       title: APK file path
       description: |-
