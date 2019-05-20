@@ -152,8 +152,7 @@ func main() {
 	if err := stepconf.Parse(&configs); err != nil {
 		failf("Couldn't create config: %s\n", err)
 	}
-	fmt.Println(configs)
-
+	stepconf.Print(configs)
 	if err := configs.validate(); err != nil {
 		failf(err.Error())
 	}
