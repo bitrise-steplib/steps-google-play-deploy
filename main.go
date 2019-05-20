@@ -234,7 +234,7 @@ func main() {
 	log.Infof("Upload apks or app bundle")
 
 	versionCodes := []int64{}
-	appPaths := configs.Apps()
+	appPaths, _ := configs.appPaths()
 
 	// "main:/file/path/1.obb|patch:/file/path/2.obb"
 	expansionfileUpload := strings.TrimSpace(configs.ExpansionfilePath) != ""
@@ -246,16 +246,16 @@ func main() {
 
 	for i, appPath := range appPaths {
 		versionCode := int64(0)
-		apkFile, err := os.Open(appPath)
+		appFile, err := os.Open(appPath)
 		if err != nil {
-			failf("Failed to read apk (%s), error: %s", appPath, err)
+			failf("Failed to open app (%s), error: %s", appPath, err)
 		}
 
-		if filepath.Ext(appPath) == ".aab" {
+		if strings.ToLower(filepath.Ext(appPath)) == ".aab" {
 			editsBundlesService := androidpublisher.NewEditsBundlesService(service)
 
 			editsBundlesUploadCall := editsBundlesService.Upload(configs.PackageName, appEdit.Id)
-			editsBundlesUploadCall.Media(apkFile, googleapi.ContentType("application/octet-stream"))
+			editsBundlesUploadCall.Media(appFile, googleapi.ContentType("application/octet-stream"))
 
 			bundle, err := editsBundlesUploadCall.Do()
 			if err != nil {
@@ -268,7 +268,7 @@ func main() {
 			editsApksService := androidpublisher.NewEditsApksService(service)
 
 			editsApksUploadCall := editsApksService.Upload(configs.PackageName, appEdit.Id)
-			editsApksUploadCall.Media(apkFile, googleapi.ContentType("application/vnd.android.package-archive"))
+			editsApksUploadCall.Media(appFile, googleapi.ContentType("application/vnd.android.package-archive"))
 
 			apk, err := editsApksUploadCall.Do()
 			if err != nil {
@@ -360,7 +360,7 @@ func main() {
 
 	//
 	// Deactivate blocking apks
-	untrackApks := (configs.UntrackBlockingVersions == "true")
+	untrackApks := configs.UntrackBlockingVersions
 
 	if untrackApks && configs.Track == alphaTrackName {
 		fmt.Println()

@@ -1,4 +1,4 @@
-title: Google Play Deploy
+title: Deploy to Google Play
 summary: Uploads and releases apps to Google Play Store
 description: |-
   Uploads and releases apps to Google Play Store.
@@ -48,6 +48,7 @@ project_type_tags:
   - cordova
   - ionic
   - react-native
+  - flutter
 type_tags:
   - deploy
 is_requires_admin_user: false

@@ -21,7 +21,7 @@ type Configs struct {
 	UserFraction            string          `env:"user_fraction,opt[0.05,0.1,0.2,0.5]"`
 	WhatsnewsDir            string          `env:"whatsnews_dir"`
 	MappingFile             string          `env:"mapping_file"`
-	UntrackBlockingVersions string          `env:"untrack_blocking_versions,opt[true,false]"`
+	UntrackBlockingVersions bool            `env:"untrack_blocking_versions,opt[true,false]"`
 
 	// Deprecated
 	ApkPath string `env:"apk_path"`
@@ -87,70 +87,69 @@ func (c Configs) validateMappingFile() error {
 	return nil
 }
 
-// Apps returns the app to deploy, by prefering .aab files.
-func (c Configs) Apps() []string {
-	if len(c.ApkPath) > 0 {
-		return strings.Split(c.ApkPath, "|")
-	}
+func parseAPKList(list string) []string {
+	return strings.Split(list, "|")
+}
 
-	apps := strings.Split(c.AppPath, "\n")
+func parseAppList(list string) (apps []string) {
+	for _, app := range strings.Split(list, "\n") {
+		apps = append(apps, strings.TrimSpace(app))
+	}
 	if len(apps) == 0 {
-		apps = strings.Split(c.AppPath, "|")
+		for _, app := range strings.Split(list, "|") {
+			apps = append(apps, strings.TrimSpace(app))
+		}
+	}
+	return
+}
+
+// appPaths returns the app to deploy, by prefering .aab files.
+func (c Configs) appPaths() ([]string, []string) {
+	if len(c.ApkPath) > 0 {
+		return []string{"step input 'APK file path' (apk_path) is deprecated and will be removed on 20. August, use 'APK or App Bundle file path' (app_path) instead!"}, parseAPKList(c.ApkPath)
 	}
 
-	var apks, aabs []string
-	for _, pth := range apps {
+	var apks, aabs, warnings []string
+	for _, pth := range parseAppList(c.AppPath) {
 		pth = strings.TrimSpace(pth)
-		if filepath.Ext(pth) == ".aab" {
+		ext := strings.ToLower(filepath.Ext(pth))
+		if ext == ".aab" {
 			aabs = append(aabs, pth)
-		} else {
+		} else if ext == ".apk" {
 			apks = append(apks, pth)
+		} else {
+			warnings = append(warnings, fmt.Sprintf("unknown app path extension in path: %s, supported extensions: .apk, .aab", pth))
 		}
 	}
 
 	if len(aabs) > 0 && len(apks) > 0 {
-		log.Warnf("Both .aab and .apk files provided, using the .aab file(s): %s", strings.Join(aabs, ","))
+		warnings = append(warnings, fmt.Sprintf("Both .aab and .apk files provided, using the .aab file(s): %s", strings.Join(aabs, ",")))
 	}
 
 	if len(aabs) > 1 {
-		log.Warnf("More then 1 .aab files provided, using the first: %s", aabs[0])
+		warnings = append(warnings, fmt.Sprintf("More than 1 .aab files provided, using the first: %s", aabs[0]))
 	}
 
 	if len(aabs) > 0 {
-		return []string{aabs[0]}
+		return aabs[:0], warnings
 	}
 
-	return apks
+	return apks, warnings
 }
 
 // validateApps validates if files provided via apk_path are existing files,
 // if apk_path is empty it validates if files provided via app_path input are existing .apk or .aab files.
 func (c Configs) validateApps() error {
-	if len(c.ApkPath) > 0 {
-		log.Warnf("step input 'APK file path' (apk_path) is deprecated and will be removed soon, use 'APK or App Bundle file path' (app_path) instead!")
-
-		for _, pth := range strings.Split(c.ApkPath, "|") {
-			if exist, err := pathutil.IsPathExists(pth); err != nil {
-				return fmt.Errorf("failed to check if APK exist at: %s, error: %s", pth, err)
-			} else if !exist {
-				return errors.New("APK not exist at: " + pth)
-			}
-		}
-
-		return nil
+	apps, warnings := c.appPaths()
+	for _, warn := range warnings {
+		log.Warnf(warn)
 	}
 
-	apps := strings.Split(c.AppPath, "\n")
 	if len(apps) == 0 {
-		apps = strings.Split(c.AppPath, "|")
+		return fmt.Errorf("no app provided")
 	}
 
 	for _, pth := range apps {
-		ext := filepath.Ext(pth)
-		if ext != ".apk" && ext != ".aab" {
-			return fmt.Errorf("unknown app path extension in path: %s, supported extensions: .apk, .aab", pth)
-		}
-
 		if exist, err := pathutil.IsPathExists(pth); err != nil {
 			return fmt.Errorf("failed to check if app exist at: %s, error: %s", pth, err)
 		} else if !exist {
