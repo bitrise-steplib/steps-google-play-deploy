@@ -106,7 +106,7 @@ func parseAppList(list string) (apps []string) {
 // appPaths returns the app to deploy, by prefering .aab files.
 func (c Configs) appPaths() ([]string, []string) {
 	if len(c.ApkPath) > 0 {
-		return parseAPKList(c.ApkPath), []string{"step input 'APK file path' (apk_path) is deprecated and will be removed on 20. August, use 'APK or App Bundle file path' (app_path) instead!"}
+		return parseAPKList(c.ApkPath), []string{"step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (app_path) instead!"}
 	}
 
 	var apks, aabs, warnings []string
