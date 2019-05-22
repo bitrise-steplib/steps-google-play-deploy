@@ -92,7 +92,8 @@ func parseAPKList(list string) []string {
 }
 
 func parseAppList(list string) (apps []string) {
-	if list == "" {
+	list = strings.TrimSpace(list)
+	if len(list) == 0 {
 		return nil
 	}
 
