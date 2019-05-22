@@ -131,6 +131,7 @@ workflows:
         - package_name: $PACKAGE_NAME
         - apk_path: $BITRISE_SIGNED_APK_PATH
         - track: $TRACK
+        - mapping_file: ""
 
   dep-update:
     steps:
