@@ -48,7 +48,7 @@ workflows:
         inputs:
         - build_gradle_path: ./app/build.gradle
         - new_version_code: $BITRISE_BUILD_NUMBER
-    - android-build:
+    - gradle-runner:
         inputs:
         - gradle_task: bundleRelease
         - gradlew_path: ./gradlew
