@@ -14,7 +14,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"unicode/utf8"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -22,12 +21,12 @@ import (
 	"google.golang.org/api/androidpublisher/v2"
 	"google.golang.org/api/googleapi"
 
+	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/command"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
-	"github.com/bitrise-tools/go-steputils/input"
 )
 
 const (
@@ -36,155 +35,6 @@ const (
 	rolloutTrackName    = "rollout"
 	productionTrackName = "production"
 )
-
-// ConfigsModel ...
-type ConfigsModel struct {
-	JSONKeyPath             string
-	PackageName             string
-	ApkPath                 string
-	ExpansionfilePath       string
-	Track                   string
-	UserFraction            string
-	WhatsnewsDir            string
-	MappingFile             string
-	UntrackBlockingVersions string
-}
-
-func createConfigsModelFromEnvs() ConfigsModel {
-	return ConfigsModel{
-		JSONKeyPath:             os.Getenv("service_account_json_key_path"),
-		PackageName:             os.Getenv("package_name"),
-		ApkPath:                 os.Getenv("apk_path"),
-		ExpansionfilePath:       os.Getenv("expansionfile_path"),
-		Track:                   os.Getenv("track"),
-		UserFraction:            os.Getenv("user_fraction"),
-		WhatsnewsDir:            os.Getenv("whatsnews_dir"),
-		MappingFile:             os.Getenv("mapping_file"),
-		UntrackBlockingVersions: os.Getenv("untrack_blocking_versions"),
-	}
-}
-
-func secureInput(str string) string {
-	if str == "" {
-		return ""
-	}
-
-	secureStr := func(s string, show int) string {
-		runeCount := utf8.RuneCountInString(s)
-		if runeCount < 6 || show == 0 {
-			return strings.Repeat("*", 3)
-		}
-		if show*4 > runeCount {
-			show = 1
-		}
-
-		sec := fmt.Sprintf("%s%s%s", s[0:show], strings.Repeat("*", 3), s[len(s)-show:len(s)])
-		return sec
-	}
-
-	prefix := ""
-	cont := str
-	sec := secureStr(cont, 0)
-
-	if strings.HasPrefix(str, "file://") {
-		prefix = "file://"
-		cont = strings.TrimPrefix(str, prefix)
-		sec = secureStr(cont, 3)
-	} else if strings.HasPrefix(str, "http://www.") {
-		prefix = "http://www."
-		cont = strings.TrimPrefix(str, prefix)
-		sec = secureStr(cont, 3)
-	} else if strings.HasPrefix(str, "https://www.") {
-		prefix = "https://www."
-		cont = strings.TrimPrefix(str, prefix)
-		sec = secureStr(cont, 3)
-	} else if strings.HasPrefix(str, "http://") {
-		prefix = "http://"
-		cont = strings.TrimPrefix(str, prefix)
-		sec = secureStr(cont, 3)
-	} else if strings.HasPrefix(str, "https://") {
-		prefix = "https://"
-		cont = strings.TrimPrefix(str, prefix)
-		sec = secureStr(cont, 3)
-	}
-
-	return prefix + sec
-}
-
-func (configs ConfigsModel) print() {
-	log.Infof("Configs:")
-	log.Printf("- JSONKeyPath: %s", secureInput(configs.JSONKeyPath))
-	log.Printf("- PackageName: %s", configs.PackageName)
-	log.Printf("- ApkPath: %s", configs.ApkPath)
-	log.Printf("- ExpansionfilePath: %s", configs.ExpansionfilePath)
-	log.Printf("- Track: %s", configs.Track)
-	log.Printf("- UserFraction: %s", configs.UserFraction)
-	log.Printf("- WhatsnewsDir: %s", configs.WhatsnewsDir)
-	log.Printf("- MappingFile: %s", configs.MappingFile)
-	log.Printf("- UntrackBlockingVersions: %s", configs.UntrackBlockingVersions)
-}
-
-func (configs ConfigsModel) validate() error {
-	// required
-	if err := input.ValidateIfNotEmpty(configs.JSONKeyPath); err != nil {
-		return errors.New("issue with input JSONKeyPath: " + err.Error())
-	} else if strings.HasPrefix(configs.JSONKeyPath, "file://") {
-		pth := strings.TrimPrefix(configs.JSONKeyPath, "file://")
-
-		if exist, err := pathutil.IsPathExists(pth); err != nil {
-			return fmt.Errorf("Failed to check if JSONKeyPath exist at: %s, error: %s", pth, err)
-		} else if !exist {
-			return errors.New("JSONKeyPath not exist at: " + pth)
-		}
-	}
-
-	if err := input.ValidateIfNotEmpty(configs.PackageName); err != nil {
-		return errors.New("issue with input PackageName: " + err.Error())
-	}
-
-	if err := input.ValidateIfNotEmpty(configs.ApkPath); err != nil {
-		return errors.New("issue with input ApkPath: " + err.Error())
-	}
-	apkPaths := strings.Split(configs.ApkPath, "|")
-	for _, apkPath := range apkPaths {
-		if exist, err := pathutil.IsPathExists(apkPath); err != nil {
-			return fmt.Errorf("Failed to check if APK exist at: %s, error: %s", apkPath, err)
-		} else if !exist {
-			return errors.New("APK not exist at: " + apkPath)
-		}
-	}
-
-	if err := input.ValidateIfNotEmpty(configs.Track); err != nil {
-		return errors.New("Issue with input Track: " + err.Error())
-	}
-	if configs.Track == rolloutTrackName {
-		if configs.UserFraction == "" {
-			return errors.New("No UserFraction parameter specified")
-		}
-	}
-
-	if configs.WhatsnewsDir != "" {
-		if exist, err := pathutil.IsPathExists(configs.WhatsnewsDir); err != nil {
-			return fmt.Errorf("Failed to check if WhatsnewsDir exist at: %s, error: %s", configs.WhatsnewsDir, err)
-		} else if !exist {
-			return errors.New("WhatsnewsDir not exist at: " + configs.WhatsnewsDir)
-		}
-	}
-
-	if configs.MappingFile != "" {
-		if exist, err := pathutil.IsPathExists(configs.MappingFile); err != nil {
-			return fmt.Errorf("Failed to check if MappingFile exist at: %s, error: %s", configs.MappingFile, err)
-		} else if !exist {
-			return errors.New("MappingFile not exist at: " + configs.MappingFile)
-		}
-	}
-
-	if err := input.ValidateWithOptions(configs.UntrackBlockingVersions, "true", "false"); err != nil {
-		return errors.New("issue with input UntrackBlockingVersions: " + err.Error())
-	}
-
-	return nil
-}
 
 func downloadFile(downloadURL, targetPath string) error {
 	outFile, err := os.Create(targetPath)
@@ -283,12 +133,7 @@ func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, err
 	return recentChangesMap, nil
 }
 
-func failf(format string, v ...interface{}) {
-	log.Errorf(format, v...)
-	os.Exit(1)
-}
-
-func prepareKeyPath(keyPath string) (string, bool, error) {
+func parseURI(keyPath string) (string, bool, error) {
 	url, err := url.Parse(keyPath)
 	if err != nil {
 		return "", false, fmt.Errorf("failed to parse url (%s), error: %s", keyPath, err)
@@ -297,14 +142,19 @@ func prepareKeyPath(keyPath string) (string, bool, error) {
 	return strings.TrimPrefix(keyPath, "file://"), (url.Scheme == "http" || url.Scheme == "https"), nil
 }
 
+func failf(format string, v ...interface{}) {
+	log.Errorf(format, v...)
+	os.Exit(1)
+}
+
 func main() {
-	configs := createConfigsModelFromEnvs()
-
-	fmt.Println()
-	configs.print()
-
+	var configs Configs
+	if err := stepconf.Parse(&configs); err != nil {
+		failf("Couldn't create config: %s\n", err)
+	}
+	stepconf.Print(configs)
 	if err := configs.validate(); err != nil {
-		failf("Issue with input: %s", err)
+		failf(err.Error())
 	}
 
 	//
@@ -313,7 +163,7 @@ func main() {
 	log.Infof("Authenticating")
 
 	jwtConfig := new(jwt.Config)
-	jsonKeyPth, isRemote, err := prepareKeyPath(configs.JSONKeyPath)
+	jsonKeyPth, isRemote, err := parseURI(string(configs.JSONKeyPath))
 	if err != nil {
 		failf("Failed to prepare key path (%s), error: %s", configs.JSONKeyPath, err)
 	}
@@ -384,28 +234,28 @@ func main() {
 	log.Infof("Upload apks or app bundle")
 
 	versionCodes := []int64{}
-	apkPaths := strings.Split(configs.ApkPath, "|")
+	appPaths, _ := configs.appPaths()
 
 	// "main:/file/path/1.obb|patch:/file/path/2.obb"
 	expansionfileUpload := strings.TrimSpace(configs.ExpansionfilePath) != ""
 	expansionfilePaths := strings.Split(configs.ExpansionfilePath, "|")
 
-	if expansionfileUpload && (len(apkPaths) != len(expansionfilePaths)) {
-		failf("Mismatching number of APKs(%d) and Expansionfiles(%d)", len(apkPaths), len(expansionfilePaths))
+	if expansionfileUpload && (len(appPaths) != len(expansionfilePaths)) {
+		failf("Mismatching number of APKs(%d) and Expansionfiles(%d)", len(appPaths), len(expansionfilePaths))
 	}
 
-	for i, apkPath := range apkPaths {
+	for i, appPath := range appPaths {
 		versionCode := int64(0)
-		apkFile, err := os.Open(apkPath)
+		appFile, err := os.Open(appPath)
 		if err != nil {
-			failf("Failed to read apk (%s), error: %s", apkPath, err)
+			failf("Failed to open app (%s), error: %s", appPath, err)
 		}
 
-		if strings.HasSuffix(apkPath, "aab") {
+		if strings.ToLower(filepath.Ext(appPath)) == ".aab" {
 			editsBundlesService := androidpublisher.NewEditsBundlesService(service)
 
 			editsBundlesUploadCall := editsBundlesService.Upload(configs.PackageName, appEdit.Id)
-			editsBundlesUploadCall.Media(apkFile, googleapi.ContentType("application/octet-stream"))
+			editsBundlesUploadCall.Media(appFile, googleapi.ContentType("application/octet-stream"))
 
 			bundle, err := editsBundlesUploadCall.Do()
 			if err != nil {
@@ -418,7 +268,7 @@ func main() {
 			editsApksService := androidpublisher.NewEditsApksService(service)
 
 			editsApksUploadCall := editsApksService.Upload(configs.PackageName, appEdit.Id)
-			editsApksUploadCall.Media(apkFile, googleapi.ContentType("application/vnd.android.package-archive"))
+			editsApksUploadCall.Media(appFile, googleapi.ContentType("application/vnd.android.package-archive"))
 
 			apk, err := editsApksUploadCall.Do()
 			if err != nil {
@@ -473,7 +323,7 @@ func main() {
 			}
 
 			log.Printf(" uploaded mapping file for apk version: %d", versionCode)
-			if i < len(apkPaths)-1 {
+			if i < len(appPaths)-1 {
 				fmt.Println()
 			}
 		}
@@ -510,7 +360,7 @@ func main() {
 
 	//
 	// Deactivate blocking apks
-	untrackApks := (configs.UntrackBlockingVersions == "true")
+	untrackApks := configs.UntrackBlockingVersions
 
 	if untrackApks && configs.Track == alphaTrackName {
 		fmt.Println()

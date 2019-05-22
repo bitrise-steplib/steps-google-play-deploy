@@ -1,40 +1,96 @@
-format_version: "2"
+format_version: "7"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
-
-app:
-  envs:
-  - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-android-realmtasks.git
-  - BRANCH: master
-
-  - GRADLE_TASK: assembleRelease
-  - GRADLEW_PATH: "./gradlew"
-  - PACKAGE_NAME: "io.bitrise.realmtasks"
-
-  # define these in your .bitrise.secrets.yml
-  - SERVICE_ACCOUNT_JSON_KEY_PATH: $SERVICE_ACCOUNT_JSON_KEY_PATH
-  - VERSION_CODE: "$VERSION_CODE"
-  - TRACK: $TRACK
-
-  - BITRISEIO_GOOGLE_SERVICES_JSON_URL: $BITRISEIO_GOOGLE_SERVICES_JSON_URL
-
-  - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
-  - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
-  - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
-  - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
 
 workflows:
   test:
-    before_run:
-    - audit-this-step
-    - go-tests
     steps:
+    - script:
+        inputs:
+        - content: stepman audit --step-yml ./step.yml
+    - go-list:
+    - golint:
+    - errcheck:
+    - go-test:
+    after_run:
+    - apk_deploy_test
+    - aab_deploy_test
+
+  aab_deploy_test:
+    envs:
+    # sample app
+    - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-android-sdk22.git
+    - SAMPLE_APP_BRANCH: master
+    # codesigning
+    - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_1_URL
+    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
+    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
+    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
+    # google play deploy
+    - PACKAGE_NAME: "com.bitrise_io.sample_apps_android_simple"
+    - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
+    - TRACK: alpha
+
+    steps:
+    - script: 
+        inputs:
+        - content: rm -rf ./_tmp
+    - change-workdir:
+        run_if: true
+        inputs:
+        - path: ./_tmp
+    - script:
+        inputs:
+        - content: git clone --branch $SAMPLE_APP_BRANCH $SAMPLE_APP_URL ./
+    - install-missing-android-tools:
+        inputs:
+        - gradlew_path: ./gradlew
+    - change-android-versioncode-and-versionname:
+        inputs:
+        - build_gradle_path: ./app/build.gradle
+        - new_version_code: $BITRISE_BUILD_NUMBER
+    - android-build:
+        inputs:
+        - gradle_task: bundleRelease
+        - gradlew_path: ./gradlew
+    - sign-apk:
+        inputs:
+        - apk_path: $BITRISE_APK_PATH
+    - path::./:
+        title: Step Test
+        inputs:
+        - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
+        - package_name: $PACKAGE_NAME
+        - app_path: $BITRISE_SIGNED_APK_PATH
+        - track: $TRACK
+        
+  apk_deploy_test:
+    envs:
+    # sample app
+    - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-android-realmtasks.git
+    - SAMPLE_APP_BRANCH: master
+    # google services
+    - BITRISEIO_GOOGLE_SERVICES_JSON_URL: $BITRISEIO_GOOGLE_SERVICES_JSON_URL
+    # codesigning
+    - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
+    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
+    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
+    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
+    # google play deploy
+    - PACKAGE_NAME: "io.bitrise.realmtasks"
+    - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
+    - TRACK: another-track
+
+    steps:
+    - script: 
+        inputs:
+        - content: rm -rf ./_tmp
     - script:
         inputs:
         - content: |-
             #!/usr/bin/env bash
             set -ex
-            rm -rf ./_tmp
-
+            
+            # install Android NDK
             if [ ! -d "$ANDROID_HOME/ndk-bundle/toolchains/mips64el-linux-android-4.9" ]
             then
                 curl "https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip" -o /tmp/ndk.zip
@@ -45,131 +101,44 @@ workflows:
                 envman add --key "ANDROID_NDK_HOME" --value "$ANDROID_HOME/ndk-bundle"
             fi
     - change-workdir:
-        title: Switch working dir to test/_tmp dir
         run_if: true
         inputs:
         - path: ./_tmp
-        - is_create_path: true
     - script:
         inputs:
-        - content: |-
-            #!/usr/bin/env bash
-            if [[ -z "${SAMPLE_APP_URL}" ]]; then
-              echo "error: there is no SAMPLE_APP_URL env var specified"
-              exit 1
-            elif [[ -z "${COMMIT}" && -z "${BRANCH}" ]]; then
-              echo "error: can't checkout: there is no BRANCH or COMMIT env var specified"
-              exit 1
-            fi
-            git init
-            git remote add origin "${SAMPLE_APP_URL}"
-            git fetch || exit 1
-            [[ -n "${COMMIT}" ]] && git checkout "${COMMIT}" || git checkout "${BRANCH}"
+        - content: git clone --branch $SAMPLE_APP_BRANCH $SAMPLE_APP_URL ./
+    - script:
+        inputs:
+        - content: curl -o "./app/google-services.json" "$BITRISEIO_GOOGLE_SERVICES_JSON_URL"
     - install-missing-android-tools:
-    - script:
         inputs:
-        - content: |-
-            #!/usr/bin/env bash
-            set -ex
-            curl -o "./app/google-services.json" "$BITRISEIO_GOOGLE_SERVICES_JSON_URL"
+        - gradlew_path: ./gradlew
     - change-android-versioncode-and-versionname:
         inputs:
-        - build_gradle_path: "./app/build.gradle"
-        - new_version_code: $VERSION_CODE
+        - build_gradle_path: ./app/build.gradle
+        - new_version_code: 5$BITRISE_BUILD_NUMBER
     - gradle-runner:
         inputs:
-        - gradle_task: "$GRADLE_TASK"
-        - gradlew_path: "$GRADLEW_PATH"
+        - gradle_task: assembleRelease
+        - gradlew_path: ./gradlew
     - sign-apk:
         inputs:
         - apk_path: $BITRISE_APK_PATH_LIST
     - path::./:
         title: Step Test
         inputs:
-        - service_account_json_key_path: $SERVICE_ACCOUNT_JSON_KEY_PATH
+        - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
         - package_name: $PACKAGE_NAME
         - apk_path: $BITRISE_SIGNED_APK_PATH
         - track: $TRACK
 
-  go-tests:
-    before_run:
-    - _install-test-tools
-    steps:
-    - script:
-        title: Export go files to test
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-
-            no_vendor_paths="$(go list ./... | grep -v vendor)"
-            envman add --key GOLIST_WITHOUT_VENDOR --value "$no_vendor_paths"
-    - script:
-        title: Err check
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-
-            errcheck -asserts=true -blank=true $GOLIST_WITHOUT_VENDOR
-    - script:
-        title: Go lint
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-
-            while read -r line; do
-              echo "-> Linting: $line"
-              golint_out="$(golint $line)"
-              if [[ "${golint_out}" != "" ]] ; then
-                echo "=> Golint issues found:"
-                echo "${golint_out}"
-                exit 1
-              fi
-            done <<< "$GOLIST_WITHOUT_VENDOR"
-    - script:
-        title: Go test
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-
-            go test ./...
-
-  _install-test-tools:
-    steps:
-    - script:
-        title: Install required testing tools
-        inputs:
-        - content: |-
-            #!/usr/bin/env bash
-            set -ex
-
-            go get -u -v github.com/kisielk/errcheck
-            go get -u -v github.com/golang/lint/golint
-
-  # ----------------------------------------------------------------
-  # --- Utility workflows
   dep-update:
-    title: Update the locked versions of all dependencies
-    steps:
-    - script:
-        inputs:
-        - content: |-
-            #!/usr/bin/env bash
-            set -x
-
-            go get -u -v github.com/golang/dep/cmd/dep
-            dep ensure -update -v
-
-  # ----------------------------------------------------------------
-  # --- workflow to Share this step into a Step Library
-  audit-this-step:
     steps:
     - script:
         inputs:
         - content: |-
             #!/bin/bash
             set -ex
-            stepman audit --step-yml ./step.yml
+            go get -u -v github.com/golang/dep/cmd/dep
+            dep ensure -v
+            dep ensure -v -update
