@@ -139,7 +139,7 @@ func (c Configs) appPaths() ([]string, []string) {
 	}
 
 	if len(aabs) > 0 {
-		return aabs[:0], warnings
+		return aabs[:1], warnings
 	}
 
 	return apks, warnings
