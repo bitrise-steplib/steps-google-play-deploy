@@ -54,13 +54,13 @@ workflows:
         - gradlew_path: ./gradlew
     - sign-apk:
         inputs:
-        - apk_path: $BITRISE_APK_PATH
+        - apk_path: $BITRISE_AAB_PATH
     - path::./:
         title: Step Test
         inputs:
         - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
         - package_name: $PACKAGE_NAME
-        - app_path: $BITRISE_SIGNED_APK_PATH
+        ## - app_path: $BITRISE_APK_PATH\n$BITRISE_AAB_PATH
         - track: $TRACK
         
   apk_deploy_test:
