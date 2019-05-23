@@ -91,18 +91,25 @@ func parseAPKList(list string) []string {
 	return strings.Split(list, "|")
 }
 
+func splitElements(list []string, sep string) (s []string) {
+	for _, e := range list {
+		s = append(s, strings.Split(e, sep)...)
+	}
+	return
+}
+
 func parseAppList(list string) (apps []string) {
 	list = strings.TrimSpace(list)
 	if len(list) == 0 {
 		return nil
 	}
 
-	var split []string
-	for _, e := range strings.Split(list, "\n") {
-		split = append(split, strings.Split(e, "|")...)
+	s := []string{list}
+	for _, sep := range []string{"\n", `\n`, "|"} {
+		s = splitElements(s, sep)
 	}
 
-	for _, app := range split {
+	for _, app := range s {
 		app = strings.TrimSpace(app)
 		if len(app) > 0 {
 			apps = append(apps, app)

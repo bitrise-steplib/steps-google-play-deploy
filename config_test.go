@@ -95,6 +95,14 @@ func TestConfigs_appPaths(t *testing.T) {
 			wantApps:     nil,
 			wantWarnings: []string{"unknown app path extension in path: mapping.txt, supported extensions: .apk, .aab"},
 		},
+		{
+			name: "newline (\n) as a character",
+			config: Configs{
+				AppPath: `/bitrise/deploy/app-bitrise-signed.aab\n/bitrise/deploy/app.aab`,
+			},
+			wantApps:     []string{"/bitrise/deploy/app-bitrise-signed.aab"},
+			wantWarnings: []string{"More than 1 .aab files provided, using the first: /bitrise/deploy/app-bitrise-signed.aab"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
