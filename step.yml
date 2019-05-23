@@ -76,7 +76,7 @@ inputs:
       is_required: true
   - app_path: $BITRISE_APK_PATH\n$BITRISE_AAB_PATH
     opts:
-      title: App file path.
+      title: App file path
       description: |-
         Path to the App Bundle or APK file(s) to deploy.
 
@@ -171,6 +171,8 @@ inputs:
     opts:
       title: APK file path
       description: |-
+        __This input is deprecated and will be removed on 20 August 2019, use `App file path` input instead!__
+
         Path to the APK to deploy.
 
         You can provide multiple APK paths separated by `|` character.

@@ -91,13 +91,28 @@ func parseAPKList(list string) []string {
 	return strings.Split(list, "|")
 }
 
-func parseAppList(list string) (apps []string) {
-	for _, app := range strings.Split(list, "\n") {
-		apps = append(apps, strings.TrimSpace(app))
+func splitElements(list []string, sep string) (s []string) {
+	for _, e := range list {
+		s = append(s, strings.Split(e, sep)...)
 	}
-	if len(apps) == 0 {
-		for _, app := range strings.Split(list, "|") {
-			apps = append(apps, strings.TrimSpace(app))
+	return
+}
+
+func parseAppList(list string) (apps []string) {
+	list = strings.TrimSpace(list)
+	if len(list) == 0 {
+		return nil
+	}
+
+	s := []string{list}
+	for _, sep := range []string{"\n", `\n`, "|"} {
+		s = splitElements(s, sep)
+	}
+
+	for _, app := range s {
+		app = strings.TrimSpace(app)
+		if len(app) > 0 {
+			apps = append(apps, app)
 		}
 	}
 	return
@@ -131,7 +146,7 @@ func (c Configs) appPaths() ([]string, []string) {
 	}
 
 	if len(aabs) > 0 {
-		return aabs[:0], warnings
+		return aabs[:1], warnings
 	}
 
 	return apks, warnings
