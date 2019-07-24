@@ -19,7 +19,7 @@ description: |-
   
     Described in [Google Play Developer API](https://developers.google.com/android-publisher/getting_started)'s __Using a service account__ section
 
-    __NOTE__: When you create your service account on the google developer console, choose json as `Key Type`.
+    __NOTE__: When you create your service account on the Google Play Developer Console, choose json as `Key Type`.
 
   4. Grant the necessary rights to the service account:
   
@@ -39,9 +39,6 @@ description: |-
 website: https://github.com/bitrise-io/steps-google-play-deploy
 source_code_url: https://github.com/bitrise-io/steps-google-play-deploy
 support_url: https://github.com/bitrise-io/steps-google-play-deploy/issues
-host_os_tags:
-  - osx-10.10
-  - ubuntu
 project_type_tags:
   - android
   - xamarin
@@ -114,12 +111,7 @@ inputs:
       description: |-
         __Only available if `track` is `rollout`.__
 
-        Portion of the users who should get the staged rollout version of the app.
-      value_options:
-      - "0.05"
-      - "0.1"
-      - "0.2"
-      - "0.5"
+        Portion of the users who should get the staged rollout version of the app. Accepts values between 0.0 and 1.0.
       is_required: true
   - whatsnews_dir:
     opts:
