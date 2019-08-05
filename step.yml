@@ -105,14 +105,14 @@ inputs:
         
         For example: `pre-release`, or any of your closed track you added in Google Play Developer Console.
       is_required: true
-  - user_fraction: "0.5"
+  - user_fraction:
     opts:
       title: User Fraction
       description: |-
         __Only available if `track` is `rollout`.__
 
         Portion of the users who should get the staged rollout version of the app. Accepts values between 0.0 and 1.0.
-      is_required: true
+      is_required: false
       value_options:
         - "0.05"
         - "0.1"

@@ -340,7 +340,7 @@ func main() {
 		VersionCodes: versionCodes,
 	}
 
-	if configs.Track == rolloutTrackName {
+	if configs.Track == rolloutTrackName && configs.UserFraction != "" {
 		userFraction, err := strconv.ParseFloat(configs.UserFraction, 64)
 		if err != nil {
 			failf("Failed to parse user fraction, error: %s", err)
