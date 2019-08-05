@@ -32,7 +32,6 @@ import (
 const (
 	alphaTrackName      = "alpha"
 	betaTrackName       = "beta"
-	rolloutTrackName    = "rollout"
 	productionTrackName = "production"
 )
 
@@ -340,7 +339,7 @@ func main() {
 		VersionCodes: versionCodes,
 	}
 
-	if configs.Track == rolloutTrackName && configs.UserFraction != "" {
+	if configs.UserFraction != "" {
 		userFraction, err := strconv.ParseFloat(configs.UserFraction, 64)
 		if err != nil {
 			failf("Failed to parse user fraction, error: %s", err)
@@ -390,7 +389,7 @@ func main() {
 		switch configs.Track {
 		case betaTrackName:
 			possibleTrackNamesToUpdate = []string{alphaTrackName}
-		case rolloutTrackName, productionTrackName:
+		case productionTrackName:
 			possibleTrackNamesToUpdate = []string{alphaTrackName, betaTrackName}
 		}
 
