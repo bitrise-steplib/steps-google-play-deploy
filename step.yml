@@ -109,7 +109,8 @@ inputs:
     opts:
       title: User Fraction
       description: |-
-        Portion of the users who should get the staged version of the app. Accepts values between 0.0 and 1.0.
+        Portion of the users who should get the staged version of the app. Accepts values between 0.0 and 1.0 (exclusive-exclusive).
+        To release to all users, this input should not be defined (or should be blank).
       is_required: false
   - whatsnews_dir:
     opts:
