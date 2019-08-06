@@ -129,29 +129,8 @@ func Parse(conf interface{}) error {
 }
 
 func setField(field reflect.Value, value, constraint string) error {
-	switch constraint {
-	case "":
-		break
-	case "required":
-		if value == "" {
-			return errors.New("required variable is not present")
-		}
-	case "file", "dir":
-		if err := checkPath(value, constraint == "dir"); err != nil {
-			return err
-		}
-	// TODO: use FindStringSubmatch to distinguish no match and match for empty string.
-	case regexp.MustCompile(`^opt\[.*\]$`).FindString(constraint):
-		if !contains(value, constraint) {
-			// TODO: print only the value options, not the whole string.
-			return fmt.Errorf("value is not in value options (%s)", constraint)
-		}
-	case regexp.MustCompile(rangeRegex).FindString(constraint):
-		if err := ValidateRangeFields(value, constraint); err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("invalid constraint (%s)", constraint)
+	if err := validateConstraint(value, constraint); err != nil {
+		return err
 	}
 
 	if value == "" {
@@ -187,23 +166,54 @@ func setField(field reflect.Value, value, constraint string) error {
 	return nil
 }
 
-//ValidateRangeFields validates if the given range is proper.
+func validateConstraint(value, constraint string) error {
+	switch constraint {
+	case "":
+		break
+	case "required":
+		if value == "" {
+			return errors.New("required variable is not present")
+		}
+	case "file", "dir":
+		if err := checkPath(value, constraint == "dir"); err != nil {
+			return err
+		}
+	// TODO: use FindStringSubmatch to distinguish no match and match for empty string.
+	case regexp.MustCompile(`^opt\[.*\]$`).FindString(constraint):
+		if !contains(value, constraint) {
+			// TODO: print only the value options, not the whole string.
+			return fmt.Errorf("value is not in value options (%s)", constraint)
+		}
+	case regexp.MustCompile(rangeRegex).FindString(constraint):
+		if err := ValidateRangeFields(value, constraint); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("invalid constraint (%s)", constraint)
+	}
+	return nil
+}
+
+//ValidateRangeFields validates if the given range is proper. Ranges are optional, empty values are valid.
 func ValidateRangeFields(valueStr, constraint string) error {
+	if valueStr == "" {
+		return nil
+	}
 	constraintMin, constraintMax, constraintMinBr, constraintMaxBr, err := GetRangeValues(constraint)
 	if err != nil {
 		return err
 	}
 	min, err := parseValueStr(constraintMin)
 	if err != nil {
-		return fmt.Errorf("failed to parse min value: %s", err)
+		return fmt.Errorf("failed to parse min value %s: %s", constraintMin, err)
 	}
 	max, err := parseValueStr(constraintMax)
 	if err != nil {
-		return fmt.Errorf("failed to parse max value: %s", err)
+		return fmt.Errorf("failed to parse max value %s: %s", constraintMax, err)
 	}
 	value, err := parseValueStr(valueStr)
 	if err != nil {
-		return fmt.Errorf("failed to parse value: %s", err)
+		return fmt.Errorf("failed to parse value %s: %s", valueStr, err)
 	}
 	isMinInclusiveBool, err := isMinInclusive(constraintMinBr)
 	if err != nil {
