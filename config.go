@@ -18,7 +18,7 @@ type Configs struct {
 	AppPath                 string          `env:"app_path,required"`
 	ExpansionfilePath       string          `env:"expansionfile_path"`
 	Track                   string          `env:"track,required"`
-	UserFraction            string          `env:"user_fraction,range]0.0..1.0["`
+	UserFraction            string          `env:"user_fraction,range]0.0..1.0[,omitempty"`
 	WhatsnewsDir            string          `env:"whatsnews_dir"`
 	MappingFile             string          `env:"mapping_file"`
 	UntrackBlockingVersions bool            `env:"untrack_blocking_versions,opt[true,false]"`
