@@ -18,7 +18,7 @@ workflows:
   aab_deploy_test:
     envs:
     # sample app
-    - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-android-sdk22.git
+    - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
     - SAMPLE_APP_BRANCH: master
     # codesigning
     - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_1_URL
@@ -66,7 +66,7 @@ workflows:
   apk_deploy_test:
     envs:
     # sample app
-    - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-android-realmtasks.git
+    - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-android-realmtasks.git
     - SAMPLE_APP_BRANCH: master
     # google services
     - BITRISEIO_GOOGLE_SERVICES_JSON_URL: $BITRISEIO_GOOGLE_SERVICES_JSON_URL
