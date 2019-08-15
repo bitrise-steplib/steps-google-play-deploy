@@ -52,7 +52,7 @@ workflows:
         inputs:
         - gradle_task: bundleRelease
         - gradlew_path: ./gradlew
-    - sign-apk:
+    - sign-apk@1.3.1:
         inputs:
         - apk_path: $BITRISE_AAB_PATH
     - path::./:
@@ -121,7 +121,7 @@ workflows:
         inputs:
         - gradle_task: assembleRelease
         - gradlew_path: ./gradlew
-    - sign-apk:
+    - sign-apk@1.3.1:
         inputs:
         - apk_path: $BITRISE_APK_PATH_LIST
     - path::./:
