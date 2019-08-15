@@ -105,7 +105,7 @@ inputs:
         
         For example: `pre-release`, or any of your closed track you added in Google Play Developer Console.
       is_required: true
-  - user_fraction:
+  - user_fraction: "0.5"
     opts:
       title: User Fraction
       description: |-
