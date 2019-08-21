@@ -12,7 +12,7 @@
 //
 // Usage example:
 //
-//   import "google.golang.org/api/androidpublisher/v2"
+//   import "google.golang.org/api/androidpublisher/v3"
 //   ...
 //   ctx := context.Background()
 //   androidpublisherService, err := androidpublisher.NewService(ctx)
@@ -35,7 +35,7 @@
 //   androidpublisherService, err := androidpublisher.NewService(ctx, option.WithTokenSource(config.TokenSource(ctx, token)))
 //
 // See https://godoc.org/google.golang.org/api/option/ for details on options.
-package androidpublisher // import "google.golang.org/api/androidpublisher/v2"
+package androidpublisher // import "google.golang.org/api/androidpublisher/v3"
 
 import (
 	"bytes"
@@ -69,10 +69,10 @@ var _ = errors.New
 var _ = strings.Replace
 var _ = context.Canceled
 
-const apiId = "androidpublisher:v2"
+const apiId = "androidpublisher:v3"
 const apiName = "androidpublisher"
-const apiVersion = "v2"
-const basePath = "https://www.googleapis.com/androidpublisher/v2/applications/"
+const apiVersion = "v3"
+const basePath = "https://www.googleapis.com/androidpublisher/v3/applications/"
 
 // OAuth2 scopes used by this API.
 const (
@@ -113,6 +113,7 @@ func New(client *http.Client) (*Service, error) {
 	s := &Service{client: client, BasePath: basePath}
 	s.Edits = NewEditsService(s)
 	s.Inappproducts = NewInappproductsService(s)
+	s.Internalappsharingartifacts = NewInternalappsharingartifactsService(s)
 	s.Orders = NewOrdersService(s)
 	s.Purchases = NewPurchasesService(s)
 	s.Reviews = NewReviewsService(s)
@@ -127,6 +128,8 @@ type Service struct {
 	Edits *EditsService
 
 	Inappproducts *InappproductsService
+
+	Internalappsharingartifacts *InternalappsharingartifactsService
 
 	Orders *OrdersService
 
@@ -144,7 +147,6 @@ func (s *Service) userAgent() string {
 
 func NewEditsService(s *Service) *EditsService {
 	rs := &EditsService{s: s}
-	rs.Apklistings = NewEditsApklistingsService(s)
 	rs.Apks = NewEditsApksService(s)
 	rs.Bundles = NewEditsBundlesService(s)
 	rs.Deobfuscationfiles = NewEditsDeobfuscationfilesService(s)
@@ -159,8 +161,6 @@ func NewEditsService(s *Service) *EditsService {
 
 type EditsService struct {
 	s *Service
-
-	Apklistings *EditsApklistingsService
 
 	Apks *EditsApksService
 
@@ -179,15 +179,6 @@ type EditsService struct {
 	Testers *EditsTestersService
 
 	Tracks *EditsTracksService
-}
-
-func NewEditsApklistingsService(s *Service) *EditsApklistingsService {
-	rs := &EditsApklistingsService{s: s}
-	return rs
-}
-
-type EditsApklistingsService struct {
-	s *Service
 }
 
 func NewEditsApksService(s *Service) *EditsApksService {
@@ -277,6 +268,15 @@ func NewInappproductsService(s *Service) *InappproductsService {
 }
 
 type InappproductsService struct {
+	s *Service
+}
+
+func NewInternalappsharingartifactsService(s *Service) *InternalappsharingartifactsService {
+	rs := &InternalappsharingartifactsService{s: s}
+	return rs
+}
+
+type InternalappsharingartifactsService struct {
 	s *Service
 }
 
@@ -407,74 +407,6 @@ type ApkBinary struct {
 
 func (s *ApkBinary) MarshalJSON() ([]byte, error) {
 	type NoMethod ApkBinary
-	raw := NoMethod(*s)
-	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
-}
-
-type ApkListing struct {
-	// Language: The language code, in BCP 47 format (eg "en-US").
-	Language string `json:"language,omitempty"`
-
-	// RecentChanges: Describe what's new in your APK.
-	RecentChanges string `json:"recentChanges,omitempty"`
-
-	// ServerResponse contains the HTTP response code and headers from the
-	// server.
-	googleapi.ServerResponse `json:"-"`
-
-	// ForceSendFields is a list of field names (e.g. "Language") to
-	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
-	ForceSendFields []string `json:"-"`
-
-	// NullFields is a list of field names (e.g. "Language") to include in
-	// API requests with the JSON null value. By default, fields with empty
-	// values are omitted from API requests. However, any field with an
-	// empty value appearing in NullFields will be sent to the server as
-	// null. It is an error if a field in this list has a non-empty value.
-	// This may be used to include null fields in Patch requests.
-	NullFields []string `json:"-"`
-}
-
-func (s *ApkListing) MarshalJSON() ([]byte, error) {
-	type NoMethod ApkListing
-	raw := NoMethod(*s)
-	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
-}
-
-type ApkListingsListResponse struct {
-	// Kind: Identifies what kind of resource this is. Value: the fixed
-	// string "androidpublisher#apkListingsListResponse".
-	Kind string `json:"kind,omitempty"`
-
-	Listings []*ApkListing `json:"listings,omitempty"`
-
-	// ServerResponse contains the HTTP response code and headers from the
-	// server.
-	googleapi.ServerResponse `json:"-"`
-
-	// ForceSendFields is a list of field names (e.g. "Kind") to
-	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
-	ForceSendFields []string `json:"-"`
-
-	// NullFields is a list of field names (e.g. "Kind") to include in API
-	// requests with the JSON null value. By default, fields with empty
-	// values are omitted from API requests. However, any field with an
-	// empty value appearing in NullFields will be sent to the server as
-	// null. It is an error if a field in this list has a non-empty value.
-	// This may be used to include null fields in Patch requests.
-	NullFields []string `json:"-"`
-}
-
-func (s *ApkListingsListResponse) MarshalJSON() ([]byte, error) {
-	type NoMethod ApkListingsListResponse
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -756,6 +688,34 @@ type Comment struct {
 
 func (s *Comment) MarshalJSON() ([]byte, error) {
 	type NoMethod Comment
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type CountryTargeting struct {
+	Countries []string `json:"countries,omitempty"`
+
+	IncludeRestOfWorld bool `json:"includeRestOfWorld,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Countries") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Countries") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *CountryTargeting) MarshalJSON() ([]byte, error) {
+	type NoMethod CountryTargeting
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -1355,6 +1315,52 @@ func (s *InappproductsListResponse) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// InternalAppSharingArtifact: An artifact resource which gets created
+// when uploading an APK or Android App Bundle through internal app
+// sharing.
+type InternalAppSharingArtifact struct {
+	// CertificateFingerprint: The SHA256 fingerprint of the certificate
+	// used to signed the generated artifact.
+	CertificateFingerprint string `json:"certificateFingerprint,omitempty"`
+
+	// DownloadUrl: The download URL generated for the uploaded artifact.
+	// Users that are authorized to download can follow the link to the Play
+	// Store app to install it.
+	DownloadUrl string `json:"downloadUrl,omitempty"`
+
+	// Sha256: The SHA-256 hash of the artifact represented as a lowercase
+	// hexadecimal number, matching the output of the sha256sum command.
+	Sha256 string `json:"sha256,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "CertificateFingerprint") to unconditionally include in API requests.
+	// By default, fields with empty values are omitted from API requests.
+	// However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CertificateFingerprint")
+	// to include in API requests with the JSON null value. By default,
+	// fields with empty values are omitted from API requests. However, any
+	// field with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *InternalAppSharingArtifact) MarshalJSON() ([]byte, error) {
+	type NoMethod InternalAppSharingArtifact
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 type Listing struct {
 	// FullDescription: Full description of the app; this may be up to 4000
 	// characters in length.
@@ -1432,6 +1438,36 @@ type ListingsListResponse struct {
 
 func (s *ListingsListResponse) MarshalJSON() ([]byte, error) {
 	type NoMethod ListingsListResponse
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+type LocalizedText struct {
+	// Language: The language code, in BCP 47 format (eg "en-US").
+	Language string `json:"language,omitempty"`
+
+	// Text: The text in the given `language`.
+	Text string `json:"text,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Language") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Language") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *LocalizedText) MarshalJSON() ([]byte, error) {
+	type NoMethod LocalizedText
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -1955,6 +1991,11 @@ type SubscriptionPurchase struct {
 	// when it reaches its current expiry time.
 	AutoRenewing bool `json:"autoRenewing,omitempty"`
 
+	// AutoResumeTimeMillis: Time at which the subscription will be
+	// automatically resumed, in milliseconds since the Epoch. Only present
+	// if the user has requested to pause the subscription.
+	AutoResumeTimeMillis int64 `json:"autoResumeTimeMillis,omitempty,string"`
+
 	// CancelReason: The reason why a subscription was canceled or is not
 	// auto-renewing. Possible values are:
 	// - User canceled the subscription
@@ -1962,7 +2003,7 @@ type SubscriptionPurchase struct {
 	// billing problem
 	// - Subscription was replaced with a new subscription
 	// - Subscription was canceled by the developer
-	CancelReason *int64 `json:"cancelReason,omitempty"`
+	CancelReason int64 `json:"cancelReason,omitempty"`
 
 	// CancelSurveyResult: Information provided by the user when they
 	// complete the subscription cancellation flow (cancellation reason
@@ -2024,7 +2065,7 @@ type SubscriptionPurchase struct {
 	// - Payment received
 	// - Free trial
 	// - Pending deferred upgrade/downgrade
-	PaymentState *int64 `json:"paymentState,omitempty"`
+	PaymentState int64 `json:"paymentState,omitempty"`
 
 	// PriceAmountMicros: Price of the subscription, not including tax.
 	// Price is expressed in micro-units, where 1,000,000 micro-units
@@ -2247,21 +2288,18 @@ func (s *TokenPagination) MarshalJSON() ([]byte, error) {
 }
 
 type Track struct {
+	// Releases: A list of all active releases in this track during a read
+	// request. On an update request, it represents desired changes.
+	Releases []*TrackRelease `json:"releases,omitempty"`
+
 	// Track: Identifier for this track.
 	Track string `json:"track,omitempty"`
-
-	UserFraction float64 `json:"userFraction,omitempty"`
-
-	// VersionCodes: Version codes to make active on this track. Note that
-	// this list should contain all versions you wish to be active,
-	// including those you wish to retain from previous releases.
-	VersionCodes []int64 `json:"versionCodes,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
 	googleapi.ServerResponse `json:"-"`
 
-	// ForceSendFields is a list of field names (e.g. "Track") to
+	// ForceSendFields is a list of field names (e.g. "Releases") to
 	// unconditionally include in API requests. By default, fields with
 	// empty values are omitted from API requests. However, any non-pointer,
 	// non-interface field appearing in ForceSendFields will be sent to the
@@ -2269,8 +2307,8 @@ type Track struct {
 	// used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "Track") to include in API
-	// requests with the JSON null value. By default, fields with empty
+	// NullFields is a list of field names (e.g. "Releases") to include in
+	// API requests with the JSON null value. By default, fields with empty
 	// values are omitted from API requests. However, any field with an
 	// empty value appearing in NullFields will be sent to the server as
 	// null. It is an error if a field in this list has a non-empty value.
@@ -2284,8 +2322,58 @@ func (s *Track) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-func (s *Track) UnmarshalJSON(data []byte) error {
-	type NoMethod Track
+type TrackRelease struct {
+	CountryTargeting *CountryTargeting `json:"countryTargeting,omitempty"`
+
+	// Name: The release name, used to identify this release in the Play
+	// Console UI. Not required to be unique. This is optional, if not set
+	// it will be generated from the version_name in the APKs.
+	Name string `json:"name,omitempty"`
+
+	// ReleaseNotes: The description of what is new in the app in this
+	// release.
+	ReleaseNotes []*LocalizedText `json:"releaseNotes,omitempty"`
+
+	// Status: The desired status of this release.
+	Status string `json:"status,omitempty"`
+
+	// UserFraction: Fraction of users who are eligible to receive the
+	// release. 0 < fraction < 1. To be set, release status must be
+	// "inProgress" or "halted".
+	UserFraction float64 `json:"userFraction,omitempty"`
+
+	// VersionCodes: A list of all version codes of APKs that will be
+	// exposed to the users of this track when this release is rolled out.
+	// Note that this list should contain all versions you wish to be
+	// active, including those you wish to retain from previous releases.
+	VersionCodes googleapi.Int64s `json:"versionCodes,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "CountryTargeting") to
+	// unconditionally include in API requests. By default, fields with
+	// empty values are omitted from API requests. However, any non-pointer,
+	// non-interface field appearing in ForceSendFields will be sent to the
+	// server regardless of whether the field is empty or not. This may be
+	// used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CountryTargeting") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *TrackRelease) MarshalJSON() ([]byte, error) {
+	type NoMethod TrackRelease
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *TrackRelease) UnmarshalJSON(data []byte) error {
+	type NoMethod TrackRelease
 	var s1 struct {
 		UserFraction gensupport.JSONFloat64 `json:"userFraction"`
 		*NoMethod
@@ -3162,933 +3250,6 @@ func (c *EditsValidateCall) Do(opts ...googleapi.CallOption) (*AppEdit, error) {
 
 }
 
-// method id "androidpublisher.edits.apklistings.delete":
-
-type EditsApklistingsDeleteCall struct {
-	s              *Service
-	packageNameid  string
-	editId         string
-	apkVersionCode int64
-	language       string
-	urlParams_     gensupport.URLParams
-	ctx_           context.Context
-	header_        http.Header
-}
-
-// Delete: Deletes the APK-specific localized listing for a specified
-// APK and language code.
-func (r *EditsApklistingsService) Delete(packageNameid string, editId string, apkVersionCode int64, language string) *EditsApklistingsDeleteCall {
-	c := &EditsApklistingsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
-	c.packageNameid = packageNameid
-	c.editId = editId
-	c.apkVersionCode = apkVersionCode
-	c.language = language
-	return c
-}
-
-// Fields allows partial responses to be retrieved. See
-// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
-// for more information.
-func (c *EditsApklistingsDeleteCall) Fields(s ...googleapi.Field) *EditsApklistingsDeleteCall {
-	c.urlParams_.Set("fields", googleapi.CombineFields(s))
-	return c
-}
-
-// Context sets the context to be used in this call's Do method. Any
-// pending HTTP request will be aborted if the provided context is
-// canceled.
-func (c *EditsApklistingsDeleteCall) Context(ctx context.Context) *EditsApklistingsDeleteCall {
-	c.ctx_ = ctx
-	return c
-}
-
-// Header returns an http.Header that can be modified by the caller to
-// add HTTP headers to the request.
-func (c *EditsApklistingsDeleteCall) Header() http.Header {
-	if c.header_ == nil {
-		c.header_ = make(http.Header)
-	}
-	return c.header_
-}
-
-func (c *EditsApklistingsDeleteCall) doRequest(alt string) (*http.Response, error) {
-	reqHeaders := make(http.Header)
-	for k, v := range c.header_ {
-		reqHeaders[k] = v
-	}
-	reqHeaders.Set("User-Agent", c.s.userAgent())
-	var body io.Reader = nil
-	c.urlParams_.Set("alt", alt)
-	c.urlParams_.Set("prettyPrint", "false")
-	urls := googleapi.ResolveRelative(c.s.BasePath, "{packageName}/edits/{editId}/apks/{apkVersionCode}/listings/{language}")
-	urls += "?" + c.urlParams_.Encode()
-	req, err := http.NewRequest("DELETE", urls, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header = reqHeaders
-	googleapi.Expand(req.URL, map[string]string{
-		"packageName":    c.packageNameid,
-		"editId":         c.editId,
-		"apkVersionCode": strconv.FormatInt(c.apkVersionCode, 10),
-		"language":       c.language,
-	})
-	return gensupport.SendRequest(c.ctx_, c.s.client, req)
-}
-
-// Do executes the "androidpublisher.edits.apklistings.delete" call.
-func (c *EditsApklistingsDeleteCall) Do(opts ...googleapi.CallOption) error {
-	gensupport.SetOptions(c.urlParams_, opts...)
-	res, err := c.doRequest("json")
-	if err != nil {
-		return err
-	}
-	defer googleapi.CloseBody(res)
-	if err := googleapi.CheckResponse(res); err != nil {
-		return err
-	}
-	return nil
-	// {
-	//   "description": "Deletes the APK-specific localized listing for a specified APK and language code.",
-	//   "httpMethod": "DELETE",
-	//   "id": "androidpublisher.edits.apklistings.delete",
-	//   "parameterOrder": [
-	//     "packageName",
-	//     "editId",
-	//     "apkVersionCode",
-	//     "language"
-	//   ],
-	//   "parameters": {
-	//     "apkVersionCode": {
-	//       "description": "The APK version code whose APK-specific listings should be read or modified.",
-	//       "format": "int32",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "integer"
-	//     },
-	//     "editId": {
-	//       "description": "Unique identifier for this edit.",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     },
-	//     "language": {
-	//       "description": "The language code (a BCP-47 language tag) of the APK-specific localized listing to read or modify. For example, to select Austrian German, pass \"de-AT\".",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     },
-	//     "packageName": {
-	//       "description": "Unique identifier for the Android app that is being updated; for example, \"com.spiffygame\".",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     }
-	//   },
-	//   "path": "{packageName}/edits/{editId}/apks/{apkVersionCode}/listings/{language}",
-	//   "scopes": [
-	//     "https://www.googleapis.com/auth/androidpublisher"
-	//   ]
-	// }
-
-}
-
-// method id "androidpublisher.edits.apklistings.deleteall":
-
-type EditsApklistingsDeleteallCall struct {
-	s              *Service
-	packageNameid  string
-	editId         string
-	apkVersionCode int64
-	urlParams_     gensupport.URLParams
-	ctx_           context.Context
-	header_        http.Header
-}
-
-// Deleteall: Deletes all the APK-specific localized listings for a
-// specified APK.
-func (r *EditsApklistingsService) Deleteall(packageNameid string, editId string, apkVersionCode int64) *EditsApklistingsDeleteallCall {
-	c := &EditsApklistingsDeleteallCall{s: r.s, urlParams_: make(gensupport.URLParams)}
-	c.packageNameid = packageNameid
-	c.editId = editId
-	c.apkVersionCode = apkVersionCode
-	return c
-}
-
-// Fields allows partial responses to be retrieved. See
-// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
-// for more information.
-func (c *EditsApklistingsDeleteallCall) Fields(s ...googleapi.Field) *EditsApklistingsDeleteallCall {
-	c.urlParams_.Set("fields", googleapi.CombineFields(s))
-	return c
-}
-
-// Context sets the context to be used in this call's Do method. Any
-// pending HTTP request will be aborted if the provided context is
-// canceled.
-func (c *EditsApklistingsDeleteallCall) Context(ctx context.Context) *EditsApklistingsDeleteallCall {
-	c.ctx_ = ctx
-	return c
-}
-
-// Header returns an http.Header that can be modified by the caller to
-// add HTTP headers to the request.
-func (c *EditsApklistingsDeleteallCall) Header() http.Header {
-	if c.header_ == nil {
-		c.header_ = make(http.Header)
-	}
-	return c.header_
-}
-
-func (c *EditsApklistingsDeleteallCall) doRequest(alt string) (*http.Response, error) {
-	reqHeaders := make(http.Header)
-	for k, v := range c.header_ {
-		reqHeaders[k] = v
-	}
-	reqHeaders.Set("User-Agent", c.s.userAgent())
-	var body io.Reader = nil
-	c.urlParams_.Set("alt", alt)
-	c.urlParams_.Set("prettyPrint", "false")
-	urls := googleapi.ResolveRelative(c.s.BasePath, "{packageName}/edits/{editId}/apks/{apkVersionCode}/listings")
-	urls += "?" + c.urlParams_.Encode()
-	req, err := http.NewRequest("DELETE", urls, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header = reqHeaders
-	googleapi.Expand(req.URL, map[string]string{
-		"packageName":    c.packageNameid,
-		"editId":         c.editId,
-		"apkVersionCode": strconv.FormatInt(c.apkVersionCode, 10),
-	})
-	return gensupport.SendRequest(c.ctx_, c.s.client, req)
-}
-
-// Do executes the "androidpublisher.edits.apklistings.deleteall" call.
-func (c *EditsApklistingsDeleteallCall) Do(opts ...googleapi.CallOption) error {
-	gensupport.SetOptions(c.urlParams_, opts...)
-	res, err := c.doRequest("json")
-	if err != nil {
-		return err
-	}
-	defer googleapi.CloseBody(res)
-	if err := googleapi.CheckResponse(res); err != nil {
-		return err
-	}
-	return nil
-	// {
-	//   "description": "Deletes all the APK-specific localized listings for a specified APK.",
-	//   "httpMethod": "DELETE",
-	//   "id": "androidpublisher.edits.apklistings.deleteall",
-	//   "parameterOrder": [
-	//     "packageName",
-	//     "editId",
-	//     "apkVersionCode"
-	//   ],
-	//   "parameters": {
-	//     "apkVersionCode": {
-	//       "description": "The APK version code whose APK-specific listings should be read or modified.",
-	//       "format": "int32",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "integer"
-	//     },
-	//     "editId": {
-	//       "description": "Unique identifier for this edit.",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     },
-	//     "packageName": {
-	//       "description": "Unique identifier for the Android app that is being updated; for example, \"com.spiffygame\".",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     }
-	//   },
-	//   "path": "{packageName}/edits/{editId}/apks/{apkVersionCode}/listings",
-	//   "scopes": [
-	//     "https://www.googleapis.com/auth/androidpublisher"
-	//   ]
-	// }
-
-}
-
-// method id "androidpublisher.edits.apklistings.get":
-
-type EditsApklistingsGetCall struct {
-	s              *Service
-	packageNameid  string
-	editId         string
-	apkVersionCode int64
-	language       string
-	urlParams_     gensupport.URLParams
-	ifNoneMatch_   string
-	ctx_           context.Context
-	header_        http.Header
-}
-
-// Get: Fetches the APK-specific localized listing for a specified APK
-// and language code.
-func (r *EditsApklistingsService) Get(packageNameid string, editId string, apkVersionCode int64, language string) *EditsApklistingsGetCall {
-	c := &EditsApklistingsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
-	c.packageNameid = packageNameid
-	c.editId = editId
-	c.apkVersionCode = apkVersionCode
-	c.language = language
-	return c
-}
-
-// Fields allows partial responses to be retrieved. See
-// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
-// for more information.
-func (c *EditsApklistingsGetCall) Fields(s ...googleapi.Field) *EditsApklistingsGetCall {
-	c.urlParams_.Set("fields", googleapi.CombineFields(s))
-	return c
-}
-
-// IfNoneMatch sets the optional parameter which makes the operation
-// fail if the object's ETag matches the given value. This is useful for
-// getting updates only after the object has changed since the last
-// request. Use googleapi.IsNotModified to check whether the response
-// error from Do is the result of In-None-Match.
-func (c *EditsApklistingsGetCall) IfNoneMatch(entityTag string) *EditsApklistingsGetCall {
-	c.ifNoneMatch_ = entityTag
-	return c
-}
-
-// Context sets the context to be used in this call's Do method. Any
-// pending HTTP request will be aborted if the provided context is
-// canceled.
-func (c *EditsApklistingsGetCall) Context(ctx context.Context) *EditsApklistingsGetCall {
-	c.ctx_ = ctx
-	return c
-}
-
-// Header returns an http.Header that can be modified by the caller to
-// add HTTP headers to the request.
-func (c *EditsApklistingsGetCall) Header() http.Header {
-	if c.header_ == nil {
-		c.header_ = make(http.Header)
-	}
-	return c.header_
-}
-
-func (c *EditsApklistingsGetCall) doRequest(alt string) (*http.Response, error) {
-	reqHeaders := make(http.Header)
-	for k, v := range c.header_ {
-		reqHeaders[k] = v
-	}
-	reqHeaders.Set("User-Agent", c.s.userAgent())
-	if c.ifNoneMatch_ != "" {
-		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
-	}
-	var body io.Reader = nil
-	c.urlParams_.Set("alt", alt)
-	c.urlParams_.Set("prettyPrint", "false")
-	urls := googleapi.ResolveRelative(c.s.BasePath, "{packageName}/edits/{editId}/apks/{apkVersionCode}/listings/{language}")
-	urls += "?" + c.urlParams_.Encode()
-	req, err := http.NewRequest("GET", urls, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header = reqHeaders
-	googleapi.Expand(req.URL, map[string]string{
-		"packageName":    c.packageNameid,
-		"editId":         c.editId,
-		"apkVersionCode": strconv.FormatInt(c.apkVersionCode, 10),
-		"language":       c.language,
-	})
-	return gensupport.SendRequest(c.ctx_, c.s.client, req)
-}
-
-// Do executes the "androidpublisher.edits.apklistings.get" call.
-// Exactly one of *ApkListing or error will be non-nil. Any non-2xx
-// status code is an error. Response headers are in either
-// *ApkListing.ServerResponse.Header or (if a response was returned at
-// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
-// to check whether the returned error was because
-// http.StatusNotModified was returned.
-func (c *EditsApklistingsGetCall) Do(opts ...googleapi.CallOption) (*ApkListing, error) {
-	gensupport.SetOptions(c.urlParams_, opts...)
-	res, err := c.doRequest("json")
-	if res != nil && res.StatusCode == http.StatusNotModified {
-		if res.Body != nil {
-			res.Body.Close()
-		}
-		return nil, &googleapi.Error{
-			Code:   res.StatusCode,
-			Header: res.Header,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	defer googleapi.CloseBody(res)
-	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
-	}
-	ret := &ApkListing{
-		ServerResponse: googleapi.ServerResponse{
-			Header:         res.Header,
-			HTTPStatusCode: res.StatusCode,
-		},
-	}
-	target := &ret
-	if err := gensupport.DecodeResponse(target, res); err != nil {
-		return nil, err
-	}
-	return ret, nil
-	// {
-	//   "description": "Fetches the APK-specific localized listing for a specified APK and language code.",
-	//   "httpMethod": "GET",
-	//   "id": "androidpublisher.edits.apklistings.get",
-	//   "parameterOrder": [
-	//     "packageName",
-	//     "editId",
-	//     "apkVersionCode",
-	//     "language"
-	//   ],
-	//   "parameters": {
-	//     "apkVersionCode": {
-	//       "description": "The APK version code whose APK-specific listings should be read or modified.",
-	//       "format": "int32",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "integer"
-	//     },
-	//     "editId": {
-	//       "description": "Unique identifier for this edit.",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     },
-	//     "language": {
-	//       "description": "The language code (a BCP-47 language tag) of the APK-specific localized listing to read or modify. For example, to select Austrian German, pass \"de-AT\".",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     },
-	//     "packageName": {
-	//       "description": "Unique identifier for the Android app that is being updated; for example, \"com.spiffygame\".",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     }
-	//   },
-	//   "path": "{packageName}/edits/{editId}/apks/{apkVersionCode}/listings/{language}",
-	//   "response": {
-	//     "$ref": "ApkListing"
-	//   },
-	//   "scopes": [
-	//     "https://www.googleapis.com/auth/androidpublisher"
-	//   ]
-	// }
-
-}
-
-// method id "androidpublisher.edits.apklistings.list":
-
-type EditsApklistingsListCall struct {
-	s              *Service
-	packageNameid  string
-	editId         string
-	apkVersionCode int64
-	urlParams_     gensupport.URLParams
-	ifNoneMatch_   string
-	ctx_           context.Context
-	header_        http.Header
-}
-
-// List: Lists all the APK-specific localized listings for a specified
-// APK.
-func (r *EditsApklistingsService) List(packageNameid string, editId string, apkVersionCode int64) *EditsApklistingsListCall {
-	c := &EditsApklistingsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
-	c.packageNameid = packageNameid
-	c.editId = editId
-	c.apkVersionCode = apkVersionCode
-	return c
-}
-
-// Fields allows partial responses to be retrieved. See
-// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
-// for more information.
-func (c *EditsApklistingsListCall) Fields(s ...googleapi.Field) *EditsApklistingsListCall {
-	c.urlParams_.Set("fields", googleapi.CombineFields(s))
-	return c
-}
-
-// IfNoneMatch sets the optional parameter which makes the operation
-// fail if the object's ETag matches the given value. This is useful for
-// getting updates only after the object has changed since the last
-// request. Use googleapi.IsNotModified to check whether the response
-// error from Do is the result of In-None-Match.
-func (c *EditsApklistingsListCall) IfNoneMatch(entityTag string) *EditsApklistingsListCall {
-	c.ifNoneMatch_ = entityTag
-	return c
-}
-
-// Context sets the context to be used in this call's Do method. Any
-// pending HTTP request will be aborted if the provided context is
-// canceled.
-func (c *EditsApklistingsListCall) Context(ctx context.Context) *EditsApklistingsListCall {
-	c.ctx_ = ctx
-	return c
-}
-
-// Header returns an http.Header that can be modified by the caller to
-// add HTTP headers to the request.
-func (c *EditsApklistingsListCall) Header() http.Header {
-	if c.header_ == nil {
-		c.header_ = make(http.Header)
-	}
-	return c.header_
-}
-
-func (c *EditsApklistingsListCall) doRequest(alt string) (*http.Response, error) {
-	reqHeaders := make(http.Header)
-	for k, v := range c.header_ {
-		reqHeaders[k] = v
-	}
-	reqHeaders.Set("User-Agent", c.s.userAgent())
-	if c.ifNoneMatch_ != "" {
-		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
-	}
-	var body io.Reader = nil
-	c.urlParams_.Set("alt", alt)
-	c.urlParams_.Set("prettyPrint", "false")
-	urls := googleapi.ResolveRelative(c.s.BasePath, "{packageName}/edits/{editId}/apks/{apkVersionCode}/listings")
-	urls += "?" + c.urlParams_.Encode()
-	req, err := http.NewRequest("GET", urls, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header = reqHeaders
-	googleapi.Expand(req.URL, map[string]string{
-		"packageName":    c.packageNameid,
-		"editId":         c.editId,
-		"apkVersionCode": strconv.FormatInt(c.apkVersionCode, 10),
-	})
-	return gensupport.SendRequest(c.ctx_, c.s.client, req)
-}
-
-// Do executes the "androidpublisher.edits.apklistings.list" call.
-// Exactly one of *ApkListingsListResponse or error will be non-nil. Any
-// non-2xx status code is an error. Response headers are in either
-// *ApkListingsListResponse.ServerResponse.Header or (if a response was
-// returned at all) in error.(*googleapi.Error).Header. Use
-// googleapi.IsNotModified to check whether the returned error was
-// because http.StatusNotModified was returned.
-func (c *EditsApklistingsListCall) Do(opts ...googleapi.CallOption) (*ApkListingsListResponse, error) {
-	gensupport.SetOptions(c.urlParams_, opts...)
-	res, err := c.doRequest("json")
-	if res != nil && res.StatusCode == http.StatusNotModified {
-		if res.Body != nil {
-			res.Body.Close()
-		}
-		return nil, &googleapi.Error{
-			Code:   res.StatusCode,
-			Header: res.Header,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	defer googleapi.CloseBody(res)
-	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
-	}
-	ret := &ApkListingsListResponse{
-		ServerResponse: googleapi.ServerResponse{
-			Header:         res.Header,
-			HTTPStatusCode: res.StatusCode,
-		},
-	}
-	target := &ret
-	if err := gensupport.DecodeResponse(target, res); err != nil {
-		return nil, err
-	}
-	return ret, nil
-	// {
-	//   "description": "Lists all the APK-specific localized listings for a specified APK.",
-	//   "httpMethod": "GET",
-	//   "id": "androidpublisher.edits.apklistings.list",
-	//   "parameterOrder": [
-	//     "packageName",
-	//     "editId",
-	//     "apkVersionCode"
-	//   ],
-	//   "parameters": {
-	//     "apkVersionCode": {
-	//       "description": "The APK version code whose APK-specific listings should be read or modified.",
-	//       "format": "int32",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "integer"
-	//     },
-	//     "editId": {
-	//       "description": "Unique identifier for this edit.",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     },
-	//     "packageName": {
-	//       "description": "Unique identifier for the Android app that is being updated; for example, \"com.spiffygame\".",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     }
-	//   },
-	//   "path": "{packageName}/edits/{editId}/apks/{apkVersionCode}/listings",
-	//   "response": {
-	//     "$ref": "ApkListingsListResponse"
-	//   },
-	//   "scopes": [
-	//     "https://www.googleapis.com/auth/androidpublisher"
-	//   ]
-	// }
-
-}
-
-// method id "androidpublisher.edits.apklistings.patch":
-
-type EditsApklistingsPatchCall struct {
-	s              *Service
-	packageNameid  string
-	editId         string
-	apkVersionCode int64
-	language       string
-	apklisting     *ApkListing
-	urlParams_     gensupport.URLParams
-	ctx_           context.Context
-	header_        http.Header
-}
-
-// Patch: Updates or creates the APK-specific localized listing for a
-// specified APK and language code. This method supports patch
-// semantics.
-func (r *EditsApklistingsService) Patch(packageNameid string, editId string, apkVersionCode int64, language string, apklisting *ApkListing) *EditsApklistingsPatchCall {
-	c := &EditsApklistingsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
-	c.packageNameid = packageNameid
-	c.editId = editId
-	c.apkVersionCode = apkVersionCode
-	c.language = language
-	c.apklisting = apklisting
-	return c
-}
-
-// Fields allows partial responses to be retrieved. See
-// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
-// for more information.
-func (c *EditsApklistingsPatchCall) Fields(s ...googleapi.Field) *EditsApklistingsPatchCall {
-	c.urlParams_.Set("fields", googleapi.CombineFields(s))
-	return c
-}
-
-// Context sets the context to be used in this call's Do method. Any
-// pending HTTP request will be aborted if the provided context is
-// canceled.
-func (c *EditsApklistingsPatchCall) Context(ctx context.Context) *EditsApklistingsPatchCall {
-	c.ctx_ = ctx
-	return c
-}
-
-// Header returns an http.Header that can be modified by the caller to
-// add HTTP headers to the request.
-func (c *EditsApklistingsPatchCall) Header() http.Header {
-	if c.header_ == nil {
-		c.header_ = make(http.Header)
-	}
-	return c.header_
-}
-
-func (c *EditsApklistingsPatchCall) doRequest(alt string) (*http.Response, error) {
-	reqHeaders := make(http.Header)
-	for k, v := range c.header_ {
-		reqHeaders[k] = v
-	}
-	reqHeaders.Set("User-Agent", c.s.userAgent())
-	var body io.Reader = nil
-	body, err := googleapi.WithoutDataWrapper.JSONReader(c.apklisting)
-	if err != nil {
-		return nil, err
-	}
-	reqHeaders.Set("Content-Type", "application/json")
-	c.urlParams_.Set("alt", alt)
-	c.urlParams_.Set("prettyPrint", "false")
-	urls := googleapi.ResolveRelative(c.s.BasePath, "{packageName}/edits/{editId}/apks/{apkVersionCode}/listings/{language}")
-	urls += "?" + c.urlParams_.Encode()
-	req, err := http.NewRequest("PATCH", urls, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header = reqHeaders
-	googleapi.Expand(req.URL, map[string]string{
-		"packageName":    c.packageNameid,
-		"editId":         c.editId,
-		"apkVersionCode": strconv.FormatInt(c.apkVersionCode, 10),
-		"language":       c.language,
-	})
-	return gensupport.SendRequest(c.ctx_, c.s.client, req)
-}
-
-// Do executes the "androidpublisher.edits.apklistings.patch" call.
-// Exactly one of *ApkListing or error will be non-nil. Any non-2xx
-// status code is an error. Response headers are in either
-// *ApkListing.ServerResponse.Header or (if a response was returned at
-// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
-// to check whether the returned error was because
-// http.StatusNotModified was returned.
-func (c *EditsApklistingsPatchCall) Do(opts ...googleapi.CallOption) (*ApkListing, error) {
-	gensupport.SetOptions(c.urlParams_, opts...)
-	res, err := c.doRequest("json")
-	if res != nil && res.StatusCode == http.StatusNotModified {
-		if res.Body != nil {
-			res.Body.Close()
-		}
-		return nil, &googleapi.Error{
-			Code:   res.StatusCode,
-			Header: res.Header,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	defer googleapi.CloseBody(res)
-	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
-	}
-	ret := &ApkListing{
-		ServerResponse: googleapi.ServerResponse{
-			Header:         res.Header,
-			HTTPStatusCode: res.StatusCode,
-		},
-	}
-	target := &ret
-	if err := gensupport.DecodeResponse(target, res); err != nil {
-		return nil, err
-	}
-	return ret, nil
-	// {
-	//   "description": "Updates or creates the APK-specific localized listing for a specified APK and language code. This method supports patch semantics.",
-	//   "httpMethod": "PATCH",
-	//   "id": "androidpublisher.edits.apklistings.patch",
-	//   "parameterOrder": [
-	//     "packageName",
-	//     "editId",
-	//     "apkVersionCode",
-	//     "language"
-	//   ],
-	//   "parameters": {
-	//     "apkVersionCode": {
-	//       "description": "The APK version code whose APK-specific listings should be read or modified.",
-	//       "format": "int32",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "integer"
-	//     },
-	//     "editId": {
-	//       "description": "Unique identifier for this edit.",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     },
-	//     "language": {
-	//       "description": "The language code (a BCP-47 language tag) of the APK-specific localized listing to read or modify. For example, to select Austrian German, pass \"de-AT\".",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     },
-	//     "packageName": {
-	//       "description": "Unique identifier for the Android app that is being updated; for example, \"com.spiffygame\".",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     }
-	//   },
-	//   "path": "{packageName}/edits/{editId}/apks/{apkVersionCode}/listings/{language}",
-	//   "request": {
-	//     "$ref": "ApkListing"
-	//   },
-	//   "response": {
-	//     "$ref": "ApkListing"
-	//   },
-	//   "scopes": [
-	//     "https://www.googleapis.com/auth/androidpublisher"
-	//   ]
-	// }
-
-}
-
-// method id "androidpublisher.edits.apklistings.update":
-
-type EditsApklistingsUpdateCall struct {
-	s              *Service
-	packageNameid  string
-	editId         string
-	apkVersionCode int64
-	language       string
-	apklisting     *ApkListing
-	urlParams_     gensupport.URLParams
-	ctx_           context.Context
-	header_        http.Header
-}
-
-// Update: Updates or creates the APK-specific localized listing for a
-// specified APK and language code.
-func (r *EditsApklistingsService) Update(packageNameid string, editId string, apkVersionCode int64, language string, apklisting *ApkListing) *EditsApklistingsUpdateCall {
-	c := &EditsApklistingsUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
-	c.packageNameid = packageNameid
-	c.editId = editId
-	c.apkVersionCode = apkVersionCode
-	c.language = language
-	c.apklisting = apklisting
-	return c
-}
-
-// Fields allows partial responses to be retrieved. See
-// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
-// for more information.
-func (c *EditsApklistingsUpdateCall) Fields(s ...googleapi.Field) *EditsApklistingsUpdateCall {
-	c.urlParams_.Set("fields", googleapi.CombineFields(s))
-	return c
-}
-
-// Context sets the context to be used in this call's Do method. Any
-// pending HTTP request will be aborted if the provided context is
-// canceled.
-func (c *EditsApklistingsUpdateCall) Context(ctx context.Context) *EditsApklistingsUpdateCall {
-	c.ctx_ = ctx
-	return c
-}
-
-// Header returns an http.Header that can be modified by the caller to
-// add HTTP headers to the request.
-func (c *EditsApklistingsUpdateCall) Header() http.Header {
-	if c.header_ == nil {
-		c.header_ = make(http.Header)
-	}
-	return c.header_
-}
-
-func (c *EditsApklistingsUpdateCall) doRequest(alt string) (*http.Response, error) {
-	reqHeaders := make(http.Header)
-	for k, v := range c.header_ {
-		reqHeaders[k] = v
-	}
-	reqHeaders.Set("User-Agent", c.s.userAgent())
-	var body io.Reader = nil
-	body, err := googleapi.WithoutDataWrapper.JSONReader(c.apklisting)
-	if err != nil {
-		return nil, err
-	}
-	reqHeaders.Set("Content-Type", "application/json")
-	c.urlParams_.Set("alt", alt)
-	c.urlParams_.Set("prettyPrint", "false")
-	urls := googleapi.ResolveRelative(c.s.BasePath, "{packageName}/edits/{editId}/apks/{apkVersionCode}/listings/{language}")
-	urls += "?" + c.urlParams_.Encode()
-	req, err := http.NewRequest("PUT", urls, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header = reqHeaders
-	googleapi.Expand(req.URL, map[string]string{
-		"packageName":    c.packageNameid,
-		"editId":         c.editId,
-		"apkVersionCode": strconv.FormatInt(c.apkVersionCode, 10),
-		"language":       c.language,
-	})
-	return gensupport.SendRequest(c.ctx_, c.s.client, req)
-}
-
-// Do executes the "androidpublisher.edits.apklistings.update" call.
-// Exactly one of *ApkListing or error will be non-nil. Any non-2xx
-// status code is an error. Response headers are in either
-// *ApkListing.ServerResponse.Header or (if a response was returned at
-// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
-// to check whether the returned error was because
-// http.StatusNotModified was returned.
-func (c *EditsApklistingsUpdateCall) Do(opts ...googleapi.CallOption) (*ApkListing, error) {
-	gensupport.SetOptions(c.urlParams_, opts...)
-	res, err := c.doRequest("json")
-	if res != nil && res.StatusCode == http.StatusNotModified {
-		if res.Body != nil {
-			res.Body.Close()
-		}
-		return nil, &googleapi.Error{
-			Code:   res.StatusCode,
-			Header: res.Header,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	defer googleapi.CloseBody(res)
-	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
-	}
-	ret := &ApkListing{
-		ServerResponse: googleapi.ServerResponse{
-			Header:         res.Header,
-			HTTPStatusCode: res.StatusCode,
-		},
-	}
-	target := &ret
-	if err := gensupport.DecodeResponse(target, res); err != nil {
-		return nil, err
-	}
-	return ret, nil
-	// {
-	//   "description": "Updates or creates the APK-specific localized listing for a specified APK and language code.",
-	//   "httpMethod": "PUT",
-	//   "id": "androidpublisher.edits.apklistings.update",
-	//   "parameterOrder": [
-	//     "packageName",
-	//     "editId",
-	//     "apkVersionCode",
-	//     "language"
-	//   ],
-	//   "parameters": {
-	//     "apkVersionCode": {
-	//       "description": "The APK version code whose APK-specific listings should be read or modified.",
-	//       "format": "int32",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "integer"
-	//     },
-	//     "editId": {
-	//       "description": "Unique identifier for this edit.",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     },
-	//     "language": {
-	//       "description": "The language code (a BCP-47 language tag) of the APK-specific localized listing to read or modify. For example, to select Austrian German, pass \"de-AT\".",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     },
-	//     "packageName": {
-	//       "description": "Unique identifier for the Android app that is being updated; for example, \"com.spiffygame\".",
-	//       "location": "path",
-	//       "required": true,
-	//       "type": "string"
-	//     }
-	//   },
-	//   "path": "{packageName}/edits/{editId}/apks/{apkVersionCode}/listings/{language}",
-	//   "request": {
-	//     "$ref": "ApkListing"
-	//   },
-	//   "response": {
-	//     "$ref": "ApkListing"
-	//   },
-	//   "scopes": [
-	//     "https://www.googleapis.com/auth/androidpublisher"
-	//   ]
-	// }
-
-}
-
 // method id "androidpublisher.edits.apks.addexternallyhosted":
 
 type EditsApksAddexternallyhostedCall struct {
@@ -4574,11 +3735,11 @@ func (c *EditsApksUploadCall) Do(opts ...googleapi.CallOption) (*Apk, error) {
 	//     "protocols": {
 	//       "resumable": {
 	//         "multipart": true,
-	//         "path": "/resumable/upload/androidpublisher/v2/applications/{packageName}/edits/{editId}/apks"
+	//         "path": "/resumable/upload/androidpublisher/v3/applications/{packageName}/edits/{editId}/apks"
 	//       },
 	//       "simple": {
 	//         "multipart": true,
-	//         "path": "/upload/androidpublisher/v2/applications/{packageName}/edits/{editId}/apks"
+	//         "path": "/upload/androidpublisher/v3/applications/{packageName}/edits/{editId}/apks"
 	//       }
 	//     }
 	//   },
@@ -4960,11 +4121,11 @@ func (c *EditsBundlesUploadCall) Do(opts ...googleapi.CallOption) (*Bundle, erro
 	//     "protocols": {
 	//       "resumable": {
 	//         "multipart": true,
-	//         "path": "/resumable/upload/androidpublisher/v2/applications/{packageName}/edits/{editId}/bundles"
+	//         "path": "/resumable/upload/androidpublisher/v3/applications/{packageName}/edits/{editId}/bundles"
 	//       },
 	//       "simple": {
 	//         "multipart": true,
-	//         "path": "/upload/androidpublisher/v2/applications/{packageName}/edits/{editId}/bundles"
+	//         "path": "/upload/androidpublisher/v3/applications/{packageName}/edits/{editId}/bundles"
 	//       }
 	//     }
 	//   },
@@ -5194,11 +4355,11 @@ func (c *EditsDeobfuscationfilesUploadCall) Do(opts ...googleapi.CallOption) (*D
 	//     "protocols": {
 	//       "resumable": {
 	//         "multipart": true,
-	//         "path": "/resumable/upload/androidpublisher/v2/applications/{packageName}/edits/{editId}/apks/{apkVersionCode}/deobfuscationFiles/{deobfuscationFileType}"
+	//         "path": "/resumable/upload/androidpublisher/v3/applications/{packageName}/edits/{editId}/apks/{apkVersionCode}/deobfuscationFiles/{deobfuscationFileType}"
 	//       },
 	//       "simple": {
 	//         "multipart": true,
-	//         "path": "/upload/androidpublisher/v2/applications/{packageName}/edits/{editId}/apks/{apkVersionCode}/deobfuscationFiles/{deobfuscationFileType}"
+	//         "path": "/upload/androidpublisher/v3/applications/{packageName}/edits/{editId}/apks/{apkVersionCode}/deobfuscationFiles/{deobfuscationFileType}"
 	//       }
 	//     }
 	//   },
@@ -6423,11 +5584,11 @@ func (c *EditsExpansionfilesUploadCall) Do(opts ...googleapi.CallOption) (*Expan
 	//     "protocols": {
 	//       "resumable": {
 	//         "multipart": true,
-	//         "path": "/resumable/upload/androidpublisher/v2/applications/{packageName}/edits/{editId}/apks/{apkVersionCode}/expansionFiles/{expansionFileType}"
+	//         "path": "/resumable/upload/androidpublisher/v3/applications/{packageName}/edits/{editId}/apks/{apkVersionCode}/expansionFiles/{expansionFileType}"
 	//       },
 	//       "simple": {
 	//         "multipart": true,
-	//         "path": "/upload/androidpublisher/v2/applications/{packageName}/edits/{editId}/apks/{apkVersionCode}/expansionFiles/{expansionFileType}"
+	//         "path": "/upload/androidpublisher/v3/applications/{packageName}/edits/{editId}/apks/{apkVersionCode}/expansionFiles/{expansionFileType}"
 	//       }
 	//     }
 	//   },
@@ -7205,11 +6366,11 @@ func (c *EditsImagesUploadCall) Do(opts ...googleapi.CallOption) (*ImagesUploadR
 	//     "protocols": {
 	//       "resumable": {
 	//         "multipart": true,
-	//         "path": "/resumable/upload/androidpublisher/v2/applications/{packageName}/edits/{editId}/listings/{language}/{imageType}"
+	//         "path": "/resumable/upload/androidpublisher/v3/applications/{packageName}/edits/{editId}/listings/{language}/{imageType}"
 	//       },
 	//       "simple": {
 	//         "multipart": true,
-	//         "path": "/upload/androidpublisher/v2/applications/{packageName}/edits/{editId}/listings/{language}/{imageType}"
+	//         "path": "/upload/androidpublisher/v3/applications/{packageName}/edits/{editId}/listings/{language}/{imageType}"
 	//       }
 	//     }
 	//   },
@@ -10140,6 +9301,441 @@ func (c *InappproductsUpdateCall) Do(opts ...googleapi.CallOption) (*InAppProduc
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/androidpublisher"
 	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.internalappsharingartifacts.uploadapk":
+
+type InternalappsharingartifactsUploadapkCall struct {
+	s             *Service
+	packageNameid string
+	urlParams_    gensupport.URLParams
+	mediaInfo_    *gensupport.MediaInfo
+	ctx_          context.Context
+	header_       http.Header
+}
+
+// Uploadapk: Uploads an APK to internal app sharing. If you are using
+// the Google API client libraries, please increase the timeout of the
+// http request before calling this endpoint (a timeout of 2 minutes is
+// recommended). See:
+// https://developers.google.com/api-client-library/java/google-api-java-client/errors for an example in
+// java.
+func (r *InternalappsharingartifactsService) Uploadapk(packageNameid string) *InternalappsharingartifactsUploadapkCall {
+	c := &InternalappsharingartifactsUploadapkCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageNameid = packageNameid
+	return c
+}
+
+// Media specifies the media to upload in one or more chunks. The chunk
+// size may be controlled by supplying a MediaOption generated by
+// googleapi.ChunkSize. The chunk size defaults to
+// googleapi.DefaultUploadChunkSize.The Content-Type header used in the
+// upload request will be determined by sniffing the contents of r,
+// unless a MediaOption generated by googleapi.ContentType is
+// supplied.
+// At most one of Media and ResumableMedia may be set.
+func (c *InternalappsharingartifactsUploadapkCall) Media(r io.Reader, options ...googleapi.MediaOption) *InternalappsharingartifactsUploadapkCall {
+	c.mediaInfo_ = gensupport.NewInfoFromMedia(r, options)
+	return c
+}
+
+// ResumableMedia specifies the media to upload in chunks and can be
+// canceled with ctx.
+//
+// Deprecated: use Media instead.
+//
+// At most one of Media and ResumableMedia may be set. mediaType
+// identifies the MIME media type of the upload, such as "image/png". If
+// mediaType is "", it will be auto-detected. The provided ctx will
+// supersede any context previously provided to the Context method.
+func (c *InternalappsharingartifactsUploadapkCall) ResumableMedia(ctx context.Context, r io.ReaderAt, size int64, mediaType string) *InternalappsharingartifactsUploadapkCall {
+	c.ctx_ = ctx
+	c.mediaInfo_ = gensupport.NewInfoFromResumableMedia(r, size, mediaType)
+	return c
+}
+
+// ProgressUpdater provides a callback function that will be called
+// after every chunk. It should be a low-latency function in order to
+// not slow down the upload operation. This should only be called when
+// using ResumableMedia (as opposed to Media).
+func (c *InternalappsharingartifactsUploadapkCall) ProgressUpdater(pu googleapi.ProgressUpdater) *InternalappsharingartifactsUploadapkCall {
+	c.mediaInfo_.SetProgressUpdater(pu)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *InternalappsharingartifactsUploadapkCall) Fields(s ...googleapi.Field) *InternalappsharingartifactsUploadapkCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+// This context will supersede any context previously provided to the
+// ResumableMedia method.
+func (c *InternalappsharingartifactsUploadapkCall) Context(ctx context.Context) *InternalappsharingartifactsUploadapkCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *InternalappsharingartifactsUploadapkCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *InternalappsharingartifactsUploadapkCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "internalappsharing/{packageName}/artifacts/apk")
+	if c.mediaInfo_ != nil {
+		urls = strings.Replace(urls, "https://www.googleapis.com/", "https://www.googleapis.com/upload/", 1)
+		c.urlParams_.Set("uploadType", c.mediaInfo_.UploadType())
+	}
+	if body == nil {
+		body = new(bytes.Buffer)
+		reqHeaders.Set("Content-Type", "application/json")
+	}
+	body, getBody, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
+	defer cleanup()
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	req.GetBody = getBody
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageNameid,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.internalappsharingartifacts.uploadapk" call.
+// Exactly one of *InternalAppSharingArtifact or error will be non-nil.
+// Any non-2xx status code is an error. Response headers are in either
+// *InternalAppSharingArtifact.ServerResponse.Header or (if a response
+// was returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *InternalappsharingartifactsUploadapkCall) Do(opts ...googleapi.CallOption) (*InternalAppSharingArtifact, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	rx := c.mediaInfo_.ResumableUpload(res.Header.Get("Location"))
+	if rx != nil {
+		rx.Client = c.s.client
+		rx.UserAgent = c.s.userAgent()
+		ctx := c.ctx_
+		if ctx == nil {
+			ctx = context.TODO()
+		}
+		res, err = rx.Upload(ctx)
+		if err != nil {
+			return nil, err
+		}
+		defer res.Body.Close()
+		if err := googleapi.CheckResponse(res); err != nil {
+			return nil, err
+		}
+	}
+	ret := &InternalAppSharingArtifact{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Uploads an APK to internal app sharing. If you are using the Google API client libraries, please increase the timeout of the http request before calling this endpoint (a timeout of 2 minutes is recommended). See: https://developers.google.com/api-client-library/java/google-api-java-client/errors for an example in java.",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.internalappsharingartifacts.uploadapk",
+	//   "mediaUpload": {
+	//     "accept": [
+	//       "application/octet-stream",
+	//       "application/vnd.android.package-archive"
+	//     ],
+	//     "maxSize": "1GB",
+	//     "protocols": {
+	//       "resumable": {
+	//         "multipart": true,
+	//         "path": "/resumable/upload/androidpublisher/v3/applications/internalappsharing/{packageName}/artifacts/apk"
+	//       },
+	//       "simple": {
+	//         "multipart": true,
+	//         "path": "/upload/androidpublisher/v3/applications/internalappsharing/{packageName}/artifacts/apk"
+	//       }
+	//     }
+	//   },
+	//   "parameterOrder": [
+	//     "packageName"
+	//   ],
+	//   "parameters": {
+	//     "packageName": {
+	//       "description": "Unique identifier for the Android app; for example, \"com.spiffygame\".",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "internalappsharing/{packageName}/artifacts/apk",
+	//   "response": {
+	//     "$ref": "InternalAppSharingArtifact"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ],
+	//   "supportsMediaUpload": true
+	// }
+
+}
+
+// method id "androidpublisher.internalappsharingartifacts.uploadbundle":
+
+type InternalappsharingartifactsUploadbundleCall struct {
+	s             *Service
+	packageNameid string
+	urlParams_    gensupport.URLParams
+	mediaInfo_    *gensupport.MediaInfo
+	ctx_          context.Context
+	header_       http.Header
+}
+
+// Uploadbundle: Uploads an app bundle to internal app sharing. If you
+// are using the Google API client libraries, please increase the
+// timeout of the http request before calling this endpoint (a timeout
+// of 2 minutes is recommended). See:
+// https://developers.google.com/api-client-library/java/google-api-java-client/errors for an example in
+// java.
+func (r *InternalappsharingartifactsService) Uploadbundle(packageNameid string) *InternalappsharingartifactsUploadbundleCall {
+	c := &InternalappsharingartifactsUploadbundleCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageNameid = packageNameid
+	return c
+}
+
+// Media specifies the media to upload in one or more chunks. The chunk
+// size may be controlled by supplying a MediaOption generated by
+// googleapi.ChunkSize. The chunk size defaults to
+// googleapi.DefaultUploadChunkSize.The Content-Type header used in the
+// upload request will be determined by sniffing the contents of r,
+// unless a MediaOption generated by googleapi.ContentType is
+// supplied.
+// At most one of Media and ResumableMedia may be set.
+func (c *InternalappsharingartifactsUploadbundleCall) Media(r io.Reader, options ...googleapi.MediaOption) *InternalappsharingartifactsUploadbundleCall {
+	c.mediaInfo_ = gensupport.NewInfoFromMedia(r, options)
+	return c
+}
+
+// ResumableMedia specifies the media to upload in chunks and can be
+// canceled with ctx.
+//
+// Deprecated: use Media instead.
+//
+// At most one of Media and ResumableMedia may be set. mediaType
+// identifies the MIME media type of the upload, such as "image/png". If
+// mediaType is "", it will be auto-detected. The provided ctx will
+// supersede any context previously provided to the Context method.
+func (c *InternalappsharingartifactsUploadbundleCall) ResumableMedia(ctx context.Context, r io.ReaderAt, size int64, mediaType string) *InternalappsharingartifactsUploadbundleCall {
+	c.ctx_ = ctx
+	c.mediaInfo_ = gensupport.NewInfoFromResumableMedia(r, size, mediaType)
+	return c
+}
+
+// ProgressUpdater provides a callback function that will be called
+// after every chunk. It should be a low-latency function in order to
+// not slow down the upload operation. This should only be called when
+// using ResumableMedia (as opposed to Media).
+func (c *InternalappsharingartifactsUploadbundleCall) ProgressUpdater(pu googleapi.ProgressUpdater) *InternalappsharingartifactsUploadbundleCall {
+	c.mediaInfo_.SetProgressUpdater(pu)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *InternalappsharingartifactsUploadbundleCall) Fields(s ...googleapi.Field) *InternalappsharingartifactsUploadbundleCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+// This context will supersede any context previously provided to the
+// ResumableMedia method.
+func (c *InternalappsharingartifactsUploadbundleCall) Context(ctx context.Context) *InternalappsharingartifactsUploadbundleCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *InternalappsharingartifactsUploadbundleCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *InternalappsharingartifactsUploadbundleCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "internalappsharing/{packageName}/artifacts/bundle")
+	if c.mediaInfo_ != nil {
+		urls = strings.Replace(urls, "https://www.googleapis.com/", "https://www.googleapis.com/upload/", 1)
+		c.urlParams_.Set("uploadType", c.mediaInfo_.UploadType())
+	}
+	if body == nil {
+		body = new(bytes.Buffer)
+		reqHeaders.Set("Content-Type", "application/json")
+	}
+	body, getBody, cleanup := c.mediaInfo_.UploadRequest(reqHeaders, body)
+	defer cleanup()
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	req.GetBody = getBody
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageNameid,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.internalappsharingartifacts.uploadbundle" call.
+// Exactly one of *InternalAppSharingArtifact or error will be non-nil.
+// Any non-2xx status code is an error. Response headers are in either
+// *InternalAppSharingArtifact.ServerResponse.Header or (if a response
+// was returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *InternalappsharingartifactsUploadbundleCall) Do(opts ...googleapi.CallOption) (*InternalAppSharingArtifact, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, &googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, err
+	}
+	rx := c.mediaInfo_.ResumableUpload(res.Header.Get("Location"))
+	if rx != nil {
+		rx.Client = c.s.client
+		rx.UserAgent = c.s.userAgent()
+		ctx := c.ctx_
+		if ctx == nil {
+			ctx = context.TODO()
+		}
+		res, err = rx.Upload(ctx)
+		if err != nil {
+			return nil, err
+		}
+		defer res.Body.Close()
+		if err := googleapi.CheckResponse(res); err != nil {
+			return nil, err
+		}
+	}
+	ret := &InternalAppSharingArtifact{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Uploads an app bundle to internal app sharing. If you are using the Google API client libraries, please increase the timeout of the http request before calling this endpoint (a timeout of 2 minutes is recommended). See: https://developers.google.com/api-client-library/java/google-api-java-client/errors for an example in java.",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.internalappsharingartifacts.uploadbundle",
+	//   "mediaUpload": {
+	//     "accept": [
+	//       "application/octet-stream"
+	//     ],
+	//     "maxSize": "2GB",
+	//     "protocols": {
+	//       "resumable": {
+	//         "multipart": true,
+	//         "path": "/resumable/upload/androidpublisher/v3/applications/internalappsharing/{packageName}/artifacts/bundle"
+	//       },
+	//       "simple": {
+	//         "multipart": true,
+	//         "path": "/upload/androidpublisher/v3/applications/internalappsharing/{packageName}/artifacts/bundle"
+	//       }
+	//     }
+	//   },
+	//   "parameterOrder": [
+	//     "packageName"
+	//   ],
+	//   "parameters": {
+	//     "packageName": {
+	//       "description": "Unique identifier for the Android app; for example, \"com.spiffygame\".",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "internalappsharing/{packageName}/artifacts/bundle",
+	//   "response": {
+	//     "$ref": "InternalAppSharingArtifact"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ],
+	//   "supportsMediaUpload": true
 	// }
 
 }
