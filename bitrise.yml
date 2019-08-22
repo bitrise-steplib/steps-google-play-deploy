@@ -48,6 +48,7 @@ workflows:
         inputs:
         - build_gradle_path: ./app/build.gradle
         - new_version_code: $BITRISE_BUILD_NUMBER
+        - new_version_name: "0.2.4"
     - gradle-runner:
         inputs:
         - gradle_task: bundleRelease
@@ -62,6 +63,7 @@ workflows:
         - package_name: $PACKAGE_NAME
         - app_path: $BITRISE_SIGNED_AAB_PATH
         - track: $TRACK
+        - user_fraction: ""
         
   apk_deploy_test:
     envs:
@@ -116,7 +118,8 @@ workflows:
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
-        - new_version_code: 5$BITRISE_BUILD_NUMBER
+        - new_version_code: $BITRISE_BUILD_NUMBER
+        - new_version_name: "0.2.4"
     - gradle-runner:
         inputs:
         - gradle_task: assembleRelease
@@ -132,6 +135,7 @@ workflows:
         - apk_path: $BITRISE_SIGNED_APK_PATH
         - track: $TRACK
         - mapping_file: ""
+        - user_fraction: ""
 
   dep-update:
     steps:

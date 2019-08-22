@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"errors"
@@ -27,8 +27,8 @@ type Configs struct {
 	ApkPath string `env:"apk_path"`
 }
 
-// validate validates the Configs.
-func (c Configs) validate() error {
+// Validate validates the Configs.
+func (c Configs) Validate() error {
 	if err := c.validateJSONKeyPath(); err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (c Configs) validateMappingFile() error {
 	}
 
 	if exist, err := pathutil.IsPathExists(c.MappingFile); err != nil {
-		return fmt.Errorf("Failed to check if mapping file exist at: %s, error: %s", c.MappingFile, err)
+		return fmt.Errorf("failed to check if mapping file exist at: %s, error: %s", c.MappingFile, err)
 	} else if !exist {
 		return errors.New("mapping file not exist at: " + c.MappingFile)
 	}
@@ -118,8 +118,8 @@ func parseAppList(list string) (apps []string) {
 	return
 }
 
-// appPaths returns the app to deploy, by prefering .aab files.
-func (c Configs) appPaths() ([]string, []string) {
+// AppPaths returns the app to deploy, by prefering .aab files.
+func (c Configs) AppPaths() ([]string, []string) {
 	if len(c.ApkPath) > 0 {
 		return parseAPKList(c.ApkPath), []string{"step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (app_path) instead!"}
 	}
@@ -155,7 +155,7 @@ func (c Configs) appPaths() ([]string, []string) {
 // validateApps validates if files provided via apk_path are existing files,
 // if apk_path is empty it validates if files provided via app_path input are existing .apk or .aab files.
 func (c Configs) validateApps() error {
-	apps, warnings := c.appPaths()
+	apps, warnings := c.AppPaths()
 	for _, warn := range warnings {
 		log.Warnf(warn)
 	}

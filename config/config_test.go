@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"reflect"
@@ -106,12 +106,12 @@ func TestConfigs_appPaths(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotApps, gotWarnings := tt.config.appPaths()
+			gotApps, gotWarnings := tt.config.AppPaths()
 			if !reflect.DeepEqual(gotApps, tt.wantApps) {
-				t.Errorf("Configs.appPaths() gotApps = %v, want %v", gotApps, tt.wantApps)
+				t.Errorf("Configs.AppPaths() gotApps = %v, want %v", gotApps, tt.wantApps)
 			}
 			if !reflect.DeepEqual(gotWarnings, tt.wantWarnings) {
-				t.Errorf("Configs.appPaths() gotWarnings = %v, want %v", gotWarnings, tt.wantWarnings)
+				t.Errorf("Configs.AppPaths() gotWarnings = %v, want %v", gotWarnings, tt.wantWarnings)
 			}
 		})
 	}
