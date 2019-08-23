@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,7 +12,6 @@ import (
 	"github.com/bitrise-steplib/steps-google-play-deploy/utility"
 
 	"google.golang.org/api/androidpublisher/v3"
-	"google.golang.org/api/option"
 )
 
 func failf(format string, v ...interface{}) {
@@ -91,7 +89,7 @@ func updateTrack(configs config.Configs, service *androidpublisher.Service, appE
 		return err
 	}
 	newTrack.Releases = append(newTrack.Releases, &newRelease)
-	utility.PrintTrack(newTrack, "New track to upload:")
+	utility.PrintTrack(newTrack, "Track to update:")
 
 	editsTracksUpdateCall := editsTracksService.Update(configs.PackageName, appEdit.Id, configs.Track, newTrack)
 	track, err := editsTracksUpdateCall.Do()
@@ -127,7 +125,7 @@ func main() {
 	if err != nil {
 		failf("Failed to create HTTP client: %v", err)
 	}
-	service, err := androidpublisher.NewService(context.TODO(), option.WithHTTPClient(client))
+	service, err := androidpublisher.New(client)
 	if err != nil {
 		failf("Failed to create publisher service, error: %s", err)
 	}
