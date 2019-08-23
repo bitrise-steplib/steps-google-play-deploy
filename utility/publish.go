@@ -196,23 +196,42 @@ func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, err
 	return recentChangesMap, nil
 }
 
-// GetNewRelease creates and returns a new release object with the given version codes.
-func GetNewRelease(configs config.Configs, versionCodes googleapi.Int64s) (androidpublisher.TrackRelease, error) {
-	newRelease := androidpublisher.TrackRelease{
-		VersionCodes: versionCodes,
+// GetRelease gets a release from a track based on it's status.
+func GetRelease(config config.Configs, releases *[]*androidpublisher.TrackRelease) *androidpublisher.TrackRelease {
+	status := GetReleaseStatusFromConfig(config)
+	for _, release := range *releases {
+		if status == release.Status {
+			return release
+		}
 	}
+	newRelease := androidpublisher.TrackRelease{
+		Status: status,
+	}
+	if config.UserFraction != 0 {
+		newRelease.UserFraction = config.UserFraction
+	}
+	*releases = append(*releases, &newRelease)
+	return &newRelease
+}
 
+// UpdateRelease creates and returns a new release object with the given version codes.
+func UpdateRelease(configs config.Configs, versionCodes googleapi.Int64s, releases *[]*androidpublisher.TrackRelease) error {
+	release := GetRelease(configs, releases)
+	release.VersionCodes = append(release.VersionCodes, versionCodes...)
+	log.Printf(" assigned apk versions: %v", release.VersionCodes)
+	if err := updateListing(configs, release); err != nil {
+		return fmt.Errorf("failed to update listing, reason: %v", err)
+	}
+	return nil
+}
+
+// GetReleaseStatusFromConfig gets the release status from the config.
+func GetReleaseStatusFromConfig(configs config.Configs) string {
 	if configs.UserFraction != 0 {
 		log.Infof("Release is a staged rollout, %v of users will receive it.", configs.UserFraction)
-		newRelease.UserFraction = configs.UserFraction
-		newRelease.Status = releaseStatusInProgress
-	} else {
-		newRelease.Status = releaseStatusCompleted
+		return releaseStatusInProgress
 	}
-	if err := updateListing(configs, &newRelease); err != nil {
-		return newRelease, fmt.Errorf("failed to update listing, reason: %v", err)
-	}
-	return newRelease, nil
+	return releaseStatusCompleted
 }
 
 // GetTrack gets the given track from the list of tracks of a given app.

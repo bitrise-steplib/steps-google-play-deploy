@@ -85,13 +85,11 @@ func updateTrack(configs config.Configs, service *androidpublisher.Service, appE
 	if err != nil {
 		return err
 	}
+	utility.PrintTrack(newTrack, "Track to update:")
 
-	newRelease, err := utility.GetNewRelease(configs, versionCodes)
-	if err != nil {
+	if err := utility.UpdateRelease(configs, versionCodes, &newTrack.Releases); err != nil {
 		return err
 	}
-	newTrack.Releases = append(newTrack.Releases, &newRelease)
-	utility.PrintTrack(newTrack, "Track to update:")
 
 	editsTracksUpdateCall := editsTracksService.Update(configs.PackageName, appEdit.Id, configs.Track, newTrack)
 	track, err := editsTracksUpdateCall.Do()
@@ -100,7 +98,6 @@ func updateTrack(configs config.Configs, service *androidpublisher.Service, appE
 	}
 
 	log.Printf(" updated track: %s", track.Track)
-	log.Printf(" assigned apk versions: %v", newRelease.VersionCodes)
 	return nil
 }
 
