@@ -18,5 +18,5 @@ func PrintTrack(track *androidpublisher.Track, prefix string) {
 
 // PrintRelease prints out the given release to the console.
 func PrintRelease(release androidpublisher.TrackRelease) {
-	log.Infof("Release '%s' has versionCodes: %v", release.Name, release.VersionCodes)
+	log.Infof("Release '%s' has versionCodes: '%v', status: '%v", release.Name, release.VersionCodes, release.Status)
 }

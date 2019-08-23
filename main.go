@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 	"github.com/bitrise-steplib/steps-google-play-deploy/utility"
 
 	"google.golang.org/api/androidpublisher/v3"
+	"google.golang.org/api/option"
 )
 
 func failf(format string, v ...interface{}) {
@@ -125,7 +127,7 @@ func main() {
 	if err != nil {
 		failf("Failed to create HTTP client: %v", err)
 	}
-	service, err := androidpublisher.New(client)
+	service, err := androidpublisher.NewService(context.TODO(), option.WithHTTPClient(client))
 	if err != nil {
 		failf("Failed to create publisher service, error: %s", err)
 	}
