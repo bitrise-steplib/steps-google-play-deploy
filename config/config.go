@@ -99,6 +99,7 @@ func splitElements(list []string, sep string) (s []string) {
 }
 
 func parseAppList(list string) (apps []string) {
+	log.Debugf("Parsing app list: '%v'", list)
 	list = strings.TrimSpace(list)
 	if len(list) == 0 {
 		return nil
@@ -113,6 +114,7 @@ func parseAppList(list string) (apps []string) {
 		app = strings.TrimSpace(app)
 		if len(app) > 0 {
 			apps = append(apps, app)
+			log.Debugf("Found app: %v", app)
 		}
 	}
 	return
@@ -120,17 +122,15 @@ func parseAppList(list string) (apps []string) {
 
 // AppPaths returns the app to deploy, by prefering .aab files.
 func (c Configs) AppPaths() ([]string, []string) {
-	if len(c.ApkPath) > 0 {
-		return parseAPKList(c.ApkPath), []string{"step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (app_path) instead!"}
-	}
-
 	var apks, aabs, warnings []string
 	for _, pth := range parseAppList(c.AppPath) {
 		pth = strings.TrimSpace(pth)
 		ext := strings.ToLower(filepath.Ext(pth))
 		if ext == ".aab" {
+			log.Infof("Found .aab file: %v", pth)
 			aabs = append(aabs, pth)
 		} else if ext == ".apk" {
+			log.Infof("Found .apk file: %v", pth)
 			apks = append(apks, pth)
 		} else {
 			warnings = append(warnings, fmt.Sprintf("unknown app path extension in path: %s, supported extensions: .apk, .aab", pth))

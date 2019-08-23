@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/fileutil"
@@ -217,12 +218,47 @@ func GetRelease(config config.Configs, releases *[]*androidpublisher.TrackReleas
 // UpdateRelease creates and returns a new release object with the given version codes.
 func UpdateRelease(configs config.Configs, versionCodes googleapi.Int64s, releases *[]*androidpublisher.TrackRelease) error {
 	release := GetRelease(configs, releases)
+	if configs.UntrackBlockingVersions {
+		removeBlockingVersionFromRelease(release, versionCodes)
+	}
+	log.Infof("Release version codes are: %v", release.VersionCodes)
 	release.VersionCodes = append(release.VersionCodes, versionCodes...)
-	log.Printf(" assigned apk versions: %v", release.VersionCodes)
+	log.Printf(" assigned app versions: %v", release.VersionCodes)
 	if err := updateListing(configs, release); err != nil {
 		return fmt.Errorf("failed to update listing, reason: %v", err)
 	}
 	return nil
+}
+
+// removeBlockingVersionFromRelease removes blocking version from a given version, which would shadow the given version.
+func removeBlockingVersionFromRelease(release *androidpublisher.TrackRelease, newVersionCodes googleapi.Int64s) {
+	log.Printf(" checking app versions on release: %s", release.Name)
+	log.Infof("VersionCodes: %v", release.VersionCodes)
+	log.Infof("New version codes: '%v'", newVersionCodes)
+
+	var cleanTrack bool
+	if len(release.VersionCodes) != len(newVersionCodes) {
+		log.Warnf("Mismatching app count, removing (%v) versions from release: %s", release.VersionCodes, release.Name)
+		cleanTrack = true
+	} else {
+		log.Debugf("App version code numbers are equal")
+		sort.Slice(release.VersionCodes, func(a, b int) bool { return release.VersionCodes[a] < release.VersionCodes[b] })
+		sort.Slice(newVersionCodes, func(a, b int) bool { return newVersionCodes[a] < newVersionCodes[b] })
+
+		for i := 0; i < len(newVersionCodes); i++ {
+			log.Debugf("Searching for shadowing versions, comparing '%v' and '%v'", release.VersionCodes[i], newVersionCodes[i])
+			if release.VersionCodes[i] > newVersionCodes[i] {
+				log.Warnf("Shadowing app found, removing (%v) versions from release: %s", release.VersionCodes, release.Name)
+				cleanTrack = true
+				break
+			}
+		}
+	}
+
+	if cleanTrack {
+		log.Infof("Clearing version codes for release %v", release.Name)
+		release.VersionCodes = googleapi.Int64s{}
+	}
 }
 
 // GetReleaseStatusFromConfig gets the release status from the config.
@@ -235,12 +271,9 @@ func GetReleaseStatusFromConfig(configs config.Configs) string {
 }
 
 // GetTrack gets the given track from the list of tracks of a given app.
-func GetTrack(configs config.Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, currentTrack string) (*androidpublisher.Track, error) {
-	listResponse, err := listTracks(configs, service, appEdit)
-	if err != nil {
-		return &androidpublisher.Track{}, fmt.Errorf("failed to list tracks, error: %s", err)
-	}
-	for _, track := range listResponse.Tracks {
+func GetTrack(configs config.Configs, allTracks []*androidpublisher.Track) (*androidpublisher.Track, error) {
+	currentTrack := configs.Track
+	for _, track := range allTracks {
 		if currentTrack == track.Track {
 			log.Debugf("Current track found, name '%s'", currentTrack)
 			return track, nil
@@ -256,17 +289,17 @@ func GetTrack(configs config.Configs, service *androidpublisher.Service, appEdit
 	}, nil
 }
 
-// listTrack lists all tracks for a given app.
-func listTracks(configs config.Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (*androidpublisher.TracksListResponse, error) {
+// GetAllTracks lists all tracks for a given app.
+func GetAllTracks(configs config.Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) ([]*androidpublisher.Track, error) {
 	log.Infof("Listing tracks")
 	tracksService := androidpublisher.NewEditsTracksService(service)
 	tracksListCall := tracksService.List(configs.PackageName, appEdit.Id)
 	listResponse, err := tracksListCall.Do()
 	if err != nil {
-		return &androidpublisher.TracksListResponse{}, fmt.Errorf("failed to list tracks, error: %s", err)
+		return []*androidpublisher.Track{}, fmt.Errorf("failed to list tracks, error: %s", err)
 	}
 	for _, track := range listResponse.Tracks {
 		PrintTrack(track, "Found track:")
 	}
-	return listResponse, nil
+	return listResponse.Tracks, nil
 }

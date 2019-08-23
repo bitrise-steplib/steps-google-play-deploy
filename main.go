@@ -33,7 +33,7 @@ func uploadApplications(configs config.Configs, service *androidpublisher.Servic
 	}
 
 	for i, appPath := range appPaths {
-		log.Printf("Uploading %v", appPath)
+		log.Printf("Uploading %v %d/%d", appPath, i+1, len(appPaths))
 		versionCode := int64(0)
 		appFile, err := os.Open(appPath)
 		if err != nil {
@@ -77,11 +77,16 @@ func uploadApplications(configs config.Configs, service *androidpublisher.Servic
 	return versionCodes, nil
 }
 
-// updateTrack updates the given track with a new release with the given version codes.
-func updateTrack(configs config.Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) error {
+// updateTracks updates the given track with a new release with the given version codes.
+func updateTracks(configs config.Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) error {
 	editsTracksService := androidpublisher.NewEditsTracksService(service)
 
-	newTrack, err := utility.GetTrack(configs, service, appEdit, configs.Track)
+	allTracks, err := utility.GetAllTracks(configs, service, appEdit)
+	if err != nil {
+		return fmt.Errorf("failed to list tracks, error: %s", err)
+	}
+
+	newTrack, err := utility.GetTrack(configs, allTracks)
 	if err != nil {
 		return err
 	}
@@ -159,7 +164,7 @@ func main() {
 	// Update track
 	fmt.Println()
 	log.Infof("Update track")
-	if err := updateTrack(configs, service, appEdit, versionCodes); err != nil {
+	if err := updateTracks(configs, service, appEdit, versionCodes); err != nil {
 		failf("Failed to update track, reason: %v", err)
 	}
 	log.Donef("Track updated")

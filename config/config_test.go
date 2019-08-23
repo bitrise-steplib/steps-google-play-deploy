@@ -71,15 +71,6 @@ func TestConfigs_appPaths(t *testing.T) {
 			wantWarnings: []string{"Both .aab and .apk files provided, using the .aab file(s): app.aab"},
 		},
 		{
-			name: "uses deprecated input (ApkPath) if set",
-			config: Configs{
-				AppPath: "app.aab",
-				ApkPath: "app.apk",
-			},
-			wantApps:     []string{"app.apk"},
-			wantWarnings: []string{"step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (app_path) instead!"},
-		},
-		{
 			name: "uses first aab",
 			config: Configs{
 				AppPath: "app.aab\napp1.aab",
