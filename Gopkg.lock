@@ -19,17 +19,16 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d4b9188d913079f0aecbbacdd0a361b07f5aa3b0f712ea84325550b1da775e02"
+  digest = "1:d36036163cfdca120e6d4ef3fa329a8a0210d526ca3f8ac3fbd7a0ada752d008"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
-    "command",
-    "errorutil",
     "fileutil",
     "log",
     "parseutil",
     "pathutil",
     "pointers",
+    "retry",
   ]
   pruneopts = "UT"
   revision = "ad86bf775472ce1934affb9d3cb7d5ea3dffd16f"
@@ -73,15 +72,15 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:5da8ce674952566deae4dbc23d07c85caafc6cfa815b0b3e03e41979cedb8750"
+  digest = "1:99d32780e5238c2621fff621123997c3e3cca96db8be13179013aea77dfab551"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
     "require",
   ]
   pruneopts = "UT"
-  revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
-  version = "v1.3.0"
+  revision = "221dbe5ed46703ee255b1da0dec05086f5035f62"
+  version = "v1.4.0"
 
 [[projects]]
   digest = "1:74055050ea547bb04600be79cc501965cb3de8988018262f2ca430f0a0b48ec3"
@@ -110,7 +109,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:37cf5c1105f46a9e4c5e6f0a2c9bcfc08e78462be487c2538cc3dccb73c36993"
+  digest = "1:e93fe09ca93cf16f8b2dc48053f56c2f91ed4f3fd16bfaf9596b6548c7b48a7f"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -123,7 +122,7 @@
     "trace",
   ]
   pruneopts = "UT"
-  revision = "74dc4d7220e7acc4e100824340f3e66577424772"
+  revision = "ba9fcec4b297b415637633c5a6e8fa592e4a16c3"
 
 [[projects]]
   branch = "master"
@@ -145,7 +144,7 @@
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "fde4db37ae7ad8191b03d30d27f258b5291ae4e3"
+  revision = "c7b8b68b14567162c6602a7c5659ee0f26417c18"
 
 [[projects]]
   digest = "1:8d8faad6b12a3a4c819a3f9618cb6ee1fa1cfc33253abeeea8b55336721e3405"
@@ -215,7 +214,7 @@
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "UT"
-  revision = "fa694d86fc64c7654a660f8908de4e879866748d"
+  revision = "24fa4b261c55da65468f2abfdae2b024eef27dfb"
 
 [[projects]]
   digest = "1:3b97661db2e5d4c87f7345e875ea28f911e54c715ba0a74be08e1649d67e05cd"
@@ -259,22 +258,29 @@
   revision = "6eaf6f47437a6b4e2153a190160ef39a92c7eceb"
   version = "v1.23.0"
 
+[[projects]]
+  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
+  version = "v2.2.2"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/bitrise-io/go-steputils/stepconf",
-    "github.com/bitrise-io/go-utils/command",
-    "github.com/bitrise-io/go-utils/errorutil",
     "github.com/bitrise-io/go-utils/fileutil",
     "github.com/bitrise-io/go-utils/log",
     "github.com/bitrise-io/go-utils/pathutil",
+    "github.com/bitrise-io/go-utils/retry",
     "github.com/stretchr/testify/require",
-    "golang.org/x/oauth2",
     "golang.org/x/oauth2/google",
     "golang.org/x/oauth2/jwt",
     "google.golang.org/api/androidpublisher/v3",
     "google.golang.org/api/googleapi",
+    "google.golang.org/api/option",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

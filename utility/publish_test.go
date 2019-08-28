@@ -3,6 +3,8 @@ package utility
 import (
 	"reflect"
 	"testing"
+
+	"google.golang.org/api/googleapi"
 )
 
 func TestGetExpansionFiles(t *testing.T) {
@@ -33,6 +35,32 @@ func TestGetExpansionFiles(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got1, tt.entries) {
 				t.Errorf("GetExpansionFiles() got1 = %v, want %v", got1, tt.entries)
+			}
+		})
+	}
+}
+
+func Test_sortAndFilterVersionCodes(t *testing.T) {
+	tests := []struct {
+		name                string
+		currentVersionCodes googleapi.Int64s
+		newVersionCodes     googleapi.Int64s
+		want                googleapi.Int64s
+	}{
+		{
+			"currentIsHigher", googleapi.Int64s{5, 6, 7, 8}, googleapi.Int64s{1, 2, 3, 4}, googleapi.Int64s{5, 6, 7, 8},
+		},
+		{
+			"newIsHigher", googleapi.Int64s{5, 6, 7, 8}, googleapi.Int64s{9, 10, 11, 12}, googleapi.Int64s{9, 10, 11, 12},
+		},
+		{
+			"mixed", googleapi.Int64s{5, 6, 7, 8}, googleapi.Int64s{4, 6, 8, 10}, googleapi.Int64s{5, 6, 8, 10},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := sortAndFilterVersionCodes(tt.currentVersionCodes, tt.newVersionCodes); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("sortAndFilterVersionCodes() = %v, want %v", got, tt.want)
 			}
 		})
 	}

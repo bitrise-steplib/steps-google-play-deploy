@@ -220,9 +220,11 @@ func UpdateRelease(configs config.Configs, versionCodes googleapi.Int64s, releas
 	release := GetRelease(configs, releases)
 	if configs.UntrackBlockingVersions {
 		removeBlockingVersionFromRelease(release, versionCodes)
+	} else {
+		release.VersionCodes = append(release.VersionCodes, versionCodes...)
 	}
 	log.Infof("Release version codes are: %v", release.VersionCodes)
-	release.VersionCodes = append(release.VersionCodes, versionCodes...)
+
 	log.Printf(" assigned app versions: %v", release.VersionCodes)
 	if err := updateListing(configs, release); err != nil {
 		return fmt.Errorf("failed to update listing, reason: %v", err)
@@ -232,8 +234,8 @@ func UpdateRelease(configs config.Configs, versionCodes googleapi.Int64s, releas
 
 // removeBlockingVersionFromRelease removes blocking version from a given version, which would shadow the given version.
 func removeBlockingVersionFromRelease(release *androidpublisher.TrackRelease, newVersionCodes googleapi.Int64s) {
-	log.Printf(" checking app versions on release: %s", release.Name)
-	log.Infof("VersionCodes: %v", release.VersionCodes)
+	log.Printf("Checking app versions on release: %s", release.Name)
+	log.Infof("Current version codes: %v", release.VersionCodes)
 	log.Infof("New version codes: '%v'", newVersionCodes)
 
 	var cleanTrack bool
@@ -241,24 +243,33 @@ func removeBlockingVersionFromRelease(release *androidpublisher.TrackRelease, ne
 		log.Warnf("Mismatching app count, removing (%v) versions from release: %s", release.VersionCodes, release.Name)
 		cleanTrack = true
 	} else {
-		log.Debugf("App version code numbers are equal")
-		sort.Slice(release.VersionCodes, func(a, b int) bool { return release.VersionCodes[a] < release.VersionCodes[b] })
-		sort.Slice(newVersionCodes, func(a, b int) bool { return newVersionCodes[a] < newVersionCodes[b] })
-
-		for i := 0; i < len(newVersionCodes); i++ {
-			log.Debugf("Searching for shadowing versions, comparing '%v' and '%v'", release.VersionCodes[i], newVersionCodes[i])
-			if release.VersionCodes[i] > newVersionCodes[i] {
-				log.Warnf("Shadowing app found, removing (%v) versions from release: %s", release.VersionCodes, release.Name)
-				cleanTrack = true
-				break
-			}
-		}
+		log.Debugf("The number of App version codes (current and new) are equal")
+		release.VersionCodes = sortAndFilterVersionCodes(release.VersionCodes, newVersionCodes)
 	}
 
 	if cleanTrack {
-		log.Infof("Clearing version codes for release %v", release.Name)
-		release.VersionCodes = googleapi.Int64s{}
+		log.Infof("Clearing version codes for release %v, the new versions will be %v", release.Name, newVersionCodes)
+		release.VersionCodes = newVersionCodes
 	}
+}
+
+// sortAndFilterVersionCodes sorts and filters two set of version codes, returns the higher for each.
+func sortAndFilterVersionCodes(currentVersionCodes googleapi.Int64s, newVersionCodes googleapi.Int64s) googleapi.Int64s {
+	sort.Slice(currentVersionCodes, func(a, b int) bool { return currentVersionCodes[a] < currentVersionCodes[b] })
+	sort.Slice(newVersionCodes, func(a, b int) bool { return newVersionCodes[a] < newVersionCodes[b] })
+
+	var filteredVersionCodes googleapi.Int64s
+	for i := 0; i < len(newVersionCodes); i++ {
+		log.Debugf("Searching for shadowing versions, comparing (%v) and (%v)", currentVersionCodes[i], newVersionCodes[i])
+		if currentVersionCodes[i] < newVersionCodes[i] {
+			log.Warnf("Shadowing app found, removing current (%v) version, adding new (%v)", currentVersionCodes[i], newVersionCodes[i])
+			filteredVersionCodes = append(filteredVersionCodes, newVersionCodes[i])
+		} else {
+			log.Warnf("Currently released app with (%v) version is higher than new (%v), app with new version code ignored", currentVersionCodes[i], newVersionCodes[i])
+			filteredVersionCodes = append(filteredVersionCodes, currentVersionCodes[i])
+		}
+	}
+	return filteredVersionCodes
 }
 
 // GetReleaseStatusFromConfig gets the release status from the config.

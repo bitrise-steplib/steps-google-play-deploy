@@ -9,10 +9,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-io/go-utils/retry"
 
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
@@ -35,7 +37,7 @@ func CreateHTTPClient(jsonKeyPth string) (*http.Client, error) {
 
 		jsonKeySource := jsonKeyPth
 		jsonKeyPth = filepath.Join(tmpDir, "key.json")
-		if err := downloadFile(jsonKeySource, jsonKeyPth); err != nil {
+		if err := downloadFileWithRetry(jsonKeySource, jsonKeyPth, 3, 3); err != nil {
 			return nil, fmt.Errorf("failed to download json key file, error: %s", err)
 		}
 	}
@@ -73,6 +75,16 @@ func ParseURI(keyURI string) (string, bool, error) {
 	}
 
 	return strings.TrimPrefix(keyURI, "file://"), jsonURL.Scheme == "http" || jsonURL.Scheme == "https", nil
+}
+
+// downloadFileWithRetry calls downloadFile method with a given number of retries and waiting interval between the retries.
+func downloadFileWithRetry(downloadURL, targetPath string, numberOfRetries, waitInterval uint) error {
+	if err := retry.Times(numberOfRetries).Wait(time.Duration(waitInterval) * time.Second).Try(func(attempt uint) error {
+		return downloadFile(downloadURL, targetPath)
+	}); err != nil {
+		return err
+	}
+	return nil
 }
 
 // downloadFile downloads a file from the given URL to the given target path.
