@@ -3,17 +3,14 @@ package utility
 import (
 	"context"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/retry"
 
 	"golang.org/x/oauth2/google"
@@ -29,26 +26,24 @@ func CreateHTTPClient(jsonKeyPth string) (*http.Client, error) {
 		return nil, fmt.Errorf("failed to prepare key path (%s), error: %s", jsonKeyPth, err)
 	}
 
+	var authConfig *jwt.Config
+	var authConfErr error
 	if isRemote {
-		tmpDir, err := pathutil.NormalizedOSTempDirPath("__google-play-deploy__")
+		jsonContent, err := downloadContentWithRetry(jsonKeyPth, 3, 3)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create tmp dir, error: %s", err)
-		}
-
-		jsonKeySource := jsonKeyPth
-		jsonKeyPth = filepath.Join(tmpDir, "key.json")
-		if err := downloadFileWithRetry(jsonKeySource, jsonKeyPth, 3, 3); err != nil {
 			return nil, fmt.Errorf("failed to download json key file, error: %s", err)
 		}
+		authConfig, authConfErr = google.JWTConfigFromJSON(jsonContent, androidpublisher.AndroidpublisherScope)
+		if authConfErr != nil {
+			return nil, err
+		}
+	} else {
+		authConfig, authConfErr = jwtConfigFromJSONKeyFile(jsonKeyPth)
+		if authConfErr != nil {
+			return nil, fmt.Errorf("failed to create auth config from json key file %v, error: %s", jsonKeyPth, err)
+		}
 	}
-
-	authConfig, err := jwtConfigFromJSONKeyFile(jsonKeyPth)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create auth config from json key file %v, error: %s", jsonKeyPth, err)
-	}
-	jwtConfig := authConfig
-
-	return jwtConfig.Client(context.TODO()), nil
+	return authConfig.Client(context.TODO()), nil
 }
 
 // jwtConfigFromJSONKeyFile gets the jwt config from the given file.
@@ -77,31 +72,21 @@ func ParseURI(keyURI string) (string, bool, error) {
 	return strings.TrimPrefix(keyURI, "file://"), jsonURL.Scheme == "http" || jsonURL.Scheme == "https", nil
 }
 
-// downloadFileWithRetry calls downloadFile method with a given number of retries and waiting interval between the retries.
-func downloadFileWithRetry(downloadURL, targetPath string, numberOfRetries, waitInterval uint) error {
-	if err := retry.Times(numberOfRetries).Wait(time.Duration(waitInterval) * time.Second).Try(func(attempt uint) error {
-		return downloadFile(downloadURL, targetPath)
-	}); err != nil {
+// downloadContentWithRetry calls downloadContent method with a given number of retries and waiting interval between the retries.
+func downloadContentWithRetry(downloadURL string, numberOfRetries, waitInterval uint) ([]byte, error) {
+	var contentBytes []byte
+	return contentBytes, retry.Times(numberOfRetries).Wait(time.Duration(waitInterval) * time.Second).Try(func(attempt uint) error {
+		var err error
+		contentBytes, err = downloadContent(downloadURL)
 		return err
-	}
-	return nil
+	})
 }
 
-// downloadFile downloads a file from the given URL to the given target path.
-func downloadFile(downloadURL, targetPath string) error {
-	outFile, err := os.Create(targetPath)
-	if err != nil {
-		return fmt.Errorf("failed to create (%s), error: %s", targetPath, err)
-	}
-	defer func() {
-		if err := outFile.Close(); err != nil {
-			log.Warnf("Failed to close (%s)", targetPath)
-		}
-	}()
-
+// downloadContent opens the given url and returns the body of the response as a byte array.
+func downloadContent(downloadURL string) ([]byte, error) {
 	resp, err := http.Get(downloadURL)
 	if err != nil {
-		return fmt.Errorf("failed to download from (%s), error: %s", downloadURL, err)
+		return []byte{}, fmt.Errorf("failed to download from (%s), error: %s", downloadURL, err)
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
@@ -109,10 +94,10 @@ func downloadFile(downloadURL, targetPath string) error {
 		}
 	}()
 
-	_, err = io.Copy(outFile, resp.Body)
+	contentBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("failed to download from (%s), error: %s", downloadURL, err)
+		return []byte{}, fmt.Errorf("failed to read received conent, error: %s", err)
 	}
 
-	return nil
+	return contentBytes, nil
 }

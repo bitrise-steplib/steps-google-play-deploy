@@ -262,10 +262,10 @@ func sortAndFilterVersionCodes(currentVersionCodes googleapi.Int64s, newVersionC
 	for i := 0; i < len(newVersionCodes); i++ {
 		log.Debugf("Searching for shadowing versions, comparing (%v) and (%v)", currentVersionCodes[i], newVersionCodes[i])
 		if currentVersionCodes[i] < newVersionCodes[i] {
-			log.Warnf("Shadowing app found, removing current (%v) version, adding new (%v)", currentVersionCodes[i], newVersionCodes[i])
+			log.Infof("Shadowing app found, removing current (%v) version, adding new (%v)", currentVersionCodes[i], newVersionCodes[i])
 			filteredVersionCodes = append(filteredVersionCodes, newVersionCodes[i])
 		} else {
-			log.Warnf("Currently released app with (%v) version is higher than new (%v), app with new version code ignored", currentVersionCodes[i], newVersionCodes[i])
+			log.Infof("Currently released app with (%v) version is higher than new (%v), app with new version code ignored", currentVersionCodes[i], newVersionCodes[i])
 			filteredVersionCodes = append(filteredVersionCodes, currentVersionCodes[i])
 		}
 	}
