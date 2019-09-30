@@ -11,11 +11,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:dacd83ec550d6d5c2ac83e57f20d45a25a39d79c73be4451771f92572a1f6344"
+  digest = "1:a3afea7f3c972b809af1a79472585115af175fbf1bcc5bebccd495f19bb551db"
   name = "github.com/bitrise-io/go-steputils"
   packages = ["stepconf"]
   pruneopts = "UT"
-  revision = "cecc766da84859e37e780d9d1c416f0f3993e6b1"
+  revision = "f540824d77dfd382ce84fd0ee0a9da2fba1cce0a"
 
 [[projects]]
   branch = "master"

@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 
 	"golang.org/x/oauth2"
@@ -340,13 +339,7 @@ func main() {
 		VersionCodes: versionCodes,
 	}
 
-	if configs.Track == rolloutTrackName {
-		userFraction, err := strconv.ParseFloat(configs.UserFraction, 64)
-		if err != nil {
-			failf("Failed to parse user fraction, error: %s", err)
-		}
-		newTrack.UserFraction = userFraction
-	}
+	newTrack.UserFraction = configs.UserFraction
 
 	editsTracksUpdateCall := editsTracksService.Update(configs.PackageName, appEdit.Id, configs.Track, &newTrack)
 	track, err := editsTracksUpdateCall.Do()
