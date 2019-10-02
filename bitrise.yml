@@ -1,4 +1,4 @@
-format_version: "7"
+format_version: "8"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 workflows:
@@ -18,7 +18,7 @@ workflows:
   aab_deploy_test:
     envs:
     # sample app
-    - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-android-sdk22.git
+    - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
     - SAMPLE_APP_BRANCH: master
     # codesigning
     - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_1_URL
@@ -28,7 +28,7 @@ workflows:
     # google play deploy
     - PACKAGE_NAME: "com.bitrise_io.sample_apps_android_simple"
     - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
-    - TRACK: alpha
+    - TRACK: production
 
     steps:
     - script: 
@@ -48,6 +48,7 @@ workflows:
         inputs:
         - build_gradle_path: ./app/build.gradle
         - new_version_code: $BITRISE_BUILD_NUMBER
+        - new_version_name: "0.2.4"
     - gradle-runner:
         inputs:
         - gradle_task: bundleRelease
@@ -60,13 +61,13 @@ workflows:
         inputs:
         - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
         - package_name: $PACKAGE_NAME
-        ## - app_path: $BITRISE_APK_PATH\n$BITRISE_AAB_PATH
+        - app_path: $BITRISE_SIGNED_AAB_PATH
         - track: $TRACK
         
   apk_deploy_test:
     envs:
     # sample app
-    - SAMPLE_APP_URL: https://github.com/bitrise-samples/sample-apps-android-realmtasks.git
+    - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-android-realmtasks.git
     - SAMPLE_APP_BRANCH: master
     # google services
     - BITRISEIO_GOOGLE_SERVICES_JSON_URL: $BITRISEIO_GOOGLE_SERVICES_JSON_URL
@@ -116,7 +117,8 @@ workflows:
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
-        - new_version_code: 5$BITRISE_BUILD_NUMBER
+        - new_version_code: $BITRISE_BUILD_NUMBER
+        - new_version_name: "0.2.4"
     - gradle-runner:
         inputs:
         - gradle_task: assembleRelease
@@ -132,6 +134,7 @@ workflows:
         - apk_path: $BITRISE_SIGNED_APK_PATH
         - track: $TRACK
         - mapping_file: ""
+        - user_fraction: ""
 
   dep-update:
     steps:
