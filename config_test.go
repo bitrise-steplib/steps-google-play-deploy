@@ -1,9 +1,51 @@
 package main
 
 import (
+	"os"
 	"reflect"
 	"testing"
+
+	"github.com/bitrise-io/go-steputils/stepconf"
 )
+
+func Test_fraction(t *testing.T) {
+	type cfgs struct {
+		UserFraction float64 `env:"user_fraction,range]0.0..1.0["`
+		Input        string
+		Value        float64
+		WantErr      bool
+	}
+
+	for _, cfg := range []cfgs{
+		{
+			Input:   "",
+			Value:   0,
+			WantErr: false,
+		},
+		{
+			Input:   "0.3",
+			Value:   0.3,
+			WantErr: false,
+		},
+		{
+			Input:   "0",
+			Value:   0,
+			WantErr: true,
+		},
+	} {
+		if err := os.Setenv("user_fraction", cfg.Input); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := stepconf.Parse(&cfg); err != nil && !cfg.WantErr {
+			t.Fatal(err)
+		}
+
+		if cfg.UserFraction != cfg.Value {
+			t.Fatal("eeeh man")
+		}
+	}
+}
 
 func Test_parseAppList(t *testing.T) {
 	tests := []struct {
