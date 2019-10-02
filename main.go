@@ -300,7 +300,7 @@ func main() {
 				}
 				editsExpansionfilesService := androidpublisher.NewEditsExpansionfilesService(service)
 				editsExpansionfilesCall := editsExpansionfilesService.Upload(configs.PackageName, appEdit.Id, versionCode, expfileType)
-				editsExpansionfilesCall.Media(expansionFile, googleapi.ContentType("application/vnd.android.package-archive"))
+				editsExpansionfilesCall.Media(expansionFile, googleapi.ContentType("application/octet-stream"))
 				if _, err := editsExpansionfilesCall.Do(); err != nil {
 					failf("Failed to upload expansion file, error: %s", err)
 				}
