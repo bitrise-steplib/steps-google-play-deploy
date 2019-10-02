@@ -28,7 +28,7 @@ workflows:
     # google play deploy
     - PACKAGE_NAME: "com.bitrise_io.sample_apps_android_simple"
     - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
-    - TRACK: alpha
+    - TRACK: production
 
     steps:
     - script: 
