@@ -91,13 +91,13 @@ func Test_parseAppList(t *testing.T) {
 func TestConfigs_appPaths(t *testing.T) {
 	tests := []struct {
 		name         string
-		config       Configs
+		config       main.Configs
 		wantApps     []string
 		wantWarnings []string
 	}{
 		{
 			name: "empty test",
-			config: Configs{
+			config: main.Configs{
 				AppPath: "",
 				ApkPath: "",
 			},
@@ -106,24 +106,15 @@ func TestConfigs_appPaths(t *testing.T) {
 		},
 		{
 			name: "prefers aab",
-			config: Configs{
+			config: main.Configs{
 				AppPath: "app.apk|app.aab",
 			},
 			wantApps:     []string{"app.aab"},
 			wantWarnings: []string{"Both .aab and .apk files provided, using the .aab file(s): app.aab"},
 		},
 		{
-			name: "uses deprecated input (ApkPath) if set",
-			config: Configs{
-				AppPath: "app.aab",
-				ApkPath: "app.apk",
-			},
-			wantApps:     []string{"app.apk"},
-			wantWarnings: []string{"step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (app_path) instead!"},
-		},
-		{
 			name: "uses first aab",
-			config: Configs{
+			config: main.Configs{
 				AppPath: "app.aab\napp1.aab",
 			},
 			wantApps:     []string{"app.aab"},
@@ -131,7 +122,7 @@ func TestConfigs_appPaths(t *testing.T) {
 		},
 		{
 			name: "unknown extension",
-			config: Configs{
+			config: main.Configs{
 				AppPath: "mapping.txt",
 			},
 			wantApps:     nil,
@@ -139,7 +130,7 @@ func TestConfigs_appPaths(t *testing.T) {
 		},
 		{
 			name: "newline (\n) as a character",
-			config: Configs{
+			config: main.Configs{
 				AppPath: `/bitrise/deploy/app-bitrise-signed.aab\n/bitrise/deploy/app.aab`,
 			},
 			wantApps:     []string{"/bitrise/deploy/app-bitrise-signed.aab"},
@@ -148,12 +139,12 @@ func TestConfigs_appPaths(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotApps, gotWarnings := tt.config.appPaths()
+			gotApps, gotWarnings := tt.config.AppPaths()
 			if !reflect.DeepEqual(gotApps, tt.wantApps) {
-				t.Errorf("Configs.appPaths() gotApps = %v, want %v", gotApps, tt.wantApps)
+				t.Errorf("Configs.AppPaths() gotApps = %v, want %v", gotApps, tt.wantApps)
 			}
 			if !reflect.DeepEqual(gotWarnings, tt.wantWarnings) {
-				t.Errorf("Configs.appPaths() gotWarnings = %v, want %v", gotWarnings, tt.wantWarnings)
+				t.Errorf("Configs.AppPaths() gotWarnings = %v, want %v", gotWarnings, tt.wantWarnings)
 			}
 		})
 	}

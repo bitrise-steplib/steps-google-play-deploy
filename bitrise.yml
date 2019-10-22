@@ -63,6 +63,7 @@ workflows:
         - package_name: $PACKAGE_NAME
         - app_path: $BITRISE_SIGNED_AAB_PATH
         - track: $TRACK
+        - user_fraction: 0.6
         
   apk_deploy_test:
     envs:
