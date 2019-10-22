@@ -120,7 +120,7 @@ func parseAppList(list string) (apps []string) {
 	return
 }
 
-// AppPaths returns the app to deploy, by prefering .aab files.
+// AppPaths returns the app to deploy, by preferring .aab files.
 func (c Configs) AppPaths() ([]string, []string) {
 	var apks, aabs, warnings []string
 	for _, pth := range parseAppList(c.AppPath) {
@@ -141,7 +141,7 @@ func (c Configs) AppPaths() ([]string, []string) {
 		warnings = append(warnings, fmt.Sprintf("Both .aab and .apk files provided, using the .aab file(s): %s", strings.Join(aabs, ",")))
 	}
 
-	if len(aabs) > 1 {
+	if len(aabs) > 1 && aabs != nil {
 		warnings = append(warnings, fmt.Sprintf("More than 1 .aab files provided, using the first: %s", aabs[0]))
 	}
 

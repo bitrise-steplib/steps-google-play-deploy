@@ -1,8 +1,7 @@
-package utility
+package main
 
 import (
 	"fmt"
-	"github.com/bitrise-steplib/steps-google-play-deploy"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -61,7 +60,7 @@ func validateExpansionFilePath(expFilePath string) bool {
 }
 
 // UploadMappingFile uploads the mapping files (that are used for deobfuscation) to Google Play.
-func UploadMappingFile(service *androidpublisher.Service, configs main.Configs, appEditID string, versionCode int64) error {
+func UploadMappingFile(service *androidpublisher.Service, configs Configs, appEditID string, versionCode int64) error {
 	log.Debugf("Getting mapping file from %v", configs.MappingFile)
 	mappingFile, err := os.Open(configs.MappingFile)
 	if err != nil {
@@ -132,7 +131,7 @@ func UploadAppApk(service *androidpublisher.Service, packageName string, appEdit
 }
 
 // updates the listing info of a given release.
-func updateListing(configs main.Configs, release *androidpublisher.TrackRelease) error {
+func updateListing(configs Configs, release *androidpublisher.TrackRelease) error {
 	log.Debugf("Checking if updating listing is required, whats new dir is '%v'", configs.WhatsnewsDir)
 	if configs.WhatsnewsDir != "" {
 		fmt.Println()
@@ -197,7 +196,7 @@ func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, err
 }
 
 // GetRelease gets a release from a track based on it's status.
-func GetRelease(config main.Configs, releases *[]*androidpublisher.TrackRelease) *androidpublisher.TrackRelease {
+func GetRelease(config Configs, releases *[]*androidpublisher.TrackRelease) *androidpublisher.TrackRelease {
 	status := GetReleaseStatusFromConfig(config)
 	for _, release := range *releases {
 		if status == release.Status {
@@ -215,7 +214,7 @@ func GetRelease(config main.Configs, releases *[]*androidpublisher.TrackRelease)
 }
 
 // UpdateRelease creates and returns a new release object with the given version codes.
-func UpdateRelease(configs main.Configs, versionCodes googleapi.Int64s, releases *[]*androidpublisher.TrackRelease) error {
+func UpdateRelease(configs Configs, versionCodes googleapi.Int64s, releases *[]*androidpublisher.TrackRelease) error {
 	release := GetRelease(configs, releases)
 	if configs.UntrackBlockingVersions {
 		removeBlockingVersionFromRelease(release, versionCodes)
@@ -272,7 +271,7 @@ func sortAndFilterVersionCodes(currentVersionCodes googleapi.Int64s, newVersionC
 }
 
 // GetReleaseStatusFromConfig gets the release status from the config.
-func GetReleaseStatusFromConfig(configs main.Configs) string {
+func GetReleaseStatusFromConfig(configs Configs) string {
 	if configs.UserFraction != 0 {
 		log.Infof("Release is a staged rollout, %v of users will receive it.", configs.UserFraction)
 		return releaseStatusInProgress
@@ -281,7 +280,7 @@ func GetReleaseStatusFromConfig(configs main.Configs) string {
 }
 
 // GetTrack gets the given track from the list of tracks of a given app.
-func GetTrack(configs main.Configs, allTracks []*androidpublisher.Track) (*androidpublisher.Track, error) {
+func GetTrack(configs Configs, allTracks []*androidpublisher.Track) (*androidpublisher.Track, error) {
 	currentTrack := configs.Track
 	for _, track := range allTracks {
 		if currentTrack == track.Track {
@@ -300,7 +299,7 @@ func GetTrack(configs main.Configs, allTracks []*androidpublisher.Track) (*andro
 }
 
 // GetAllTracks lists all tracks for a given app.
-func GetAllTracks(configs main.Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) ([]*androidpublisher.Track, error) {
+func GetAllTracks(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) ([]*androidpublisher.Track, error) {
 	log.Infof("Listing tracks")
 	tracksService := androidpublisher.NewEditsTracksService(service)
 	tracksListCall := tracksService.List(configs.PackageName, appEdit.Id)

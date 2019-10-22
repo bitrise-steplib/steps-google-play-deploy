@@ -9,8 +9,6 @@ import (
 
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-steplib/steps-google-play-deploy/utility"
-
 	"google.golang.org/api/androidpublisher/v3"
 	"google.golang.org/api/option"
 )
@@ -26,7 +24,7 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 	var versionCodes []int64
 	appPaths, _ := configs.AppPaths()
 
-	expansionFileUpload, expansionFilePaths, err := utility.GetExpansionFiles(appPaths, configs.ExpansionfilePath)
+	expansionFileUpload, expansionFilePaths, err := GetExpansionFiles(appPaths, configs.ExpansionfilePath)
 	if err != nil {
 		return []int64{}, err
 	}
@@ -40,14 +38,14 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 		}
 
 		if strings.ToLower(filepath.Ext(appPath)) == ".aab" {
-			bundle, err := utility.UploadAppBundle(service, configs.PackageName, appEdit.Id, appFile)
+			bundle, err := UploadAppBundle(service, configs.PackageName, appEdit.Id, appFile)
 			if err != nil {
 				return []int64{}, err
 			}
 			versionCodes = append(versionCodes, bundle.VersionCode)
 			versionCode = bundle.VersionCode
 		} else {
-			apk, err := utility.UploadAppApk(service, configs.PackageName, appEdit.Id, appFile)
+			apk, err := UploadAppApk(service, configs.PackageName, appEdit.Id, appFile)
 			if err != nil {
 				return []int64{}, err
 			}
@@ -55,7 +53,7 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 			versionCode = apk.VersionCode
 
 			if expansionFileUpload {
-				if err := utility.UploadExpansionFiles(service, expansionFilePaths[i], configs.PackageName, appEdit.Id, versionCode); err != nil {
+				if err := UploadExpansionFiles(service, expansionFilePaths[i], configs.PackageName, appEdit.Id, versionCode); err != nil {
 					return []int64{}, err
 				}
 			}
@@ -63,7 +61,7 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 
 		// Upload mapping.txt
 		if configs.MappingFile != "" && versionCode != 0 {
-			if err := utility.UploadMappingFile(service, configs, appEdit.Id, versionCode); err != nil {
+			if err := UploadMappingFile(service, configs, appEdit.Id, versionCode); err != nil {
 				return []int64{}, err
 			}
 			if i < len(appPaths)-1 {
@@ -80,18 +78,18 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) error {
 	editsTracksService := androidpublisher.NewEditsTracksService(service)
 
-	allTracks, err := utility.GetAllTracks(configs, service, appEdit)
+	allTracks, err := GetAllTracks(configs, service, appEdit)
 	if err != nil {
 		return fmt.Errorf("failed to list tracks, error: %s", err)
 	}
 
-	newTrack, err := utility.GetTrack(configs, allTracks)
+	newTrack, err := GetTrack(configs, allTracks)
 	if err != nil {
 		return err
 	}
-	utility.PrintTrack(newTrack, "Track to update:")
+	PrintTrack(newTrack, "Track to update:")
 
-	if err := utility.UpdateRelease(configs, versionCodes, &newTrack.Releases); err != nil {
+	if err := UpdateRelease(configs, versionCodes, &newTrack.Releases); err != nil {
 		return err
 	}
 
@@ -124,7 +122,7 @@ func main() {
 	// Create client and service
 	fmt.Println()
 	log.Infof("Authenticating")
-	client, err := utility.CreateHTTPClient(string(configs.JSONKeyPath))
+	client, err := CreateHTTPClient(string(configs.JSONKeyPath))
 	if err != nil {
 		failf("Failed to create HTTP client: %v", err)
 	}

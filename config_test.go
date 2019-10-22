@@ -91,13 +91,13 @@ func Test_parseAppList(t *testing.T) {
 func TestConfigs_appPaths(t *testing.T) {
 	tests := []struct {
 		name         string
-		config       main.Configs
+		config       Configs
 		wantApps     []string
 		wantWarnings []string
 	}{
 		{
 			name: "empty test",
-			config: main.Configs{
+			config: Configs{
 				AppPath: "",
 				ApkPath: "",
 			},
@@ -106,7 +106,7 @@ func TestConfigs_appPaths(t *testing.T) {
 		},
 		{
 			name: "prefers aab",
-			config: main.Configs{
+			config: Configs{
 				AppPath: "app.apk|app.aab",
 			},
 			wantApps:     []string{"app.aab"},
@@ -114,7 +114,7 @@ func TestConfigs_appPaths(t *testing.T) {
 		},
 		{
 			name: "uses first aab",
-			config: main.Configs{
+			config: Configs{
 				AppPath: "app.aab\napp1.aab",
 			},
 			wantApps:     []string{"app.aab"},
@@ -122,7 +122,7 @@ func TestConfigs_appPaths(t *testing.T) {
 		},
 		{
 			name: "unknown extension",
-			config: main.Configs{
+			config: Configs{
 				AppPath: "mapping.txt",
 			},
 			wantApps:     nil,
@@ -130,7 +130,7 @@ func TestConfigs_appPaths(t *testing.T) {
 		},
 		{
 			name: "newline (\n) as a character",
-			config: main.Configs{
+			config: Configs{
 				AppPath: `/bitrise/deploy/app-bitrise-signed.aab\n/bitrise/deploy/app.aab`,
 			},
 			wantApps:     []string{"/bitrise/deploy/app-bitrise-signed.aab"},

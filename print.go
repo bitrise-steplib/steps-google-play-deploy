@@ -1,4 +1,4 @@
-package utility
+package main
 
 import (
 	"github.com/bitrise-io/go-utils/log"
