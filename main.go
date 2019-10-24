@@ -22,9 +22,9 @@ func failf(format string, v ...interface{}) {
 // the uploaded apps.
 func uploadApplications(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) ([]int64, error) {
 	var versionCodes []int64
-	appPaths, _ := configs.AppPaths()
+	appPaths, _ := configs.appPaths()
 
-	expansionFileUpload, expansionFilePaths, err := GetExpansionFiles(appPaths, configs.ExpansionfilePath)
+	expansionFileUpload, expansionFilePaths, err := expansionFiles(appPaths, configs.ExpansionfilePath)
 	if err != nil {
 		return []int64{}, err
 	}
@@ -38,14 +38,14 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 		}
 
 		if strings.ToLower(filepath.Ext(appPath)) == ".aab" {
-			bundle, err := UploadAppBundle(service, configs.PackageName, appEdit.Id, appFile)
+			bundle, err := uploadAppBundle(service, configs.PackageName, appEdit.Id, appFile)
 			if err != nil {
 				return []int64{}, err
 			}
 			versionCodes = append(versionCodes, bundle.VersionCode)
 			versionCode = bundle.VersionCode
 		} else {
-			apk, err := UploadAppApk(service, configs.PackageName, appEdit.Id, appFile)
+			apk, err := uploadAppApk(service, configs.PackageName, appEdit.Id, appFile)
 			if err != nil {
 				return []int64{}, err
 			}
@@ -53,7 +53,7 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 			versionCode = apk.VersionCode
 
 			if expansionFileUpload {
-				if err := UploadExpansionFiles(service, expansionFilePaths[i], configs.PackageName, appEdit.Id, versionCode); err != nil {
+				if err := uploadExpansionFiles(service, expansionFilePaths[i], configs.PackageName, appEdit.Id, versionCode); err != nil {
 					return []int64{}, err
 				}
 			}
@@ -61,7 +61,7 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 
 		// Upload mapping.txt
 		if configs.MappingFile != "" && versionCode != 0 {
-			if err := UploadMappingFile(service, configs, appEdit.Id, versionCode); err != nil {
+			if err := uploadMappingFile(service, configs, appEdit.Id, versionCode); err != nil {
 				return []int64{}, err
 			}
 			if i < len(appPaths)-1 {
@@ -78,18 +78,16 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) error {
 	editsTracksService := androidpublisher.NewEditsTracksService(service)
 
-	allTracks, err := GetAllTracks(configs, service, appEdit)
+	allTracks, err := getAllTracks(configs.PackageName, service, appEdit)
 	if err != nil {
 		return fmt.Errorf("failed to list tracks, error: %s", err)
 	}
 
-	newTrack, err := GetTrack(configs, allTracks)
-	if err != nil {
-		return err
-	}
+	newTrack := getTrack(configs, allTracks)
 	PrintTrack(newTrack, "Track to update:")
 
-	if err := UpdateRelease(configs, versionCodes, &newTrack.Releases); err != nil {
+	release := getRelease(configs.UserFraction, &newTrack.Releases)
+	if err := updateRelease(configs, versionCodes, release); err != nil {
 		return err
 	}
 
@@ -113,7 +111,7 @@ func main() {
 		failf("Couldn't create config: %s\n", err)
 	}
 	stepconf.Print(configs)
-	if err := configs.Validate(); err != nil {
+	if err := configs.validate(); err != nil {
 		failf(err.Error())
 	}
 	log.Donef("Configuration read successfully")
@@ -122,7 +120,7 @@ func main() {
 	// Create client and service
 	fmt.Println()
 	log.Infof("Authenticating")
-	client, err := CreateHTTPClient(string(configs.JSONKeyPath))
+	client, err := createHTTPClient(string(configs.JSONKeyPath))
 	if err != nil {
 		failf("Failed to create HTTP client: %v", err)
 	}

@@ -12,16 +12,14 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/retry"
-
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
-
 	"google.golang.org/api/androidpublisher/v3"
 )
 
-// CreateHTTPClient creates an HTTP client for the communication during the uploads.
-func CreateHTTPClient(jsonKeyPth string) (*http.Client, error) {
-	jsonKeyPth, isRemote, err := ParseURI(string(jsonKeyPth))
+// createHTTPClient creates an HTTP client for the communication during the uploads.
+func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
+	jsonKeyPth, isRemote, err := parseURI(string(jsonKeyPth))
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare key path (%s), error: %s", jsonKeyPth, err)
 	}
@@ -61,9 +59,9 @@ func jwtConfigFromJSONKeyFile(pth string) (*jwt.Config, error) {
 	return cfg, nil
 }
 
-// ParseURI parses the given URI to return the path from it if it is a local file, if it is remote the bool value is
+// parseURI parses the given URI to return the path from it if it is a local file, if it is remote the bool value is
 // true.
-func ParseURI(keyURI string) (string, bool, error) {
+func parseURI(keyURI string) (string, bool, error) {
 	jsonURL, err := url.Parse(keyURI)
 	if err != nil {
 		return "", false, fmt.Errorf("failed to parse url (%s), error: %s", keyURI, err)

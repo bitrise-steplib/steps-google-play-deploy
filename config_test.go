@@ -99,7 +99,6 @@ func TestConfigs_appPaths(t *testing.T) {
 			name: "empty test",
 			config: Configs{
 				AppPath: "",
-				ApkPath: "",
 			},
 			wantApps:     nil,
 			wantWarnings: nil,
@@ -139,12 +138,12 @@ func TestConfigs_appPaths(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotApps, gotWarnings := tt.config.AppPaths()
+			gotApps, gotWarnings := tt.config.appPaths()
 			if !reflect.DeepEqual(gotApps, tt.wantApps) {
-				t.Errorf("Configs.AppPaths() gotApps = %v, want %v", gotApps, tt.wantApps)
+				t.Errorf("Configs.appPaths() gotApps = %v, want %v", gotApps, tt.wantApps)
 			}
 			if !reflect.DeepEqual(gotWarnings, tt.wantWarnings) {
-				t.Errorf("Configs.AppPaths() gotWarnings = %v, want %v", gotWarnings, tt.wantWarnings)
+				t.Errorf("Configs.appPaths() gotWarnings = %v, want %v", gotWarnings, tt.wantWarnings)
 			}
 		})
 	}

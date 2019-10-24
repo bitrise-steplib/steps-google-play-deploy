@@ -22,13 +22,10 @@ type Configs struct {
 	WhatsnewsDir            string          `env:"whatsnews_dir"`
 	MappingFile             string          `env:"mapping_file"`
 	UntrackBlockingVersions bool            `env:"untrack_blocking_versions,opt[true,false]"`
-
-	// Deprecated
-	ApkPath string `env:"apk_path"`
 }
 
-// Validate validates the Configs.
-func (c Configs) Validate() error {
+// validate validates the Configs.
+func (c Configs) validate() error {
 	if err := c.validateJSONKeyPath(); err != nil {
 		return err
 	}
@@ -120,8 +117,8 @@ func parseAppList(list string) (apps []string) {
 	return
 }
 
-// AppPaths returns the app to deploy, by preferring .aab files.
-func (c Configs) AppPaths() ([]string, []string) {
+// appPaths returns the app to deploy, by preferring .aab files.
+func (c Configs) appPaths() ([]string, []string) {
 	var apks, aabs, warnings []string
 	for _, pth := range parseAppList(c.AppPath) {
 		pth = strings.TrimSpace(pth)
@@ -141,7 +138,7 @@ func (c Configs) AppPaths() ([]string, []string) {
 		warnings = append(warnings, fmt.Sprintf("Both .aab and .apk files provided, using the .aab file(s): %s", strings.Join(aabs, ",")))
 	}
 
-	if len(aabs) > 1 && aabs != nil {
+	if len(aabs) > 1 {
 		warnings = append(warnings, fmt.Sprintf("More than 1 .aab files provided, using the first: %s", aabs[0]))
 	}
 
@@ -155,7 +152,7 @@ func (c Configs) AppPaths() ([]string, []string) {
 // validateApps validates if files provided via apk_path are existing files,
 // if apk_path is empty it validates if files provided via app_path input are existing .apk or .aab files.
 func (c Configs) validateApps() error {
-	apps, warnings := c.AppPaths()
+	apps, warnings := c.appPaths()
 	for _, warn := range warnings {
 		log.Warnf(warn)
 	}

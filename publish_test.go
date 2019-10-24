@@ -25,16 +25,16 @@ func TestGetExpansionFiles(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := GetExpansionFiles(tt.appPaths, tt.expansionFilePathConfig)
+			got, got1, err := expansionFiles(tt.appPaths, tt.expansionFilePathConfig)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetExpansionFiles() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("expansionFiles() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.toUpload {
-				t.Errorf("GetExpansionFiles() got = %v, want %v", got, tt.toUpload)
+				t.Errorf("expansionFiles() got = %v, want %v", got, tt.toUpload)
 			}
 			if !reflect.DeepEqual(got1, tt.entries) {
-				t.Errorf("GetExpansionFiles() got1 = %v, want %v", got1, tt.entries)
+				t.Errorf("expansionFiles() got1 = %v, want %v", got1, tt.entries)
 			}
 		})
 	}

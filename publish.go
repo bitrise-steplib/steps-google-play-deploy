@@ -19,8 +19,8 @@ const (
 	releaseStatusInProgress = "inProgress"
 )
 
-// UploadExpansionFiles uploads the expansion files for given applications, like .obb files.
-func UploadExpansionFiles(service *androidpublisher.Service, expansionFileEntry string, packageName string, appEditID string, versionCode int64) error {
+// uploadExpansionFiles uploads the expansion files for given applications, like .obb files.
+func uploadExpansionFiles(service *androidpublisher.Service, expansionFileEntry string, packageName string, appEditID string, versionCode int64) error {
 	// "main:/file/path/1.obb"
 	cleanExpfilePath := strings.TrimSpace(expansionFileEntry)
 	if !validateExpansionFilePath(cleanExpfilePath) {
@@ -59,8 +59,8 @@ func validateExpansionFilePath(expFilePath string) bool {
 	return strings.HasPrefix(expFilePath, "main:") || strings.HasPrefix(expFilePath, "patch:")
 }
 
-// UploadMappingFile uploads the mapping files (that are used for deobfuscation) to Google Play.
-func UploadMappingFile(service *androidpublisher.Service, configs Configs, appEditID string, versionCode int64) error {
+// uploadMappingFile uploads the mapping files (that are used for deobfuscation) to Google Play.
+func uploadMappingFile(service *androidpublisher.Service, configs Configs, appEditID string, versionCode int64) error {
 	log.Debugf("Getting mapping file from %v", configs.MappingFile)
 	mappingFile, err := os.Open(configs.MappingFile)
 	if err != nil {
@@ -79,9 +79,9 @@ func UploadMappingFile(service *androidpublisher.Service, configs Configs, appEd
 	return nil
 }
 
-// GetExpansionFiles gets the expansion files from the received configuration. Returns true and the entries (type and
+// expansionFiles gets the expansion files from the received configuration. Returns true and the entries (type and
 // path) of them when any found, false or error otherwise.
-func GetExpansionFiles(appPaths []string, expansionFilePathConfig string) (bool, []string, error) {
+func expansionFiles(appPaths []string, expansionFilePathConfig string) (bool, []string, error) {
 	// "main:/file/path/1.obb|patch:/file/path/2.obb"
 	expansionFileUpload := strings.TrimSpace(expansionFilePathConfig) != ""
 	expansionFileEntries := strings.Split(expansionFilePathConfig, "|")
@@ -98,8 +98,8 @@ func GetExpansionFiles(appPaths []string, expansionFilePathConfig string) (bool,
 	return expansionFileUpload, expansionFileEntries, nil
 }
 
-// UploadAppBundle uploads aab files to Google Play. Returns the uploaded bundle itself or an error.
-func UploadAppBundle(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File) (*androidpublisher.Bundle, error) {
+// uploadAppBundle uploads aab files to Google Play. Returns the uploaded bundle itself or an error.
+func uploadAppBundle(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File) (*androidpublisher.Bundle, error) {
 	log.Debugf("Uploading file %v with package name '%v', AppEditId '%v", appFile, packageName, appEditID)
 	editsBundlesService := androidpublisher.NewEditsBundlesService(service)
 
@@ -114,8 +114,8 @@ func UploadAppBundle(service *androidpublisher.Service, packageName string, appE
 	return bundle, nil
 }
 
-// UploadAppApk uploads an apk file to Google Play. Returns the apk itself or an error.
-func UploadAppApk(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File) (*androidpublisher.Apk, error) {
+// uploadAppApk uploads an apk file to Google Play. Returns the apk itself or an error.
+func uploadAppApk(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File) (*androidpublisher.Apk, error) {
 	log.Debugf("Uploading file %v with package name '%v', AppEditId '%v", appFile, packageName, appEditID)
 	editsApksService := androidpublisher.NewEditsApksService(service)
 
@@ -195,9 +195,11 @@ func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, err
 	return recentChangesMap, nil
 }
 
-// GetRelease gets a release from a track based on it's status.
-func GetRelease(config Configs, releases *[]*androidpublisher.TrackRelease) *androidpublisher.TrackRelease {
-	status := GetReleaseStatusFromConfig(config)
+// getRelease gets a release from a track based on it's status. Note we would get error if we would like to have
+// multiple instances of a release with the same status. Example: "error: googleapi: Error 400: Too many completed
+// releases specified., releasesTooManyCompletedReleases".
+func getRelease(userFraction float64, releases *[]*androidpublisher.TrackRelease) *androidpublisher.TrackRelease {
+	status := releaseStatusFromConfig(userFraction)
 	for _, release := range *releases {
 		if status == release.Status {
 			return release
@@ -206,16 +208,15 @@ func GetRelease(config Configs, releases *[]*androidpublisher.TrackRelease) *and
 	newRelease := androidpublisher.TrackRelease{
 		Status: status,
 	}
-	if config.UserFraction != 0 {
-		newRelease.UserFraction = config.UserFraction
+	if userFraction != 0 {
+		newRelease.UserFraction = userFraction
 	}
 	*releases = append(*releases, &newRelease)
 	return &newRelease
 }
 
-// UpdateRelease creates and returns a new release object with the given version codes.
-func UpdateRelease(configs Configs, versionCodes googleapi.Int64s, releases *[]*androidpublisher.TrackRelease) error {
-	release := GetRelease(configs, releases)
+// updateRelease creates and returns a new release object with the given version codes.
+func updateRelease(configs Configs, versionCodes googleapi.Int64s, release *androidpublisher.TrackRelease) error {
 	if configs.UntrackBlockingVersions {
 		removeBlockingVersionFromRelease(release, versionCodes)
 	} else {
@@ -270,22 +271,22 @@ func sortAndFilterVersionCodes(currentVersionCodes googleapi.Int64s, newVersionC
 	return filteredVersionCodes
 }
 
-// GetReleaseStatusFromConfig gets the release status from the config.
-func GetReleaseStatusFromConfig(configs Configs) string {
-	if configs.UserFraction != 0 {
-		log.Infof("Release is a staged rollout, %v of users will receive it.", configs.UserFraction)
+// releaseStatusFromConfig gets the release status from the config value of user fraction.
+func releaseStatusFromConfig(userFraction float64) string {
+	if userFraction != 0 {
+		log.Infof("Release is a staged rollout, %v of users will receive it.", userFraction)
 		return releaseStatusInProgress
 	}
 	return releaseStatusCompleted
 }
 
-// GetTrack gets the given track from the list of tracks of a given app.
-func GetTrack(configs Configs, allTracks []*androidpublisher.Track) (*androidpublisher.Track, error) {
+// getTrack gets the given track from the list of tracks of a given app.
+func getTrack(configs Configs, allTracks []*androidpublisher.Track) *androidpublisher.Track {
 	currentTrack := configs.Track
 	for _, track := range allTracks {
 		if currentTrack == track.Track {
 			log.Debugf("Current track found, name '%s'", currentTrack)
-			return track, nil
+			return track
 		}
 	}
 
@@ -295,14 +296,14 @@ func GetTrack(configs Configs, allTracks []*androidpublisher.Track) (*androidpub
 		ServerResponse:  googleapi.ServerResponse{},
 		ForceSendFields: []string{},
 		NullFields:      []string{},
-	}, nil
+	}
 }
 
-// GetAllTracks lists all tracks for a given app.
-func GetAllTracks(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) ([]*androidpublisher.Track, error) {
+// getAllTracks lists all tracks for a given app.
+func getAllTracks(packageName string, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) ([]*androidpublisher.Track, error) {
 	log.Infof("Listing tracks")
 	tracksService := androidpublisher.NewEditsTracksService(service)
-	tracksListCall := tracksService.List(configs.PackageName, appEdit.Id)
+	tracksListCall := tracksService.List(packageName, appEdit.Id)
 	listResponse, err := tracksListCall.Do()
 	if err != nil {
 		return []*androidpublisher.Track{}, fmt.Errorf("failed to list tracks, error: %s", err)

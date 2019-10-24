@@ -10,7 +10,7 @@ func TestParseURI(t *testing.T) {
 
 	t.Log("parseURI - file://../../../../../../Downloads/key.json")
 	{
-		keyPth, isRemote, err := ParseURI("file://../../../../../../Downloads/key.json")
+		keyPth, isRemote, err := parseURI("file://../../../../../../Downloads/key.json")
 		require.NoError(t, err)
 
 		require.Equal(t, "../../../../../../Downloads/key.json", keyPth)
@@ -19,7 +19,7 @@ func TestParseURI(t *testing.T) {
 
 	t.Log("parseURI - file://./")
 	{
-		keyPth, isRemote, err := ParseURI("file://./testfolder/key.json")
+		keyPth, isRemote, err := parseURI("file://./testfolder/key.json")
 		require.NoError(t, err)
 
 		require.Equal(t, "./testfolder/key.json", keyPth)
@@ -28,7 +28,7 @@ func TestParseURI(t *testing.T) {
 
 	t.Log("parseURI - file:///")
 	{
-		keyPth, isRemote, err := ParseURI("file:///testfolder/key.json")
+		keyPth, isRemote, err := parseURI("file:///testfolder/key.json")
 		require.NoError(t, err)
 
 		require.Equal(t, "/testfolder/key.json", keyPth)
@@ -37,7 +37,7 @@ func TestParseURI(t *testing.T) {
 
 	t.Log("parseURI - http://")
 	{
-		keyPth, isRemote, err := ParseURI("http://testdomain.com/testsub/key.json")
+		keyPth, isRemote, err := parseURI("http://testdomain.com/testsub/key.json")
 		require.NoError(t, err)
 
 		require.Equal(t, "http://testdomain.com/testsub/key.json", keyPth)
@@ -46,7 +46,7 @@ func TestParseURI(t *testing.T) {
 
 	t.Log("parseURI - https://")
 	{
-		keyPth, isRemote, err := ParseURI("https://testdomain.com/testsub/key.json")
+		keyPth, isRemote, err := parseURI("https://testdomain.com/testsub/key.json")
 		require.NoError(t, err)
 
 		require.Equal(t, "https://testdomain.com/testsub/key.json", keyPth)
@@ -55,7 +55,7 @@ func TestParseURI(t *testing.T) {
 
 	t.Log("parseURI - ./")
 	{
-		keyPth, isRemote, err := ParseURI("./user/test/key.json")
+		keyPth, isRemote, err := parseURI("./user/test/key.json")
 		require.NoError(t, err)
 
 		require.Equal(t, "./user/test/key.json", keyPth)
@@ -64,7 +64,7 @@ func TestParseURI(t *testing.T) {
 
 	t.Log("parseURI - /")
 	{
-		keyPth, isRemote, err := ParseURI("/user/test/key.json")
+		keyPth, isRemote, err := parseURI("/user/test/key.json")
 		require.NoError(t, err)
 
 		require.Equal(t, "/user/test/key.json", keyPth)
