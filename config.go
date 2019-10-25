@@ -149,8 +149,8 @@ func (c Configs) appPaths() ([]string, []string) {
 	return apks, warnings
 }
 
-// validateApps validates if files provided via apk_path are existing files,
-// if apk_path is empty it validates if files provided via app_path input are existing .apk or .aab files.
+// validateApps validates if files provided via app_path are existing files,
+// if app_path is empty it validates if files provided via app_path input are existing .apk or .aab files.
 func (c Configs) validateApps() error {
 	apps, warnings := c.appPaths()
 	for _, warn := range warnings {

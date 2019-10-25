@@ -20,15 +20,38 @@ const (
 )
 
 // uploadExpansionFiles uploads the expansion files for given applications, like .obb files.
-func uploadExpansionFiles(service *androidpublisher.Service, expansionFileEntry string, packageName string, appEditID string, versionCode int64) error {
-	// "main:/file/path/1.obb"
-	cleanExpfilePath := strings.TrimSpace(expansionFileEntry)
-	if !validateExpansionFilePath(cleanExpfilePath) {
-		return fmt.Errorf("invalid expansion file config: %s", expansionFileEntry)
+func uploadExpansionFiles(service *androidpublisher.Service, expFileEntry string, packageName string, appEditID string, versionCode int64) error {
+	cleanExpFileConfigEntry := strings.TrimSpace(expFileEntry)
+	if !validateExpansionFileConfig(cleanExpFileConfigEntry) {
+		return fmt.Errorf("invalid expansion file config: %s", expFileEntry)
 	}
 
-	// [0]: "main" [1]:"/file/path/1.obb"
-	expansionFilePathSplit := strings.Split(cleanExpfilePath, ":")
+	expFilePth, expFileType, err := expFileInfo(cleanExpFileConfigEntry)
+	if err != nil {
+		return err
+	}
+	expansionFile, err := os.Open(expFilePth)
+	if err != nil {
+		return fmt.Errorf("failed to read expansion file (%v), error: %s", expansionFile, err)
+	}
+	log.Debugf("Uploading expansion file %v with package name '%v', AppEditId '%v', version code '%v'", expansionFile, packageName, appEditID, versionCode)
+	editsExpansionFilesService := androidpublisher.NewEditsExpansionfilesService(service)
+	editsExpansionFilesCall := editsExpansionFilesService.Upload(packageName, appEditID, versionCode, expFileType)
+	editsExpansionFilesCall.Media(expansionFile, googleapi.ContentType("application/octet-stream"))
+	if _, err := editsExpansionFilesCall.Do(); err != nil {
+		return fmt.Errorf("failed to upload expansion file, error: %s", err)
+	}
+	log.Infof("Uploaded expansion file %v", expansionFile)
+	return nil
+}
+
+// expFilePth gets the expansion file path from a given config entry
+func expFileInfo(expFileConfigEntry string) (string, string, error) {
+	// "main:/file/path/1.obb"
+	expansionFilePathSplit := strings.Split(expFileConfigEntry, ":")
+	if len(expansionFilePathSplit) < 2 {
+		return "", "", fmt.Errorf("malformed expansion file path: %s", expFileConfigEntry)
+	}
 
 	// "main"
 	expFileType := strings.TrimSpace(expansionFilePathSplit[0])
@@ -37,26 +60,14 @@ func uploadExpansionFiles(service *androidpublisher.Service, expansionFileEntry 
 	// "/file/path/1.obb"
 	expFilePth := strings.TrimSpace(strings.Join(expansionFilePathSplit[1:], ""))
 	log.Debugf("Expansion file path is %s", expFilePth)
-
-	expansionFile, err := os.Open(expFilePth)
-	if err != nil {
-		return fmt.Errorf("failed to read expansion file (%v), error: %s", expansionFile, err)
-	}
-	log.Debugf("Uploading expansion file %v with package name '%v', AppEditId '%v', version code '%v'", expansionFile, packageName, appEditID, versionCode)
-	editsExpansionFilesService := androidpublisher.NewEditsExpansionfilesService(service)
-	editsExpansionFilesCall := editsExpansionFilesService.Upload(packageName, appEditID, versionCode, expFileType)
-	editsExpansionFilesCall.Media(expansionFile, googleapi.ContentType("application/vnd.android.package-archive"))
-	if _, err := editsExpansionFilesCall.Do(); err != nil {
-		return fmt.Errorf("failed to upload expansion file, error: %s", err)
-	}
-	log.Infof("Uploaded expansion file %v", expansionFile)
-	return nil
+	return expFilePth, expFileType, nil
 }
 
-// validateExpansionFilePath validates the given expansion file path. Returns false if it is neither a main or patch
-// file.
-func validateExpansionFilePath(expFilePath string) bool {
-	return strings.HasPrefix(expFilePath, "main:") || strings.HasPrefix(expFilePath, "patch:")
+// validateExpansionFileConfig validates the given expansion file path. Returns false if it is neither a main or patch
+// file. Example: "main:/file/path/1.obb".
+func validateExpansionFileConfig(expFileEntry string) bool {
+	cleanExpFileConfigEntry := strings.TrimSpace(expFileEntry)
+	return strings.HasPrefix(cleanExpFileConfigEntry, "main:") || strings.HasPrefix(cleanExpFileConfigEntry, "patch:")
 }
 
 // uploadMappingFile uploads the mapping files (that are used for deobfuscation) to Google Play.
@@ -120,7 +131,7 @@ func uploadAppApk(service *androidpublisher.Service, packageName string, appEdit
 	editsApksService := androidpublisher.NewEditsApksService(service)
 
 	editsApksUploadCall := editsApksService.Upload(packageName, appEditID)
-	editsApksUploadCall.Media(appFile, googleapi.ContentType("application/octet-stream"))
+	editsApksUploadCall.Media(appFile, googleapi.ContentType("application/vnd.android.package-archive"))
 
 	apk, err := editsApksUploadCall.Do()
 	if err != nil {
