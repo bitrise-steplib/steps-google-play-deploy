@@ -57,7 +57,7 @@ workflows:
         inputs:
         - apk_path: $BITRISE_AAB_PATH
     - path::./:
-        title: Step Test
+        title: Step Test AAB
         inputs:
         - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
         - package_name: $PACKAGE_NAME
@@ -128,14 +128,23 @@ workflows:
         inputs:
         - apk_path: $BITRISE_APK_PATH_LIST
     - path::./:
-        title: Step Test
+        title: Step Test APK 2/1
         inputs:
         - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
         - package_name: $PACKAGE_NAME
         - apk_path: $BITRISE_SIGNED_APK_PATH
-        - track: $TRACK
+        - track: "beta"
         - mapping_file: ""
         - user_fraction: ""
+    - path::./:
+        title: Step Test APK 2/2
+        inputs:
+          - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
+          - package_name: $PACKAGE_NAME
+          - apk_path: $BITRISE_SIGNED_APK_PATH
+          - track: $TRACK
+          - mapping_file: ""
+          - user_fraction: ""
 
   dep-update:
     steps:
