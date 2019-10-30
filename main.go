@@ -24,7 +24,7 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 	var versionCodes []int64
 	appPaths, _ := configs.appPaths()
 
-	expansionFileUpload, expansionFilePaths, err := expansionFiles(appPaths, configs.ExpansionfilePath)
+	expansionFilePaths, err := expansionFiles(appPaths, configs.ExpansionfilePath)
 	if err != nil {
 		return []int64{}, err
 	}
@@ -52,7 +52,7 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 			versionCodes = append(versionCodes, apk.VersionCode)
 			versionCode = apk.VersionCode
 
-			if expansionFileUpload {
+			if len(expansionFilePaths) > 0 {
 				if err := uploadExpansionFiles(service, expansionFilePaths[i], configs.PackageName, appEdit.Id, versionCode); err != nil {
 					return []int64{}, err
 				}
@@ -83,15 +83,18 @@ func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *a
 		return fmt.Errorf("failed to list tracks, error: %s", err)
 	}
 
-	newTrack := getTrack(configs, allTracks)
-	PrintTrack(newTrack, "Track to update:")
+	trackToUpdate, err := getTrack(configs, allTracks)
+	if err != nil {
+		return err
+	}
+	printTrack(trackToUpdate, "Track to update:")
 
-	release := getRelease(configs.UserFraction, &newTrack.Releases)
+	release := getRelease(configs.UserFraction, &trackToUpdate.Releases)
 	if err := updateRelease(configs, versionCodes, release); err != nil {
 		return err
 	}
 
-	editsTracksUpdateCall := editsTracksService.Update(configs.PackageName, appEdit.Id, configs.Track, newTrack)
+	editsTracksUpdateCall := editsTracksService.Update(configs.PackageName, appEdit.Id, configs.Track, trackToUpdate)
 	track, err := editsTracksUpdateCall.Do()
 	if err != nil {
 		return fmt.Errorf("update call failed, error: %s", err)

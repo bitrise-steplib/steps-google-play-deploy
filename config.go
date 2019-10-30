@@ -171,3 +171,22 @@ func (c Configs) validateApps() error {
 
 	return nil
 }
+
+// expansionFiles gets the expansion files from the received configuration. Returns true and the entries (type and
+// path) of them when any found, false or error otherwise.
+func expansionFiles(appPaths []string, expansionFilePathConfig string) ([]string, error) {
+	// "main:/file/path/1.obb|patch:/file/path/2.obb"
+	expansionFileUpload := strings.TrimSpace(expansionFilePathConfig) != ""
+	expansionFileEntries := strings.Split(expansionFilePathConfig, "|")
+
+	if expansionFileUpload && (len(appPaths) != len(expansionFileEntries)) {
+		return []string{}, fmt.Errorf("mismatching number of APKs(%d) and Expansionfiles(%d)", len(appPaths), len(expansionFileEntries))
+	}
+	if expansionFileUpload {
+		log.Infof("Found %v expansion file(s) to upload.", len(expansionFileEntries))
+		for i, expansionFile := range expansionFileEntries {
+			log.Debugf("%v - %v", i+1, expansionFile)
+		}
+	}
+	return expansionFileEntries, nil
+}

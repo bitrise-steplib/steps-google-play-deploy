@@ -5,18 +5,18 @@ import (
 	"google.golang.org/api/androidpublisher/v3"
 )
 
-// PrintTrack prints out the given track to the console.
-func PrintTrack(track *androidpublisher.Track, prefix string) {
+// printTrack prints out the given track to the console.
+func printTrack(track *androidpublisher.Track, prefix string) {
 	if prefix != "" {
 		log.Infof("%s", prefix)
 	}
 	log.Infof("%s", track.Track)
 	for _, release := range track.Releases {
-		PrintRelease(*release)
+		printRelease(*release)
 	}
 }
 
-// PrintRelease prints out the given release to the console.
-func PrintRelease(release androidpublisher.TrackRelease) {
+// printRelease prints out the given release to the console.
+func printRelease(release androidpublisher.TrackRelease) {
 	log.Infof("Release '%s' has versionCodes: '%v', status: '%v", release.Name, release.VersionCodes, release.Status)
 }

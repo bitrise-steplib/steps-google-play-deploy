@@ -12,29 +12,25 @@ func Test_expansionFiles(t *testing.T) {
 		name                    string
 		appPaths                []string
 		expansionFilePathConfig string
-		toUpload                bool
 		entries                 []string
 		wantErr                 bool
 	}{
-		{"mainOnly", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb|main:b.obb|main:c.obb", true, []string{"main:a.obb", "main:b.obb", "main:c.obb"}, false},
-		{"pathOnly", []string{"x.apk", "y.apk", "z.apk"}, "patch:a.obb|patch:b.obb|patch:c.obb", true, []string{"patch:a.obb", "patch:b.obb", "patch:c.obb"}, false},
-		{"mixed", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb|patch:b.obb|patch:c.obb", true, []string{"main:a.obb", "patch:b.obb", "patch:c.obb"}, false},
-		{"omit", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb||patch:c.obb", true, []string{"main:a.obb", "", "patch:c.obb"}, false},
-		{"multipleOmit", []string{"w.apk", "x.apk", "y.apk", "z.apk"}, "main:a.obb|||patch:c.obb", true, []string{"main:a.obb", "", "", "patch:c.obb"}, false},
-		{"invalid", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb", false, []string{}, true},
+		{"mainOnly", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb|main:b.obb|main:c.obb", []string{"main:a.obb", "main:b.obb", "main:c.obb"}, false},
+		{"pathOnly", []string{"x.apk", "y.apk", "z.apk"}, "patch:a.obb|patch:b.obb|patch:c.obb", []string{"patch:a.obb", "patch:b.obb", "patch:c.obb"}, false},
+		{"mixed", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb|patch:b.obb|patch:c.obb", []string{"main:a.obb", "patch:b.obb", "patch:c.obb"}, false},
+		{"omit", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb||patch:c.obb", []string{"main:a.obb", "", "patch:c.obb"}, false},
+		{"multipleOmit", []string{"w.apk", "x.apk", "y.apk", "z.apk"}, "main:a.obb|||patch:c.obb", []string{"main:a.obb", "", "", "patch:c.obb"}, false},
+		{"invalid", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb", []string{}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := expansionFiles(tt.appPaths, tt.expansionFilePathConfig)
+			got, err := expansionFiles(tt.appPaths, tt.expansionFilePathConfig)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("expansionFiles() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.toUpload {
-				t.Errorf("expansionFiles() got = %v, want %v", got, tt.toUpload)
-			}
-			if !reflect.DeepEqual(got1, tt.entries) {
-				t.Errorf("expansionFiles() got1 = %v, want %v", got1, tt.entries)
+			if !reflect.DeepEqual(got, tt.entries) {
+				t.Errorf("expansionFiles() got1 = %v, want %v", got, tt.entries)
 			}
 		})
 	}

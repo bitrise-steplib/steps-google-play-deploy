@@ -96,25 +96,6 @@ func uploadMappingFile(service *androidpublisher.Service, configs Configs, appEd
 	return nil
 }
 
-// expansionFiles gets the expansion files from the received configuration. Returns true and the entries (type and
-// path) of them when any found, false or error otherwise.
-func expansionFiles(appPaths []string, expansionFilePathConfig string) (bool, []string, error) {
-	// "main:/file/path/1.obb|patch:/file/path/2.obb"
-	expansionFileUpload := strings.TrimSpace(expansionFilePathConfig) != ""
-	expansionFileEntries := strings.Split(expansionFilePathConfig, "|")
-
-	if expansionFileUpload && (len(appPaths) != len(expansionFileEntries)) {
-		return false, []string{}, fmt.Errorf("mismatching number of APKs(%d) and Expansionfiles(%d)", len(appPaths), len(expansionFileEntries))
-	}
-	if expansionFileUpload {
-		log.Infof("Found %v expansion file(s) to upload.", len(expansionFileEntries))
-		for i, expansionFile := range expansionFileEntries {
-			log.Debugf("%v - %v", i+1, expansionFile)
-		}
-	}
-	return expansionFileUpload, expansionFileEntries, nil
-}
-
 // uploadAppBundle uploads aab files to Google Play. Returns the uploaded bundle itself or an error.
 func uploadAppBundle(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File) (*androidpublisher.Bundle, error) {
 	log.Debugf("Uploading file %v with package name '%v', AppEditId '%v", appFile, packageName, appEditID)
@@ -306,16 +287,13 @@ func removeBlockingVersionFromRelease(release *androidpublisher.TrackRelease, ne
 	log.Infof("Current version codes: %v", release.VersionCodes)
 	log.Infof("New version codes: '%v'", newVersionCodes)
 
-	var cleanTrack bool
 	if len(release.VersionCodes) != len(newVersionCodes) {
 		log.Warnf("Mismatching app count, removing (%v) versions from release: %s", release.VersionCodes, release.Name)
-		cleanTrack = true
-	} else {
-		log.Debugf("The number of App version codes (current and new) are equal")
-		cleanTrack = sortAndFilterVersionCodes(release.VersionCodes, newVersionCodes)
+		return true
 	}
 
-	return cleanTrack
+	log.Debugf("The number of App version codes (current and new) are equal")
+	return sortAndFilterVersionCodes(release.VersionCodes, newVersionCodes)
 }
 
 // sortAndFilterVersionCodes sorts and filters two set of version codes, returns true if any of the new code is higher
@@ -336,20 +314,16 @@ func sortAndFilterVersionCodes(currentVersionCodes googleapi.Int64s, newVersionC
 
 // releaseStatusFromConfig gets the release status from the config value of user fraction.
 func releaseStatusFromConfig(userFraction float64) string {
-	if userFraction != 0 {
-		log.Infof("Release is a staged rollout, %v of users will receive it.", userFraction)
-		return releaseStatusInProgress
-	}
-	return releaseStatusCompleted
+
 }
 
 // getTrack gets the given track from the list of tracks of a given app.
-func getTrack(configs Configs, allTracks []*androidpublisher.Track) *androidpublisher.Track {
+func getTrack(configs Configs, allTracks []*androidpublisher.Track) (*androidpublisher.Track, error) {
 	currentTrack := configs.Track
 	for _, track := range allTracks {
 		if currentTrack == track.Track {
 			log.Debugf("Current track found, name '%s'", currentTrack)
-			return track
+			return track, nil
 		}
 	}
 
@@ -359,7 +333,7 @@ func getTrack(configs Configs, allTracks []*androidpublisher.Track) *androidpubl
 		ServerResponse:  googleapi.ServerResponse{},
 		ForceSendFields: []string{},
 		NullFields:      []string{},
-	}
+	}, fmt.Errorf("could not find track with name %s", currentTrack)
 }
 
 // getAllTracks lists all tracks for a given app.
@@ -372,7 +346,7 @@ func getAllTracks(packageName string, service *androidpublisher.Service, appEdit
 		return []*androidpublisher.Track{}, fmt.Errorf("failed to list tracks, error: %s", err)
 	}
 	for _, track := range listResponse.Tracks {
-		PrintTrack(track, "Found track:")
+		printTrack(track, "Found track:")
 	}
 	return listResponse.Tracks, nil
 }
