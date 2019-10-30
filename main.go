@@ -101,6 +101,26 @@ func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *a
 	return nil
 }
 
+// unTrackBlockingVersions untracks the blocking versions.
+func unTrackBlockingVersions(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) error {
+	if configs.Track == alphaTrackName {
+		fmt.Println()
+		log.Warnf("UntrackBlockingVersions is set, but selected track is: alpha, nothing to deactivate")
+		return nil
+	}
+
+	fmt.Println()
+	log.Infof("Deactivating blocking apk versions")
+	tracks, err := getAllTracks(configs.PackageName, service, appEdit)
+	if err != nil {
+		return fmt.Errorf("failed to list tracks, error: %s", err)
+	}
+
+	trackNamesToUpdate := trackNamesToUpdate(configs.Track, tracks)
+
+	return unTrackFromTracks(trackNamesToUpdate, versionCodes, service, configs.PackageName, appEdit.Id)
+}
+
 func main() {
 	//
 	// Getting configs
@@ -163,6 +183,16 @@ func main() {
 		failf("Failed to update track, reason: %v", err)
 	}
 	log.Donef("Track updated")
+	// ---
+
+	//
+	// Deactivate blocking apks
+	untrackApks := configs.UntrackBlockingVersions
+	if untrackApks {
+		if err := unTrackBlockingVersions(configs, service, appEdit, versionCodes); err != nil {
+			failf("Failed to untrack blocking versions: %s", err)
+		}
+	}
 	// ---
 
 	//

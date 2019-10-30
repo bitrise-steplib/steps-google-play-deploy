@@ -128,16 +128,7 @@ workflows:
         inputs:
         - apk_path: $BITRISE_APK_PATH_LIST
     - path::./:
-        title: Step Test APK 2/1
-        inputs:
-        - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
-        - package_name: $PACKAGE_NAME
-        - apk_path: $BITRISE_SIGNED_APK_PATH
-        - track: "beta"
-        - mapping_file: ""
-        - user_fraction: ""
-    - path::./:
-        title: Step Test APK 2/2
+        title: Step Test APK
         inputs:
           - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
           - package_name: $PACKAGE_NAME
