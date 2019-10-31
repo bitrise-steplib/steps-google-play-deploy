@@ -41,16 +41,16 @@ func Test_sortAndFilterVersionCodes(t *testing.T) {
 		name                string
 		currentVersionCodes googleapi.Int64s
 		newVersionCodes     googleapi.Int64s
-		want                googleapi.Int64s
+		want                bool
 	}{
 		{
-			"currentIsHigher", googleapi.Int64s{5, 6, 7, 8}, googleapi.Int64s{1, 2, 3, 4}, googleapi.Int64s{5, 6, 7, 8},
+			"currentIsHigher", googleapi.Int64s{5, 6, 7, 8}, googleapi.Int64s{1, 2, 3, 4}, false,
 		},
 		{
-			"newIsHigher", googleapi.Int64s{5, 6, 7, 8}, googleapi.Int64s{9, 10, 11, 12}, googleapi.Int64s{9, 10, 11, 12},
+			"newIsHigher", googleapi.Int64s{5, 6, 7, 8}, googleapi.Int64s{9, 10, 11, 12}, true,
 		},
 		{
-			"mixed", googleapi.Int64s{5, 6, 7, 8}, googleapi.Int64s{4, 6, 8, 10}, googleapi.Int64s{5, 6, 8, 10},
+			"mixed", googleapi.Int64s{5, 6, 7, 8}, googleapi.Int64s{4, 6, 8, 10}, true,
 		},
 	}
 	for _, tt := range tests {
