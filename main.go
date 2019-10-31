@@ -90,7 +90,7 @@ func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *a
 	printTrack(trackToUpdate, "Track to update:")
 
 	release := getRelease(configs.UserFraction, &trackToUpdate.Releases)
-	if err := updateRelease(configs, versionCodes, release); err != nil {
+	if err := updateReleaseDetails(configs, versionCodes, release); err != nil {
 		return err
 	}
 

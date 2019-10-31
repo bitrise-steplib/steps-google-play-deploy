@@ -213,8 +213,9 @@ func getRelease(userFraction float64, releases *[]*androidpublisher.TrackRelease
 	return &newRelease
 }
 
-// updateRelease creates and returns a new release object with the given version codes.
-func updateRelease(configs Configs, versionCodes googleapi.Int64s, release *androidpublisher.TrackRelease) error {
+// updateReleaseDetails creates and returns a new release object with the given version codes and adds the listing
+// information.
+func updateReleaseDetails(configs Configs, versionCodes googleapi.Int64s, release *androidpublisher.TrackRelease) error {
 	release.VersionCodes = versionCodes
 	log.Infof("Release version codes are: %v", release.VersionCodes)
 
@@ -314,7 +315,11 @@ func sortAndFilterVersionCodes(currentVersionCodes googleapi.Int64s, newVersionC
 
 // releaseStatusFromConfig gets the release status from the config value of user fraction.
 func releaseStatusFromConfig(userFraction float64) string {
-
+	if userFraction != 0 {
+		log.Infof("Release is a staged rollout, %v of users will receive it.", userFraction)
+		return releaseStatusInProgress
+	}
+	return releaseStatusCompleted
 }
 
 // getTrack gets the given track from the list of tracks of a given app.
