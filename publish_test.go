@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"google.golang.org/api/androidpublisher/v3"
 	"google.golang.org/api/googleapi"
 )
 
@@ -36,7 +37,7 @@ func Test_expansionFiles(t *testing.T) {
 	}
 }
 
-func Test_sortAndFilterVersionCodes(t *testing.T) {
+func Test_hasShadowingVersions(t *testing.T) {
 	tests := []struct {
 		name                string
 		currentVersionCodes googleapi.Int64s
@@ -55,8 +56,8 @@ func Test_sortAndFilterVersionCodes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := sortAndFilterVersionCodes(tt.currentVersionCodes, tt.newVersionCodes); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("sortAndFilterVersionCodes() = %v, want %v", got, tt.want)
+			if got := hasShadowingVersions(tt.currentVersionCodes, tt.newVersionCodes); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("hasShadowingVersions() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -126,6 +127,27 @@ func Test_validateExpansionFilePath(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := validateExpansionFileConfig(tt.expFilePath); got != tt.want {
 				t.Errorf("validateExpansionFileConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_removeBlockingVersionFromRelease(t *testing.T) {
+	tests := []struct {
+		name            string
+		release         *androidpublisher.TrackRelease
+		newVersionCodes googleapi.Int64s
+		want            bool
+	}{
+		{"hasShadowing1", &androidpublisher.TrackRelease{nil, "releaseName", nil, "status", 0, googleapi.Int64s{1, 2, 3, 4}, nil, nil}, googleapi.Int64s{5, 6, 7, 8}, true},
+		{"noShadowing1", &androidpublisher.TrackRelease{nil, "releaseName", nil, "status", 0, googleapi.Int64s{5, 6, 7, 8}, nil, nil}, googleapi.Int64s{1, 2, 3, 4}, false},
+		{"differentNumberOfVersions1", &androidpublisher.TrackRelease{nil, "releaseName", nil, "status", 0, googleapi.Int64s{5}, nil, nil}, googleapi.Int64s{1, 2, 3, 4}, true},
+		{"differentNumberOfVersions2", &androidpublisher.TrackRelease{nil, "releaseName", nil, "status", 0, googleapi.Int64s{5, 6, 7, 8}, nil, nil}, googleapi.Int64s{1}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := hasBlockingVersionInRelease(tt.release, tt.newVersionCodes); got != tt.want {
+				t.Errorf("hasBlockingVersionInRelease() = %v, want %v", got, tt.want)
 			}
 		})
 	}

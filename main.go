@@ -83,14 +83,14 @@ func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *a
 		return fmt.Errorf("failed to list tracks, error: %s", err)
 	}
 
-	trackToUpdate, err := getTrack(configs, allTracks)
+	trackToUpdate, err := getTrack(configs.Track, allTracks)
 	if err != nil {
 		return err
 	}
 	printTrack(trackToUpdate, "Track to update:")
 
 	release := getRelease(configs.UserFraction, &trackToUpdate.Releases)
-	if err := updateReleaseDetails(configs, versionCodes, release); err != nil {
+	if err := updateReleaseDetails(configs.WhatsnewsDir, versionCodes, release); err != nil {
 		return err
 	}
 
@@ -121,7 +121,7 @@ func unTrackBlockingVersions(configs Configs, service *androidpublisher.Service,
 
 	trackNamesToUpdate := trackNamesToUpdate(configs.Track, tracks)
 
-	return unTrackFromTracks(trackNamesToUpdate, versionCodes, service, configs.PackageName, appEdit.Id)
+	return untrackFromTracks(trackNamesToUpdate, versionCodes, service, configs.PackageName, appEdit.Id)
 }
 
 func main() {

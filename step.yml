@@ -158,19 +158,3 @@ inputs:
       - "true"
       - "false"
       is_required: true
-  - apk_path: 
-    opts:
-      title: APK file path
-      description: |-
-        __This input is deprecated and will be removed on 20 August 2019, use `App file path` input instead!__
-
-        Path to the APK to deploy.
-
-        You can provide multiple APK paths separated by `|` character.
-
-        Format examples:
-
-        - `/path/to/my/app.apk`
-        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
-        - `/path/to/my/bundle.aab`
-      category: Deprecated

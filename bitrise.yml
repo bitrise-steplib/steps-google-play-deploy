@@ -2,7 +2,7 @@ format_version: "8"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 workflows:
-  test:
+  ci:
     steps:
     - script:
         inputs:
@@ -11,6 +11,19 @@ workflows:
     - golint:
     - errcheck:
     - go-test:
+    after_run:
+    - _build_start
+
+  _build_start:
+    steps:
+      - build-router-start:
+          inputs:
+            - access_token: $BITRISE_ACCESS_TOKEN
+            - workflows: >
+                aab_deploy_test
+                apk_deploy_test_1
+                apk_deploy_test_2
+            - wait_for_builds: "true"
 
   _common:
     steps:

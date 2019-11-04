@@ -129,13 +129,13 @@ func uploadAppApk(service *androidpublisher.Service, packageName string, appEdit
 }
 
 // updates the listing info of a given release.
-func updateListing(configs Configs, release *androidpublisher.TrackRelease) error {
-	log.Debugf("Checking if updating listing is required, whats new dir is '%v'", configs.WhatsnewsDir)
-	if configs.WhatsnewsDir != "" {
+func updateListing(whatsNewsDir string, release *androidpublisher.TrackRelease) error {
+	log.Debugf("Checking if updating listing is required, whats new dir is '%v'", whatsNewsDir)
+	if whatsNewsDir != "" {
 		fmt.Println()
 		log.Infof("Update listing started")
 
-		recentChangesMap, err := readLocalisedRecentChanges(configs.WhatsnewsDir)
+		recentChangesMap, err := readLocalisedRecentChanges(whatsNewsDir)
 		if err != nil {
 			return fmt.Errorf("failed to read whatsnews, error: %s", err)
 		}
@@ -213,14 +213,13 @@ func getRelease(userFraction float64, releases *[]*androidpublisher.TrackRelease
 	return &newRelease
 }
 
-// updateReleaseDetails creates and returns a new release object with the given version codes and adds the listing
-// information.
-func updateReleaseDetails(configs Configs, versionCodes googleapi.Int64s, release *androidpublisher.TrackRelease) error {
+// updateReleaseDetails returns the new release object with the given version codes and adds the listing information.
+func updateReleaseDetails(whatsNewsDir string, versionCodes googleapi.Int64s, release *androidpublisher.TrackRelease) error {
 	release.VersionCodes = versionCodes
 	log.Infof("Release version codes are: %v", release.VersionCodes)
 
 	log.Printf(" assigned app versions: %v", release.VersionCodes)
-	if err := updateListing(configs, release); err != nil {
+	if err := updateListing(whatsNewsDir, release); err != nil {
 		return fmt.Errorf("failed to update listing, reason: %v", err)
 	}
 	return nil
@@ -249,8 +248,8 @@ func trackNamesToUpdate(track string, tracks []*androidpublisher.Track) []string
 	return trackNamesToUpdate
 }
 
-// unTrackFromTracks untracks the lower level versions.
-func unTrackFromTracks(trackNamesToUpdate []string, versionCodes googleapi.Int64s, service *androidpublisher.Service, packageName string, appEditID string) error {
+// untrackFromTracks untracks the lower level versions.
+func untrackFromTracks(trackNamesToUpdate []string, versionCodes googleapi.Int64s, service *androidpublisher.Service, packageName string, appEditID string) error {
 	tracksService := androidpublisher.NewEditsTracksService(service)
 	anyTrackUpdated := false
 	for _, trackName := range trackNamesToUpdate {
@@ -260,7 +259,7 @@ func unTrackFromTracks(trackNamesToUpdate []string, versionCodes googleapi.Int64
 			return fmt.Errorf("failed to get track (%s), error: %s", trackName, err)
 		}
 		for _, release := range track.Releases {
-			if removeBlockingVersionFromRelease(release, versionCodes) {
+			if hasBlockingVersionInRelease(release, versionCodes) {
 				anyTrackUpdated = true
 
 				release.VersionCodes = []int64{}
@@ -282,8 +281,8 @@ func unTrackFromTracks(trackNamesToUpdate []string, versionCodes googleapi.Int64
 	return nil
 }
 
-// removeBlockingVersionFromRelease removes blocking version from a given version, which would shadow the given version.
-func removeBlockingVersionFromRelease(release *androidpublisher.TrackRelease, newVersionCodes googleapi.Int64s) bool {
+// hasBlockingVersionInRelease checks if there is blocking version from a given release, which would shadow the given version.
+func hasBlockingVersionInRelease(release *androidpublisher.TrackRelease, newVersionCodes googleapi.Int64s) bool {
 	log.Printf("Checking app versions on release: %s", release.Name)
 	log.Infof("Current version codes: %v", release.VersionCodes)
 	log.Infof("New version codes: '%v'", newVersionCodes)
@@ -294,12 +293,11 @@ func removeBlockingVersionFromRelease(release *androidpublisher.TrackRelease, ne
 	}
 
 	log.Debugf("The number of App version codes (current and new) are equal")
-	return sortAndFilterVersionCodes(release.VersionCodes, newVersionCodes)
+	return hasShadowingVersions(release.VersionCodes, newVersionCodes)
 }
 
-// sortAndFilterVersionCodes sorts and filters two set of version codes, returns true if any of the new code is higher
-// than the current.
-func sortAndFilterVersionCodes(currentVersionCodes googleapi.Int64s, newVersionCodes googleapi.Int64s) bool {
+// hasShadowingVersions returns true if any of the new version code is higher than the corresponding current.
+func hasShadowingVersions(currentVersionCodes googleapi.Int64s, newVersionCodes googleapi.Int64s) bool {
 	sort.Slice(currentVersionCodes, func(a, b int) bool { return currentVersionCodes[a] < currentVersionCodes[b] })
 	sort.Slice(newVersionCodes, func(a, b int) bool { return newVersionCodes[a] < newVersionCodes[b] })
 
@@ -323,22 +321,15 @@ func releaseStatusFromConfig(userFraction float64) string {
 }
 
 // getTrack gets the given track from the list of tracks of a given app.
-func getTrack(configs Configs, allTracks []*androidpublisher.Track) (*androidpublisher.Track, error) {
-	currentTrack := configs.Track
+func getTrack(trackName string, allTracks []*androidpublisher.Track) (*androidpublisher.Track, error) {
 	for _, track := range allTracks {
-		if currentTrack == track.Track {
-			log.Debugf("Current track found, name '%s'", currentTrack)
+		if trackName == track.Track {
+			log.Debugf("Current track found, name '%s'", trackName)
 			return track, nil
 		}
 	}
 
-	return &androidpublisher.Track{
-		Releases:        []*androidpublisher.TrackRelease{},
-		Track:           currentTrack,
-		ServerResponse:  googleapi.ServerResponse{},
-		ForceSendFields: []string{},
-		NullFields:      []string{},
-	}, fmt.Errorf("could not find track with name %s", currentTrack)
+	return nil, fmt.Errorf("could not find track with name %s", trackName)
 }
 
 // getAllTracks lists all tracks for a given app.
