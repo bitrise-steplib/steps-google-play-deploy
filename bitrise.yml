@@ -71,11 +71,26 @@ workflows:
           - build_gradle_path: ./app/build.gradle
           - new_version_code: $BITRISE_BUILD_NUMBER
           - new_version_name: "0.2.4"
+
+  _common_apk:
+    steps:
     - gradle-runner:
         inputs:
           - gradle_task: assembleRelease
           - gradlew_path: ./gradlew
+    - sign-apk:
+        inputs:
+          - apk_path: $BITRISE_APK_PATH_LIST
 
+  _common_aab:
+    steps:
+      - gradle-runner:
+          inputs:
+            - gradle_task: bundleRelease
+            - gradlew_path: ./gradlew
+      - sign-apk:
+          inputs:
+            - apk_path: $BITRISE_AAB_PATH
 
   aab_deploy_test:
     envs:
@@ -91,10 +106,8 @@ workflows:
 
     before_run:
     - _common
+    - _common_aab
     steps:
-    - sign-apk:
-        inputs:
-        - apk_path: $BITRISE_AAB_PATH
     - path::./:
         title: Step Test AAB
         inputs:
@@ -119,10 +132,8 @@ workflows:
     - TRACK: "alpha"
     before_run:
       - _common
+      - _common_apk
     steps:
-    - sign-apk:
-        inputs:
-        - apk_path: $BITRISE_APK_PATH_LIST
     - path::./:
         title: Step Test APK
         inputs:
@@ -149,10 +160,8 @@ workflows:
 
     before_run:
       - _common
+      - _common_apk
     steps:
-      - sign-apk:
-          inputs:
-            - apk_path: $BITRISE_APK_PATH_LIST
       - path::./:
           title: Step Test APK
           inputs:
