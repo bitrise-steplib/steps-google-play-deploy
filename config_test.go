@@ -148,3 +148,33 @@ func TestConfigs_appPaths(t *testing.T) {
 		})
 	}
 }
+
+func Test_expansionFiles(t *testing.T) {
+	tests := []struct {
+		name                    string
+		appPaths                []string
+		expansionFilePathConfig string
+		entries                 []string
+		wantErr                 bool
+	}{
+		{"mainOnly", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb|main:b.obb|main:c.obb", []string{"main:a.obb", "main:b.obb", "main:c.obb"}, false},
+		{"pathOnly", []string{"x.apk", "y.apk", "z.apk"}, "patch:a.obb|patch:b.obb|patch:c.obb", []string{"patch:a.obb", "patch:b.obb", "patch:c.obb"}, false},
+		{"mixed", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb|patch:b.obb|patch:c.obb", []string{"main:a.obb", "patch:b.obb", "patch:c.obb"}, false},
+		{"omit", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb||patch:c.obb", []string{"main:a.obb", "", "patch:c.obb"}, false},
+		{"multipleOmit", []string{"w.apk", "x.apk", "y.apk", "z.apk"}, "main:a.obb|||patch:c.obb", []string{"main:a.obb", "", "", "patch:c.obb"}, false},
+		{"invalid1", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb", []string{}, true},
+		{"invalid2", []string{"x.apk", "y.apk", "z.apk"}, "", []string{}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := expansionFiles(tt.appPaths, tt.expansionFilePathConfig)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("expansionFiles() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.entries) {
+				t.Errorf("expansionFiles() got1 = %v, want %v", got, tt.entries)
+			}
+		})
+	}
+}
