@@ -273,6 +273,7 @@ func untrackFromTracks(trackNamesToUpdate []string, versionCodes googleapi.Int64
 		} else {
 			log.Donef("No blocking apk version found")
 		}
+		printTrack(track, "")
 		tracksUpdateCall := tracksService.Patch(packageName, appEditID, trackName, track)
 		if _, err := tracksUpdateCall.Do(); err != nil && err != io.EOF {
 			return fmt.Errorf("failed to update track (%s), error: %s", trackName, err)
