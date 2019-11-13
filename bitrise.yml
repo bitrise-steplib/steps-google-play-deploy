@@ -2,7 +2,7 @@ format_version: "8"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 workflows:
-  test:
+  ci:
     steps:
     - script:
         inputs:
@@ -12,10 +12,63 @@ workflows:
     - errcheck:
     - go-test:
     after_run:
-    - apk_deploy_test
+    - apk_deploy_test_1
     - aab_deploy_test
 
-  aab_deploy_test:
+  _build_start:
+    steps:
+      - build-router-start:
+          inputs:
+            - access_token: $BITRISE_ACCESS_TOKEN
+            - workflows: >
+                aab_deploy_test
+                apk_deploy_test_1
+                apk_deploy_test_2
+            - wait_for_builds: "true"
+
+  _common_apk:
+    envs:
+    # codesigning
+    - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
+    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
+    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
+    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
+    # sample app
+    - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-android-realmtasks.git
+    - SAMPLE_APP_BRANCH: master
+    # google play deploy
+    - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
+    steps:
+    - script:
+        inputs:
+          - content: rm -rf ./_tmp
+    - change-workdir:
+        run_if: true
+        inputs:
+          - path: ./_tmp
+    - script:
+        inputs:
+          - content: git clone --branch $SAMPLE_APP_BRANCH $SAMPLE_APP_URL ./
+    - script:
+        inputs:
+          - content: curl -o "./app/google-services.json" "$BITRISEIO_GOOGLE_SERVICES_JSON_URL"
+    - install-missing-android-tools:
+        inputs:
+          - gradlew_path: ./gradlew
+    - change-android-versioncode-and-versionname:
+        inputs:
+          - build_gradle_path: ./app/build.gradle
+          - new_version_code: $BITRISE_BUILD_NUMBER
+          - new_version_name: "0.2.4"
+    - gradle-runner:
+        inputs:
+          - gradle_task: assembleRelease
+          - gradlew_path: ./gradlew
+    - sign-apk:
+        inputs:
+          - apk_path: $BITRISE_APK_PATH_LIST
+
+  _common_aab:
     envs:
     # sample app
     - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
@@ -25,116 +78,97 @@ workflows:
     - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
     - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
     - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
+    steps:
+      - script:
+          inputs:
+            - content: rm -rf ./_tmp
+      - change-workdir:
+          run_if: true
+          inputs:
+            - path: ./_tmp
+      - script:
+          inputs:
+            - content: git clone --branch $SAMPLE_APP_BRANCH $SAMPLE_APP_URL ./
+      - script:
+          inputs:
+            - content: curl -o "./app/google-services.json" "$BITRISEIO_GOOGLE_SERVICES_JSON_URL"
+      - install-missing-android-tools:
+          inputs:
+            - gradlew_path: ./gradlew
+      - change-android-versioncode-and-versionname:
+          inputs:
+            - build_gradle_path: ./app/build.gradle
+            - new_version_code: $BITRISE_BUILD_NUMBER
+            - new_version_name: "0.2.4"
+      - gradle-runner:
+          inputs:
+            - gradle_task: bundleRelease
+            - gradlew_path: ./gradlew
+      - sign-apk:
+          inputs:
+            - apk_path: $BITRISE_AAB_PATH
+
+  aab_deploy_test:
+    envs:
     # google play deploy
     - PACKAGE_NAME: "com.bitrise_io.sample_apps_android_simple"
     - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
     - TRACK: production
 
+    before_run:
+    - _common_aab
     steps:
-    - script: 
-        inputs:
-        - content: rm -rf ./_tmp
-    - change-workdir:
-        run_if: true
-        inputs:
-        - path: ./_tmp
-    - script:
-        inputs:
-        - content: git clone --branch $SAMPLE_APP_BRANCH $SAMPLE_APP_URL ./
-    - install-missing-android-tools:
-        inputs:
-        - gradlew_path: ./gradlew
-    - change-android-versioncode-and-versionname:
-        inputs:
-        - build_gradle_path: ./app/build.gradle
-        - new_version_code: $BITRISE_BUILD_NUMBER
-        - new_version_name: "0.2.4"
-    - gradle-runner:
-        inputs:
-        - gradle_task: bundleRelease
-        - gradlew_path: ./gradlew
-    - sign-apk:
-        inputs:
-        - apk_path: $BITRISE_AAB_PATH
     - path::./:
-        title: Step Test
+        title: Step Test AAB
         inputs:
         - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
         - package_name: $PACKAGE_NAME
         - app_path: $BITRISE_SIGNED_AAB_PATH
         - track: $TRACK
-        
-  apk_deploy_test:
+        - user_fraction: 0.6
+
+  apk_deploy_test_1:
     envs:
-    # sample app
-    - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-android-realmtasks.git
-    - SAMPLE_APP_BRANCH: master
     # google services
     - BITRISEIO_GOOGLE_SERVICES_JSON_URL: $BITRISEIO_GOOGLE_SERVICES_JSON_URL
-    # codesigning
-    - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_URL
-    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
-    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
-    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
     # google play deploy
     - PACKAGE_NAME: "io.bitrise.realmtasks"
     - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
-    - TRACK: another-track
-
+    - TRACK: "alpha"
+    before_run:
+      - _common_apk
     steps:
-    - script: 
-        inputs:
-        - content: rm -rf ./_tmp
-    - script:
-        inputs:
-        - content: |-
-            #!/usr/bin/env bash
-            set -ex
-            
-            # install Android NDK
-            if [ ! -d "$ANDROID_HOME/ndk-bundle/toolchains/mips64el-linux-android-4.9" ]
-            then
-                curl "https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip" -o /tmp/ndk.zip
-                rm -rf $ANDROID_HOME/ndk-bundle
-                unzip -q /tmp/ndk.zip -d $ANDROID_HOME/
-                mv $ANDROID_HOME/android-ndk-r16b $ANDROID_HOME/ndk-bundle
-                rm -rf /tmp/ndk.zip
-                envman add --key "ANDROID_NDK_HOME" --value "$ANDROID_HOME/ndk-bundle"
-            fi
-    - change-workdir:
-        run_if: true
-        inputs:
-        - path: ./_tmp
-    - script:
-        inputs:
-        - content: git clone --branch $SAMPLE_APP_BRANCH $SAMPLE_APP_URL ./
-    - script:
-        inputs:
-        - content: curl -o "./app/google-services.json" "$BITRISEIO_GOOGLE_SERVICES_JSON_URL"
-    - install-missing-android-tools:
-        inputs:
-        - gradlew_path: ./gradlew
-    - change-android-versioncode-and-versionname:
-        inputs:
-        - build_gradle_path: ./app/build.gradle
-        - new_version_code: $BITRISE_BUILD_NUMBER
-        - new_version_name: "0.2.4"
-    - gradle-runner:
-        inputs:
-        - gradle_task: assembleRelease
-        - gradlew_path: ./gradlew
-    - sign-apk:
-        inputs:
-        - apk_path: $BITRISE_APK_PATH_LIST
     - path::./:
-        title: Step Test
+        title: Step Test APK
         inputs:
-        - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
-        - package_name: $PACKAGE_NAME
-        - apk_path: $BITRISE_SIGNED_APK_PATH
-        - track: $TRACK
-        - mapping_file: ""
-        - user_fraction: ""
+          - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
+          - package_name: $PACKAGE_NAME
+          - apk_path: $BITRISE_SIGNED_APK_PATH
+          - track: $TRACK
+          - mapping_file: ""
+          - user_fraction: ""
+
+  # This is needed to test the untrack blocking versions, it should run after apk_deploy_test_1
+  apk_deploy_test_2:
+    envs:
+      # google services
+      - BITRISEIO_GOOGLE_SERVICES_JSON_URL: $BITRISEIO_GOOGLE_SERVICES_JSON_URL
+      # google play deploy
+      - PACKAGE_NAME: "io.bitrise.realmtasks"
+      - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
+      - TRACK: "beta"
+    before_run:
+      - _common_apk
+    steps:
+      - path::./:
+          title: Step Test APK
+          inputs:
+            - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
+            - package_name: $PACKAGE_NAME
+            - apk_path: $BITRISE_SIGNED_APK_PATH
+            - track: $TRACK
+            - mapping_file: ""
+            - user_fraction: ""
 
   dep-update:
     steps:

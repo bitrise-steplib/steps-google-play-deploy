@@ -22,9 +22,6 @@ type Configs struct {
 	WhatsnewsDir            string          `env:"whatsnews_dir"`
 	MappingFile             string          `env:"mapping_file"`
 	UntrackBlockingVersions bool            `env:"untrack_blocking_versions,opt[true,false]"`
-
-	// Deprecated
-	ApkPath string `env:"apk_path"`
 }
 
 // validate validates the Configs.
@@ -80,7 +77,7 @@ func (c Configs) validateMappingFile() error {
 	}
 
 	if exist, err := pathutil.IsPathExists(c.MappingFile); err != nil {
-		return fmt.Errorf("Failed to check if mapping file exist at: %s, error: %s", c.MappingFile, err)
+		return fmt.Errorf("failed to check if mapping file exist at: %s, error: %s", c.MappingFile, err)
 	} else if !exist {
 		return errors.New("mapping file not exist at: " + c.MappingFile)
 	}
@@ -99,6 +96,7 @@ func splitElements(list []string, sep string) (s []string) {
 }
 
 func parseAppList(list string) (apps []string) {
+	log.Debugf("Parsing app list: '%v'", list)
 	list = strings.TrimSpace(list)
 	if len(list) == 0 {
 		return nil
@@ -113,24 +111,23 @@ func parseAppList(list string) (apps []string) {
 		app = strings.TrimSpace(app)
 		if len(app) > 0 {
 			apps = append(apps, app)
+			log.Debugf("Found app: %v", app)
 		}
 	}
 	return
 }
 
-// appPaths returns the app to deploy, by prefering .aab files.
+// appPaths returns the app to deploy, by preferring .aab files.
 func (c Configs) appPaths() ([]string, []string) {
-	if len(c.ApkPath) > 0 {
-		return parseAPKList(c.ApkPath), []string{"step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (app_path) instead!"}
-	}
-
 	var apks, aabs, warnings []string
 	for _, pth := range parseAppList(c.AppPath) {
 		pth = strings.TrimSpace(pth)
 		ext := strings.ToLower(filepath.Ext(pth))
 		if ext == ".aab" {
+			log.Infof("Found .aab file: %v", pth)
 			aabs = append(aabs, pth)
 		} else if ext == ".apk" {
+			log.Infof("Found .apk file: %v", pth)
 			apks = append(apks, pth)
 		} else {
 			warnings = append(warnings, fmt.Sprintf("unknown app path extension in path: %s, supported extensions: .apk, .aab", pth))
@@ -152,8 +149,8 @@ func (c Configs) appPaths() ([]string, []string) {
 	return apks, warnings
 }
 
-// validateApps validates if files provided via apk_path are existing files,
-// if apk_path is empty it validates if files provided via app_path input are existing .apk or .aab files.
+// validateApps validates if files provided via app_path are existing files,
+// if app_path is empty it validates if files provided via app_path input are existing .apk or .aab files.
 func (c Configs) validateApps() error {
 	apps, warnings := c.appPaths()
 	for _, warn := range warnings {
@@ -173,4 +170,24 @@ func (c Configs) validateApps() error {
 	}
 
 	return nil
+}
+
+// expansionFiles gets the expansion files from the received configuration. Returns true and the entries (type and
+// path) of them when any found, false or error otherwise.
+func expansionFiles(appPaths []string, expansionFilePathConfig string) ([]string, error) {
+	// "main:/file/path/1.obb|patch:/file/path/2.obb"
+	var expansionFileEntries = []string{}
+	if strings.TrimSpace(expansionFilePathConfig) != "" {
+		expansionFileEntries = strings.Split(expansionFilePathConfig, "|")
+
+		if len(appPaths) != len(expansionFileEntries) {
+			return []string{}, fmt.Errorf("mismatching number of APKs(%d) and Expansionfiles(%d)", len(appPaths), len(expansionFileEntries))
+		}
+
+		log.Infof("Found %v expansion file(s) to upload.", len(expansionFileEntries))
+		for i, expansionFile := range expansionFileEntries {
+			log.Debugf("%v - %v", i+1, expansionFile)
+		}
+	}
+	return expansionFileEntries, nil
 }

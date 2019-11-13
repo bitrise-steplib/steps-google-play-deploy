@@ -19,7 +19,7 @@ description: |-
   
     Described in [Google Play Developer API](https://developers.google.com/android-publisher/getting_started)'s __Using a service account__ section
 
-    __NOTE__: When you create your service account on the google developer console, choose json as `Key Type`.
+    __NOTE__: When you create your service account on the Google Play Developer Console, choose json as `Key Type`.
 
   4. Grant the necessary rights to the service account:
   
@@ -39,9 +39,6 @@ description: |-
 website: https://github.com/bitrise-io/steps-google-play-deploy
 source_code_url: https://github.com/bitrise-io/steps-google-play-deploy
 support_url: https://github.com/bitrise-io/steps-google-play-deploy/issues
-host_os_tags:
-  - osx-10.10
-  - ubuntu
 project_type_tags:
   - android
   - xamarin
@@ -102,7 +99,7 @@ inputs:
       description: |-
         The track in which you want to assign the uploaded app. 
         
-        Can be one of the built-in tracks: internal, alpha, beta, rollout, production.
+        Can be one of the built-in tracks: internal, alpha, beta, production.
         
         Or you can set your custom track name as well. 
         
@@ -148,11 +145,11 @@ inputs:
     opts:
       title: "Untrack blocking versions?"
       description: |-
-        Should deactivate apps, with lower version code, on lower level tracks?
+        Should deactivate apps, with lower version code on the given release.
 
         E.g.: 
         If you have an __active apk on alpha__ track with version code: `42`.
-        And you try to __upload a new version (`43`), to the beta track__, you will see an error:
+        And you try to __upload a new version (`43`)__, you will see an error:
 
         `Version 42 of this app can not be downloaded by any devices as they will all receive APKs with higher version codes`
 
@@ -161,19 +158,3 @@ inputs:
       - "true"
       - "false"
       is_required: true
-  - apk_path: 
-    opts:
-      title: APK file path
-      description: |-
-        __This input is deprecated and will be removed on 20 August 2019, use `App file path` input instead!__
-
-        Path to the APK to deploy.
-
-        You can provide multiple APK paths separated by `|` character.
-
-        Format examples:
-
-        - `/path/to/my/app.apk`
-        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
-        - `/path/to/my/bundle.aab`
-      category: Deprecated

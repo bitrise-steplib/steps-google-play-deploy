@@ -99,7 +99,6 @@ func TestConfigs_appPaths(t *testing.T) {
 			name: "empty test",
 			config: Configs{
 				AppPath: "",
-				ApkPath: "",
 			},
 			wantApps:     nil,
 			wantWarnings: nil,
@@ -111,15 +110,6 @@ func TestConfigs_appPaths(t *testing.T) {
 			},
 			wantApps:     []string{"app.aab"},
 			wantWarnings: []string{"Both .aab and .apk files provided, using the .aab file(s): app.aab"},
-		},
-		{
-			name: "uses deprecated input (ApkPath) if set",
-			config: Configs{
-				AppPath: "app.aab",
-				ApkPath: "app.apk",
-			},
-			wantApps:     []string{"app.apk"},
-			wantWarnings: []string{"step input 'APK file path' (apk_path) is deprecated and will be removed on 20 August 2019, use 'APK or App Bundle file path' (app_path) instead!"},
 		},
 		{
 			name: "uses first aab",
@@ -154,6 +144,36 @@ func TestConfigs_appPaths(t *testing.T) {
 			}
 			if !reflect.DeepEqual(gotWarnings, tt.wantWarnings) {
 				t.Errorf("Configs.appPaths() gotWarnings = %v, want %v", gotWarnings, tt.wantWarnings)
+			}
+		})
+	}
+}
+
+func Test_expansionFiles(t *testing.T) {
+	tests := []struct {
+		name                    string
+		appPaths                []string
+		expansionFilePathConfig string
+		entries                 []string
+		wantErr                 bool
+	}{
+		{"mainOnly", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb|main:b.obb|main:c.obb", []string{"main:a.obb", "main:b.obb", "main:c.obb"}, false},
+		{"pathOnly", []string{"x.apk", "y.apk", "z.apk"}, "patch:a.obb|patch:b.obb|patch:c.obb", []string{"patch:a.obb", "patch:b.obb", "patch:c.obb"}, false},
+		{"mixed", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb|patch:b.obb|patch:c.obb", []string{"main:a.obb", "patch:b.obb", "patch:c.obb"}, false},
+		{"omit", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb||patch:c.obb", []string{"main:a.obb", "", "patch:c.obb"}, false},
+		{"multipleOmit", []string{"w.apk", "x.apk", "y.apk", "z.apk"}, "main:a.obb|||patch:c.obb", []string{"main:a.obb", "", "", "patch:c.obb"}, false},
+		{"invalid1", []string{"x.apk", "y.apk", "z.apk"}, "main:a.obb", []string{}, true},
+		{"invalid2", []string{"x.apk", "y.apk", "z.apk"}, "", []string{}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := expansionFiles(tt.appPaths, tt.expansionFilePathConfig)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("expansionFiles() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.entries) {
+				t.Errorf("expansionFiles() got1 = %v, want %v", got, tt.entries)
 			}
 		})
 	}
