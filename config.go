@@ -84,10 +84,6 @@ func (c Configs) validateMappingFile() error {
 	return nil
 }
 
-func parseAPKList(list string) []string {
-	return strings.Split(list, "|")
-}
-
 func splitElements(list []string, sep string) (s []string) {
 	for _, e := range list {
 		s = append(s, strings.Split(e, sep)...)
