@@ -193,36 +193,24 @@ func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, err
 	return recentChangesMap, nil
 }
 
-// getRelease gets a release from a track based on it's status. Note we would get error if we would like to have
-// multiple instances of a release with the same status. Example: "error: googleapi: Error 400: Too many completed
-// releases specified., releasesTooManyCompletedReleases".
-func getRelease(userFraction float64, releases *[]*androidpublisher.TrackRelease) *androidpublisher.TrackRelease {
+// createTrackRelease returns a release object with the given version codes and adds the listing information.
+func createTrackRelease(whatsNewsDir string, versionCodes googleapi.Int64s, userFraction float64) (*androidpublisher.TrackRelease, error) {
 	status := releaseStatusFromConfig(userFraction)
-	for _, release := range *releases {
-		if status == release.Status {
-			return release
-		}
+
+	newRelease := &androidpublisher.TrackRelease{
+		VersionCodes: versionCodes,
+		Status:       status,
 	}
-	newRelease := androidpublisher.TrackRelease{
-		Status: status,
-	}
+	log.Infof("Release version codes are: %v", newRelease.VersionCodes)
 	if userFraction != 0 {
 		newRelease.UserFraction = userFraction
 	}
-	*releases = append(*releases, &newRelease)
-	return &newRelease
-}
 
-// updateReleaseDetails returns the new release object with the given version codes and adds the listing information.
-func updateReleaseDetails(whatsNewsDir string, versionCodes googleapi.Int64s, release *androidpublisher.TrackRelease) error {
-	release.VersionCodes = versionCodes
-	log.Infof("Release version codes are: %v", release.VersionCodes)
-
-	log.Printf(" assigned app versions: %v", release.VersionCodes)
-	if err := updateListing(whatsNewsDir, release); err != nil {
-		return fmt.Errorf("failed to update listing, reason: %v", err)
+	if err := updateListing(whatsNewsDir, newRelease); err != nil {
+		return nil, fmt.Errorf("failed to update listing, reason: %v", err)
 	}
-	return nil
+
+	return newRelease, nil
 }
 
 // trackNamesToUpdate returns the tracks that should be updated.

@@ -89,10 +89,21 @@ func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *a
 	}
 	printTrack(trackToUpdate, "Track to update:")
 
-	release := getRelease(configs.UserFraction, &trackToUpdate.Releases)
-	if err := updateReleaseDetails(configs.WhatsnewsDir, versionCodes, release); err != nil {
+	newRelease, err := createTrackRelease(configs.WhatsnewsDir, versionCodes, configs.UserFraction)
+	if err != nil {
 		return err
 	}
+
+	// Note we get error if we creating multiple instances of a release with the Completed status.
+	// Example: "error: googleapi: Error 400: Too many completed releases specified., releasesTooManyCompletedReleases".
+	// Also receiving error when deploying a Completed release when a rollout is in progress:
+	// error: googleapi: Error 403: You cannot rollout this release because it does not allow any existing users to upgrade
+	// to the newly added APKs., ReleaseValidationErrorKeyApkNoUpgradePaths
+
+	// inProgress preserves complete release even if not specified in releases array.
+	// In case only a completed release specified, it halts inProgress releases.
+
+	trackToUpdate.Releases = []*androidpublisher.TrackRelease{newRelease}
 
 	editsTracksUpdateCall := editsTracksService.Update(configs.PackageName, appEdit.Id, configs.Track, trackToUpdate)
 	track, err := editsTracksUpdateCall.Do()
