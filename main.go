@@ -87,7 +87,7 @@ func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *a
 	if err != nil {
 		return err
 	}
-	printTrack(trackToUpdate, "Track to update:")
+	log.Infof("%s track will be updated.", trackToUpdate.Track)
 
 	newRelease, err := createTrackRelease(configs.WhatsnewsDir, versionCodes, configs.UserFraction)
 	if err != nil {

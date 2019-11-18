@@ -237,7 +237,7 @@ func getAllTracks(packageName string, service *androidpublisher.Service, appEdit
 		return []*androidpublisher.Track{}, fmt.Errorf("failed to list tracks, error: %s", err)
 	}
 	for _, track := range listResponse.Tracks {
-		printTrack(track, "Found track:")
+		log.Infof(trackToString(track))
 	}
 	return listResponse.Tracks, nil
 }
