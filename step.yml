@@ -145,6 +145,8 @@ inputs:
     opts:
       title: "Untrack blocking versions?"
       description: |-
+        Deprecated, will be ignored.
+
         Should deactivate apps, with lower version code on the given release.
 
         E.g.: 
