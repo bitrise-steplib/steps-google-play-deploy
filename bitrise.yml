@@ -128,7 +128,7 @@ workflows:
     # google play deploy
     - PACKAGE_NAME: "io.bitrise.realmtasks"
     - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
-    - TRACK: "beta"
+    - TRACK: "production"
     before_run:
       - _common_apk
     steps:
@@ -150,7 +150,7 @@ workflows:
       # google play deploy
       - PACKAGE_NAME: "io.bitrise.realmtasks"
       - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
-      - TRACK: "alpha"
+      - TRACK: "beta"
     before_run:
       - _common_apk
     steps:
