@@ -136,10 +136,8 @@ func updateListing(whatsNewsDir string, release *androidpublisher.TrackRelease) 
 		var releaseNotes []*androidpublisher.LocalizedText
 		for language, recentChanges := range recentChangesMap {
 			releaseNotes = append(releaseNotes, &androidpublisher.LocalizedText{
-				Language:        language,
-				Text:            recentChanges,
-				ForceSendFields: []string{},
-				NullFields:      []string{},
+				Language: language,
+				Text:     recentChanges,
 			})
 		}
 		release.ReleaseNotes = releaseNotes
