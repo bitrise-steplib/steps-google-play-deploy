@@ -1,22 +1,22 @@
 package main
 
 import (
-	"github.com/bitrise-io/go-utils/log"
+	"fmt"
+
 	"google.golang.org/api/androidpublisher/v3"
 )
 
-// printTrack prints out the given track to the console.
-func printTrack(track *androidpublisher.Track, prefix string) {
-	if prefix != "" {
-		log.Infof("%s", prefix)
+func trackToString(track *androidpublisher.Track) string {
+	s := fmt.Sprintf("%s track:\n", track.Track)
+	for i, release := range track.Releases {
+		s += fmt.Sprintf("- %s", releaseToString(release))
+		if i != len(track.Releases)-1 {
+			s += "\n"
+		}
 	}
-	log.Infof("%s", track.Track)
-	for _, release := range track.Releases {
-		printRelease(*release)
-	}
+	return s
 }
 
-// printRelease prints out the given release to the console.
-func printRelease(release androidpublisher.TrackRelease) {
-	log.Infof("Release '%s' has versionCodes: '%v', status: '%v", release.Name, release.VersionCodes, release.Status)
+func releaseToString(release *androidpublisher.TrackRelease) string {
+	return fmt.Sprintf("'%s' release versionCodes: %v, status: '%v'", release.Name, release.VersionCodes, release.Status)
 }

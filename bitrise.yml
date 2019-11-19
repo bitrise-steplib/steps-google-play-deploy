@@ -11,20 +11,14 @@ workflows:
     - golint:
     - errcheck:
     - go-test:
+    # apk deploy is before aab deploy otherwise AAB owerrides APKs when app_path input is read
     after_run:
     - apk_deploy_test_1
     - aab_deploy_test
 
-  _build_start:
-    steps:
-      - build-router-start:
-          inputs:
-            - access_token: $BITRISE_ACCESS_TOKEN
-            - workflows: >
-                aab_deploy_test
-                apk_deploy_test_1
-                apk_deploy_test_2
-            - wait_for_builds: "true"
+  ci_untrack_phase2:
+    after_run:
+    - apk_deploy_test_2
 
   _common_apk:
     envs:
@@ -134,7 +128,7 @@ workflows:
     # google play deploy
     - PACKAGE_NAME: "io.bitrise.realmtasks"
     - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
-    - TRACK: "alpha"
+    - TRACK: "beta"
     before_run:
       - _common_apk
     steps:
@@ -148,7 +142,7 @@ workflows:
           - mapping_file: ""
           - user_fraction: ""
 
-  # This is needed to test the untrack blocking versions, it should run after apk_deploy_test_1
+  # This is needed to test the possible shadowing of releases, it should run after apk_deploy_test_1
   apk_deploy_test_2:
     envs:
       # google services
@@ -156,7 +150,7 @@ workflows:
       # google play deploy
       - PACKAGE_NAME: "io.bitrise.realmtasks"
       - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
-      - TRACK: "beta"
+      - TRACK: "alpha"
     before_run:
       - _common_apk
     steps:

@@ -87,12 +87,23 @@ func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *a
 	if err != nil {
 		return err
 	}
-	printTrack(trackToUpdate, "Track to update:")
+	log.Infof("%s track will be updated.", trackToUpdate.Track)
 
-	release := getRelease(configs.UserFraction, &trackToUpdate.Releases)
-	if err := updateReleaseDetails(configs.WhatsnewsDir, versionCodes, release); err != nil {
+	newRelease, err := createTrackRelease(configs.WhatsnewsDir, versionCodes, configs.UserFraction)
+	if err != nil {
 		return err
 	}
+
+	// Note we get error if we creating multiple instances of a release with the Completed status.
+	// Example: "error: googleapi: Error 400: Too many completed releases specified., releasesTooManyCompletedReleases".
+	// Also receiving error when deploying a Completed release when a rollout is in progress:
+	// error: googleapi: Error 403: You cannot rollout this release because it does not allow any existing users to upgrade
+	// to the newly added APKs., ReleaseValidationErrorKeyApkNoUpgradePaths
+
+	// inProgress preserves complete release even if not specified in releases array.
+	// In case only a completed release specified, it halts inProgress releases.
+
+	trackToUpdate.Releases = []*androidpublisher.TrackRelease{newRelease}
 
 	editsTracksUpdateCall := editsTracksService.Update(configs.PackageName, appEdit.Id, configs.Track, trackToUpdate)
 	track, err := editsTracksUpdateCall.Do()
@@ -102,26 +113,6 @@ func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *a
 
 	log.Printf(" updated track: %s", track.Track)
 	return nil
-}
-
-// unTrackBlockingVersions untracks the blocking versions.
-func unTrackBlockingVersions(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) error {
-	if configs.Track == alphaTrackName {
-		fmt.Println()
-		log.Warnf("UntrackBlockingVersions is set, but selected track is: alpha, nothing to deactivate")
-		return nil
-	}
-
-	fmt.Println()
-	log.Infof("Deactivating blocking apk versions")
-	tracks, err := getAllTracks(configs.PackageName, service, appEdit)
-	if err != nil {
-		return fmt.Errorf("failed to list tracks, error: %s", err)
-	}
-
-	trackNamesToUpdate := trackNamesToUpdate(configs.Track, tracks)
-
-	return untrackFromTracks(trackNamesToUpdate, versionCodes, service, configs.PackageName, appEdit.Id)
 }
 
 func main() {
@@ -152,7 +143,6 @@ func main() {
 		failf("Failed to create publisher service, error: %s", err)
 	}
 	log.Donef("Authenticated client created")
-	// ---
 
 	//
 	// Create insert edit
@@ -166,7 +156,6 @@ func main() {
 	}
 	log.Printf(" editID: %s", appEdit.Id)
 	log.Donef("Edit insert created")
-	// ---
 
 	//
 	// Upload applications
@@ -177,7 +166,6 @@ func main() {
 		failf("Failed to upload APKs: %v", err)
 	}
 	log.Donef("Applications uploaded")
-	// ---
 
 	// Update track
 	fmt.Println()
@@ -186,17 +174,6 @@ func main() {
 		failf("Failed to update track, reason: %v", err)
 	}
 	log.Donef("Track updated")
-	// ---
-
-	//
-	// Deactivate blocking apks
-	untrackApks := configs.UntrackBlockingVersions
-	if untrackApks {
-		if err := unTrackBlockingVersions(configs, service, appEdit, versionCodes); err != nil {
-			failf("Failed to untrack blocking versions: %s", err)
-		}
-	}
-	// ---
 
 	//
 	// Validate edit
@@ -207,7 +184,6 @@ func main() {
 		failf("Failed to validate edit, error: %s", err)
 	}
 	log.Donef("Edit is valid")
-	// ---
 
 	//
 	// Commit edit
@@ -219,5 +195,4 @@ func main() {
 	}
 
 	log.Donef("Edit committed")
-	// ---
 }

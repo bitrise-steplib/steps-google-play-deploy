@@ -13,15 +13,14 @@ import (
 
 // Configs stores the step's inputs
 type Configs struct {
-	JSONKeyPath             stepconf.Secret `env:"service_account_json_key_path,required"`
-	PackageName             string          `env:"package_name,required"`
-	AppPath                 string          `env:"app_path,required"`
-	ExpansionfilePath       string          `env:"expansionfile_path"`
-	Track                   string          `env:"track,required"`
-	UserFraction            float64         `env:"user_fraction,range]0.0..1.0["`
-	WhatsnewsDir            string          `env:"whatsnews_dir"`
-	MappingFile             string          `env:"mapping_file"`
-	UntrackBlockingVersions bool            `env:"untrack_blocking_versions,opt[true,false]"`
+	JSONKeyPath       stepconf.Secret `env:"service_account_json_key_path,required"`
+	PackageName       string          `env:"package_name,required"`
+	AppPath           string          `env:"app_path,required"`
+	ExpansionfilePath string          `env:"expansionfile_path"`
+	Track             string          `env:"track,required"`
+	UserFraction      float64         `env:"user_fraction,range]0.0..1.0["`
+	WhatsnewsDir      string          `env:"whatsnews_dir"`
+	MappingFile       string          `env:"mapping_file"`
 }
 
 // validate validates the Configs.
@@ -82,10 +81,6 @@ func (c Configs) validateMappingFile() error {
 		return errors.New("mapping file not exist at: " + c.MappingFile)
 	}
 	return nil
-}
-
-func parseAPKList(list string) []string {
-	return strings.Split(list, "|")
 }
 
 func splitElements(list []string, sep string) (s []string) {
