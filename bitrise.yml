@@ -142,7 +142,7 @@ workflows:
           - mapping_file: ""
           - user_fraction: ""
 
-  # This is needed to test the untrack blocking versions, it should run after apk_deploy_test_1
+  # This is needed to test the possible shadowing of releases, it should run after apk_deploy_test_1
   apk_deploy_test_2:
     envs:
       # google services
