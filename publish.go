@@ -150,18 +150,20 @@ func updateListing(whatsNewsDir string, release *androidpublisher.TrackRelease) 
 func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, error) {
 	recentChangesMap := map[string]string{}
 
-	pattern := filepath.Join(recentChangesDir, "whatsnew-*-*")
+	pattern := filepath.Join(recentChangesDir, "whatsnew-*")
 	recentChangesPaths, err := filepath.Glob(pattern)
 	if err != nil {
 		return map[string]string{}, err
 	}
 
-	pattern = `whatsnew-(?P<local>.*-.*)`
+	// The language code (a BCP-47 language tag) of the localized listing to read or modify
+	// https://tools.ietf.org/html/bcp47#section-2.1
+	pattern = `whatsnew-(?P<locale>([0-9a-zA-Z].*(-|$))+)`
 	re := regexp.MustCompile(pattern)
 
 	for _, recentChangesPath := range recentChangesPaths {
 		matches := re.FindStringSubmatch(recentChangesPath)
-		if len(matches) == 2 {
+		if len(matches) >= 2 {
 			language := matches[1]
 			content, err := fileutil.ReadStringFromFile(recentChangesPath)
 			if err != nil {

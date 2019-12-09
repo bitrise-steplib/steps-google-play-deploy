@@ -1,6 +1,10 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -68,6 +72,85 @@ func Test_validateExpansionFilePath(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := validateExpansionFileConfig(tt.expFilePath); got != tt.want {
 				t.Errorf("validateExpansionFileConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_readLocalisedRecentChanges(t *testing.T) {
+	createTestFiles := func(localeToNote map[string]string) (string, error) {
+		tmpDir, err := ioutil.TempDir("", "Test_readLocalisedRecentChanges")
+		if err != nil {
+			return "", err
+		}
+
+		for locale, notes := range localeToNote {
+			if err := ioutil.WriteFile(filepath.Join(tmpDir, "whatsnew-"+locale), []byte(notes), 0600); err != nil {
+				return "", err
+			}
+		}
+		return tmpDir, nil
+	}
+
+	tests := []struct {
+		name      string
+		testFiles map[string]string
+		want      map[string]string
+		wantErr   bool
+	}{
+		{
+			name:      "1 language: en-US",
+			testFiles: map[string]string{"en-US": "English"},
+			want:      map[string]string{"en-US": "English"},
+			wantErr:   false,
+		},
+		{
+			name:      "2 language: en-US",
+			testFiles: map[string]string{"en-US": "English", "de-DE": "German"},
+			want:      map[string]string{"en-US": "English", "de-DE": "German"},
+			wantErr:   false,
+		},
+		{
+			name:      "no second subtag",
+			testFiles: map[string]string{"ca": "Catalan"},
+			want:      map[string]string{"ca": "Catalan"},
+			wantErr:   false,
+		},
+		{
+			name:      "Latin American Spanish",
+			testFiles: map[string]string{"es-419": "Latin American Spanish"},
+			want:      map[string]string{"es-419": "Latin American Spanish"},
+			wantErr:   false,
+		},
+		{
+			// "sr-Latn-RS" represents Serbian ('sr') written using Latin script
+			//('Latn') as used in Serbia ('RS').
+			name:      "Latin American Spanish",
+			testFiles: map[string]string{"sr-Latn-RS": "Serbian"},
+			want:      map[string]string{"sr-Latn-RS": "Serbian"},
+			wantErr:   false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testDir, err := createTestFiles(tt.testFiles)
+			if err != nil {
+				t.Fatalf("setup: failed to create test files, error: %s", err)
+			}
+			defer func() {
+				err := os.RemoveAll(testDir)
+				if err != nil {
+					t.Logf("Faield to remove test dir, error: %s", err)
+				}
+			}()
+
+			got, err := readLocalisedRecentChanges(testDir)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("readLocalisedRecentChanges() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("readLocalisedRecentChanges() = %v, want %v", got, tt.want)
 			}
 		})
 	}
