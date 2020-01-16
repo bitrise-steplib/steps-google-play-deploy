@@ -215,18 +215,6 @@ func releaseStatusFromConfig(userFraction float64) string {
 	return releaseStatusCompleted
 }
 
-// getTrack gets the given track from the list of tracks of a given app.
-func getTrack(trackName string, allTracks []*androidpublisher.Track) (*androidpublisher.Track, error) {
-	for _, track := range allTracks {
-		if trackName == track.Track {
-			log.Debugf("Current track found, name '%s'", trackName)
-			return track, nil
-		}
-	}
-
-	return nil, fmt.Errorf("could not find track with name %s", trackName)
-}
-
 // getAllTracks lists all tracks for a given app.
 func getAllTracks(packageName string, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) ([]*androidpublisher.Track, error) {
 	log.Infof("Listing tracks")
