@@ -110,7 +110,17 @@ inputs:
       title: User Fraction
       description: |-
         Portion of the users who should get the staged version of the app. Accepts values between 0.0 and 1.0 (exclusive-exclusive).
+        https://developer.android.com/guide/playcore/in-app-updates#check-priority
         To release to all users, this input should not be defined (or should be blank).
+      is_required: false
+  - update_priority:
+    opts:
+      title: Update Priority
+      description: |-
+        This allows your app to decide how strongly to recommend an update to the user. 
+        Accepts values between 0 and 5 (inclusive-inclusive) with 0 being the lowest priority and 5 being the highest priority.
+        By default this value is 0.
+        For more information see here: https://developer.android.com/guide/playcore/in-app-updates#check-priority.
       is_required: false
   - whatsnews_dir:
     opts:
