@@ -197,6 +197,7 @@ func createTrackRelease(whatsNewsDir string, versionCodes googleapi.Int64s, user
 	log.Infof("Release version codes are: %v", newRelease.VersionCodes)
 	if userFraction != 0 {
 		newRelease.UserFraction = userFraction
+	}
 
 	if updatePriority != 0 {
 		newRelease.InAppUpdatePriority = int64(updatePriority)
