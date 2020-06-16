@@ -133,12 +133,8 @@ func (c Configs) appPaths() ([]string, []string) {
 		warnings = append(warnings, fmt.Sprintf("Both .aab and .apk files provided, using the .aab file(s): %s", strings.Join(aabs, ",")))
 	}
 
-	if len(aabs) > 1 {
-		warnings = append(warnings, fmt.Sprintf("More than 1 .aab files provided, using the first: %s", aabs[0]))
-	}
-
 	if len(aabs) > 0 {
-		return aabs[:1], warnings
+		return aabs, warnings
 	}
 
 	return apks, warnings
