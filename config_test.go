@@ -117,7 +117,6 @@ func TestConfigs_appPaths(t *testing.T) {
 				AppPath: "app.aab\napp1.aab",
 			},
 			wantApps:     []string{"app.aab", "app1.aab"},
-			wantWarnings: []string{"More than 1 .aab files provided, using all"},
 		},
 		{
 			name: "unknown extension",
@@ -133,7 +132,6 @@ func TestConfigs_appPaths(t *testing.T) {
 				AppPath: `/bitrise/deploy/app-bitrise-signed.aab\n/bitrise/deploy/app.aab`,
 			},
 			wantApps:     []string{"/bitrise/deploy/app-bitrise-signed.aab", "/bitrise/deploy/app.aab"},
-			wantWarnings: []string{"More than 1 .aab files provided, using all"},
 		},
 	}
 	for _, tt := range tests {
