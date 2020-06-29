@@ -214,18 +214,3 @@ func releaseStatusFromConfig(userFraction float64) string {
 	}
 	return releaseStatusCompleted
 }
-
-// getAllTracks lists all tracks for a given app.
-func getAllTracks(packageName string, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) ([]*androidpublisher.Track, error) {
-	log.Infof("Listing tracks")
-	tracksService := androidpublisher.NewEditsTracksService(service)
-	tracksListCall := tracksService.List(packageName, appEdit.Id)
-	listResponse, err := tracksListCall.Do()
-	if err != nil {
-		return []*androidpublisher.Track{}, fmt.Errorf("failed to list tracks, error: %s", err)
-	}
-	for _, track := range listResponse.Tracks {
-		log.Infof(trackToString(track))
-	}
-	return listResponse.Tracks, nil
-}

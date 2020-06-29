@@ -78,11 +78,6 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) error {
 	editsTracksService := androidpublisher.NewEditsTracksService(service)
 
-	_, err := getAllTracks(configs.PackageName, service, appEdit)
-	if err != nil {
-		return fmt.Errorf("failed to list tracks, error: %s", err)
-	}
-
 	newRelease, err := createTrackRelease(configs.WhatsnewsDir, versionCodes, configs.UserFraction)
 	if err != nil {
 		return err
