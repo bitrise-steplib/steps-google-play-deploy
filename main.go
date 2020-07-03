@@ -78,17 +78,6 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) error {
 	editsTracksService := androidpublisher.NewEditsTracksService(service)
 
-	allTracks, err := getAllTracks(configs.PackageName, service, appEdit)
-	if err != nil {
-		return fmt.Errorf("failed to list tracks, error: %s", err)
-	}
-
-	trackToUpdate, err := getTrack(configs.Track, allTracks)
-	if err != nil {
-		return err
-	}
-	log.Infof("%s track will be updated.", trackToUpdate.Track)
-
 	newRelease, err := createTrackRelease(configs.WhatsnewsDir, versionCodes, configs.UserFraction)
 	if err != nil {
 		return err
@@ -103,9 +92,11 @@ func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *a
 	// inProgress preserves complete release even if not specified in releases array.
 	// In case only a completed release specified, it halts inProgress releases.
 
-	trackToUpdate.Releases = []*androidpublisher.TrackRelease{newRelease}
-
-	editsTracksUpdateCall := editsTracksService.Update(configs.PackageName, appEdit.Id, configs.Track, trackToUpdate)
+	log.Infof("%s track will be updated.", configs.Track)
+	editsTracksUpdateCall := editsTracksService.Update(configs.PackageName, appEdit.Id, configs.Track, &androidpublisher.Track{
+		Track:    configs.Track,
+		Releases: []*androidpublisher.TrackRelease{newRelease},
+	})
 	track, err := editsTracksUpdateCall.Do()
 	if err != nil {
 		return fmt.Errorf("update call failed, error: %s", err)
