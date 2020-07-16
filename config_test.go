@@ -112,11 +112,12 @@ func TestConfigs_appPaths(t *testing.T) {
 			wantWarnings: []string{"Both .aab and .apk files provided, using the .aab file(s): app.aab"},
 		},
 		{
-			name: "multiple .aab",
+			name: "uses first aab",
 			config: Configs{
 				AppPath: "app.aab\napp1.aab",
 			},
-			wantApps:     []string{"app.aab", "app1.aab"},
+			wantApps:     []string{"app.aab"},
+			wantWarnings: []string{"More than 1 .aab files provided, using the first: app.aab"},
 		},
 		{
 			name: "unknown extension",
@@ -131,7 +132,8 @@ func TestConfigs_appPaths(t *testing.T) {
 			config: Configs{
 				AppPath: `/bitrise/deploy/app-bitrise-signed.aab\n/bitrise/deploy/app.aab`,
 			},
-			wantApps:     []string{"/bitrise/deploy/app-bitrise-signed.aab", "/bitrise/deploy/app.aab"},
+			wantApps:     []string{"/bitrise/deploy/app-bitrise-signed.aab"},
+			wantWarnings: []string{"More than 1 .aab files provided, using the first: /bitrise/deploy/app-bitrise-signed.aab"},
 		},
 	}
 	for _, tt := range tests {
