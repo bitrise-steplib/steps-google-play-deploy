@@ -16,6 +16,7 @@ import (
 const (
 	releaseStatusCompleted  = "completed"
 	releaseStatusInProgress = "inProgress"
+	releaseStatusDraft = "draft"
 )
 
 // uploadExpansionFiles uploads the expansion files for given applications, like .obb files.
@@ -188,7 +189,7 @@ func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, err
 
 // createTrackRelease returns a release object with the given version codes and adds the listing information.
 func createTrackRelease(whatsNewsDir string, versionCodes googleapi.Int64s, userFraction float64) (*androidpublisher.TrackRelease, error) {
-	status := releaseStatusFromConfig(userFraction)
+	status := releaseStatusFromConfig(userFraction, uploadAsDraft)
 
 	newRelease := &androidpublisher.TrackRelease{
 		VersionCodes: versionCodes,
@@ -207,7 +208,10 @@ func createTrackRelease(whatsNewsDir string, versionCodes googleapi.Int64s, user
 }
 
 // releaseStatusFromConfig gets the release status from the config value of user fraction.
-func releaseStatusFromConfig(userFraction float64) string {
+func releaseStatusFromConfig(userFraction float64, uploadAsDraft bool) string {
+	if uploadAsDraft {
+		log.Infof("Release is a Draft release overriden by config.")
+	}
 	if userFraction != 0 {
 		log.Infof("Release is a staged rollout, %v of users will receive it.", userFraction)
 		return releaseStatusInProgress

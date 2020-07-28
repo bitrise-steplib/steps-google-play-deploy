@@ -21,6 +21,7 @@ type Configs struct {
 	UserFraction      float64         `env:"user_fraction,range]0.0..1.0["`
 	WhatsnewsDir      string          `env:"whatsnews_dir"`
 	MappingFile       string          `env:"mapping_file"`
+	UploadAsDraft     bool            `env:"upload_as_draft,opt[true,false]"`
 }
 
 // validate validates the Configs.
