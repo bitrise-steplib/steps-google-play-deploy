@@ -72,13 +72,13 @@ workflows:
       - sign-apk@1:
           inputs:
           - android_app: "$BITRISE_AAB_PATH"
-    - path::./:
-        title: Step Test AAB
-        inputs:
-        - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
-        - package_name: $PACKAGE_NAME
-        - app_path: "/bitrise/deploy/Wearable-release-bitrise-signed.aab|/bitrise/deploy/Application-release-bitrise-signed.aab"
-        - track: $TRACK
+      - path::./:
+          title: Step Test AAB
+          inputs:
+          - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
+          - package_name: $PACKAGE_NAME
+          - app_path: "/bitrise/deploy/Wearable-release-bitrise-signed.aab|/bitrise/deploy/Application-release-bitrise-signed.aab"
+          - track: $TRACK
 
   aab_deploy_test:
     envs:
@@ -123,14 +123,14 @@ workflows:
       - sign-apk:
           inputs:
             - apk_path: $BITRISE_AAB_PATH
-    - path::./:
-        title: Step Test AAB
-        inputs:
-        - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
-        - package_name: $PACKAGE_NAME
-        - app_path: $BITRISE_SIGNED_AAB_PATH
-        - track: $TRACK
-        - user_fraction: 0.6
+      - path::./:
+          title: Step Test AAB
+          inputs:
+          - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
+          - package_name: $PACKAGE_NAME
+          - app_path: $BITRISE_SIGNED_AAB_PATH
+          - track: $TRACK
+          - user_fraction: 0.6
 
   _common_apk:
     envs:
