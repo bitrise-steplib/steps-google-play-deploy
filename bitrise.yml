@@ -20,6 +20,66 @@ workflows:
     after_run:
     - apk_deploy_test_2
 
+  multiple_aab_deploy_test:
+    envs:
+    # sample app
+    - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-wear-os.git
+    - SAMPLE_APP_BRANCH: master
+    # codesigning
+    - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_2_URL
+    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_2_PASSWORD
+    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_2_ALIAS
+    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_2_PRIVATE_KEY_PASSWORD
+    # google play deploy
+    - PACKAGE_NAME: "io.bitrise.android.xyztouristattractions"
+    - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
+    - TRACK: internal
+    steps:
+      - script:
+          inputs:
+            - content: rm -rf ./_tmp
+      - change-workdir:
+          run_if: true
+          inputs:
+            - path: ./_tmp
+      - script:
+          inputs:
+            - content: git clone --branch $SAMPLE_APP_BRANCH $SAMPLE_APP_URL ./
+      - install-missing-android-tools:
+          inputs:
+            - gradlew_path: ./gradlew
+      - change-android-versioncode-and-versionname@1:
+          inputs:
+          - version_code_offset: '1'
+          - build_gradle_path: "$BITRISE_SOURCE_DIR/Application/build.gradle"
+      - change-android-versioncode-and-versionname@1:
+          inputs:
+          - version_code_offset: '1'
+          - build_gradle_path: "$BITRISE_SOURCE_DIR/Wearable/build.gradle"
+      - android-build@0:
+          inputs:
+          - variant: release
+          - build_type: aab
+          - module: Application
+      - sign-apk@1:
+          inputs:
+          - android_app: "$BITRISE_AAB_PATH"
+      - android-build@0:
+          inputs:
+          - variant: release
+          - build_type: aab
+          - module: Wearable
+      - sign-apk@1:
+          inputs:
+          - android_app: "$BITRISE_AAB_PATH"
+    - path::./:
+        title: Step Test AAB
+        inputs:
+        - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
+        - package_name: $PACKAGE_NAME
+        - app_path: "/bitrise/deploy/Wearable-release-bitrise-signed.aab|/bitrise/deploy/Application-release-bitrise-signed.aab"
+        - track: $TRACK
+
   aab_deploy_test:
     envs:
     # sample app
