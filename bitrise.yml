@@ -80,7 +80,7 @@ workflows:
           inputs:
           - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
           - package_name: $PACKAGE_NAME
-          - app_path: "/bitrise/deploy/Wearable-release-bitrise-signed.aab|/bitrise/deploy/Application-release-bitrise-signed.aab"
+          - app_path: "/bitrise/deploy/_tmp-Wearable-release-bitrise-signed.aab|/bitrise/deploy/_tmp-Application-release-bitrise-signed.aab"
           - track: $TRACK
 
   aab_deploy_test:
