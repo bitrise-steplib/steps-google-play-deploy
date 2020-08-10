@@ -45,7 +45,9 @@ workflows:
             - path: ./_tmp
       - script:
           inputs:
-            - content: git clone --branch $SAMPLE_APP_BRANCH $SAMPLE_APP_URL ./
+            - content: |-
+                set -ex
+                git clone "$SAMPLE_APP_URL" "./" --branch "$SAMPLE_APP_BRANCH"
       - install-missing-android-tools:
           inputs:
             - gradlew_path: ./gradlew
