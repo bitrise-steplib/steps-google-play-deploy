@@ -13,7 +13,6 @@ workflows:
     - go-test:
     # apk deploy is before aab deploy otherwise AAB owerrides APKs when app_path input is read
     after_run:
-    - multiple_aab_deploy_test
     - apk_deploy_test_1
     - aab_deploy_test
 
