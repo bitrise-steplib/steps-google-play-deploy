@@ -15,6 +15,7 @@ workflows:
     after_run:
     - apk_deploy_test_1
     - aab_deploy_test
+    - multiple_aab_deploy_test
 
   ci_untrack_phase2:
     after_run:
