@@ -117,7 +117,7 @@ workflows:
       - change-android-versioncode-and-versionname:
           inputs:
             - build_gradle_path: ./app/build.gradle
-            - new_version_code: $BITRISE_BUILD_NUMBER
+            - new_version_code: $BITRISE_BUILD_NUMBER*10
             - new_version_name: "0.2.4"
       - gradle-runner:
           inputs:
@@ -167,8 +167,9 @@ workflows:
     - change-android-versioncode-and-versionname:
         inputs:
           - build_gradle_path: ./app/build.gradle
-          - new_version_code: $BITRISE_BUILD_NUMBER
+          - new_version_code: $BITRISE_BUILD_NUMBER*10
           - new_version_name: "0.2.4"
+          - version_code_offset: 1
     - gradle-runner:
         inputs:
           - gradle_task: assembleRelease
