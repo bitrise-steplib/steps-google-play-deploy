@@ -53,12 +53,12 @@ workflows:
             - gradlew_path: ./gradlew
       - change-android-versioncode-and-versionname@1:
           inputs:
-          - new_version_code: $BITRISE_BUILD_NUMBER*10
+          - new_version_code: $(( $BITRISE_BUILD_NUMBER * 10 ))
           - version_code_offset: '0'
           - build_gradle_path: "$BITRISE_SOURCE_DIR/Application/build.gradle"
       - change-android-versioncode-and-versionname@1:
           inputs:
-          - new_version_code: $BITRISE_BUILD_NUMBER*10
+          - new_version_code: $(( $BITRISE_BUILD_NUMBER * 10 ))
           - version_code_offset: '1'
           - build_gradle_path: "$BITRISE_SOURCE_DIR/Wearable/build.gradle"
       - android-build@0:
