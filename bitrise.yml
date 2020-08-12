@@ -49,10 +49,10 @@ workflows:
                 set -ex
                 git clone "$SAMPLE_APP_URL" "./" --branch "$SAMPLE_APP_BRANCH"
       - script:
-        inputs:
-          - content: |-
-              set -ex
-              envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 ))
+          inputs:
+            - content: |-
+                set -ex
+                envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 ))
       - install-missing-android-tools:
           inputs:
             - gradlew_path: ./gradlew
