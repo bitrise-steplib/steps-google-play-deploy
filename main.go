@@ -20,13 +20,13 @@ func failf(format string, v ...interface{}) {
 
 // uploadApplications uploads every application file (apk or aab) to the Google Play. Returns the version codes of
 // the uploaded apps.
-func uploadApplications(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) ([]int64, error) {
-	var versionCodes []int64
+func uploadApplications(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (map[int64]int, error) {
 	appPaths, _ := configs.appPaths()
+	versionCodes := make(map[int64]int)
 
 	expansionFilePaths, err := expansionFiles(appPaths, configs.ExpansionfilePath)
 	if err != nil {
-		return []int64{}, err
+		return nil, err
 	}
 
 	for i, appPath := range appPaths {
@@ -34,27 +34,25 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 		versionCode := int64(0)
 		appFile, err := os.Open(appPath)
 		if err != nil {
-			return []int64{}, fmt.Errorf("failed to open app (%s), error: %s", appPath, err)
+			return nil, fmt.Errorf("failed to open app (%s), error: %s", appPath, err)
 		}
 
 		if strings.ToLower(filepath.Ext(appPath)) == ".aab" {
 			bundle, err := uploadAppBundle(service, configs.PackageName, appEdit.Id, appFile)
 			if err != nil {
-				return []int64{}, err
+				return nil, err
 			}
-			versionCodes = append(versionCodes, bundle.VersionCode)
 			versionCode = bundle.VersionCode
 		} else {
 			apk, err := uploadAppApk(service, configs.PackageName, appEdit.Id, appFile)
 			if err != nil {
-				return []int64{}, err
+				return nil, err
 			}
-			versionCodes = append(versionCodes, apk.VersionCode)
 			versionCode = apk.VersionCode
 
 			if len(expansionFilePaths) > 0 {
 				if err := uploadExpansionFiles(service, expansionFilePaths[i], configs.PackageName, appEdit.Id, versionCode); err != nil {
-					return []int64{}, err
+					return nil, err
 				}
 			}
 		}
@@ -62,12 +60,14 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 		// Upload mapping.txt
 		if configs.MappingFile != "" && versionCode != 0 {
 			if err := uploadMappingFile(service, configs, appEdit.Id, versionCode); err != nil {
-				return []int64{}, err
+				return nil, err
 			}
 			if i < len(appPaths)-1 {
 				fmt.Println()
 			}
 		}
+
+		versionCodes[versionCode]++
 	}
 	log.Printf("Done uploading of %v apps", len(appPaths))
 	log.Printf("New version codes to upload: %v", versionCodes)
@@ -104,6 +104,18 @@ func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *a
 
 	log.Printf(" updated track: %s", track.Track)
 	return nil
+}
+
+func versionCodeMapToSlice(codeMap map[int64]int) []int64 {
+	var versionCodes []int64
+	for code, numArtifacts := range codeMap {
+		if numArtifacts > 1 {
+			log.Warnf("There were %d artifacts uploaded for version code %d. Duplicate version codes could cause unexpected results.", numArtifacts, code)
+		}
+		versionCodes = append(versionCodes, code)
+	}
+
+	return versionCodes
 }
 
 func main() {
@@ -161,7 +173,8 @@ func main() {
 	// Update track
 	fmt.Println()
 	log.Infof("Update track")
-	if err := updateTracks(configs, service, appEdit, versionCodes); err != nil {
+	versionCodeSlice := versionCodeMapToSlice(versionCodes)
+	if err := updateTracks(configs, service, appEdit, versionCodeSlice); err != nil {
 		failf("Failed to update track, reason: %v", err)
 	}
 	log.Donef("Track updated")
