@@ -48,17 +48,22 @@ workflows:
             - content: |-
                 set -ex
                 git clone "$SAMPLE_APP_URL" "./" --branch "$SAMPLE_APP_BRANCH"
+      - script:
+        inputs:
+          - content: |-
+              set -ex
+              envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 ))
       - install-missing-android-tools:
           inputs:
             - gradlew_path: ./gradlew
       - change-android-versioncode-and-versionname@1:
           inputs:
-          - new_version_code: $(( $BITRISE_BUILD_NUMBER * 10 ))
+          - new_version_code: $VERSION_CODE
           - version_code_offset: '0'
           - build_gradle_path: "$BITRISE_SOURCE_DIR/Application/build.gradle"
       - change-android-versioncode-and-versionname@1:
           inputs:
-          - new_version_code: $(( $BITRISE_BUILD_NUMBER * 10 ))
+          - new_version_code: $VERSION_CODE
           - version_code_offset: '1'
           - build_gradle_path: "$BITRISE_SOURCE_DIR/Wearable/build.gradle"
       - android-build@0:
