@@ -7,7 +7,7 @@ description: |-
 
   To use this step:
 
-  1. Upload the first apk manually (using the web interface):
+  1. Upload the first apk/aab manually (using the web interface):
   
     Visit the [Google Play Console](https://play.google.com/apps/publish) -> All applications -> CREATE APPLICATION
 
@@ -75,9 +75,9 @@ inputs:
     opts:
       title: App file path
       description: |-
-        Path to the App Bundle or APK file(s) to deploy.
+        Path to the App Bundle file(s) or APK file(s) to deploy.
 
-        In case of [multiple APK](https://developer.android.com/google/play/publishing/multiple-apks.html) deploy, you can specify multiple APKs as a newline `\n` or pipe `|` separated list.
+        In case of [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html) deploy, you can specify multiple APKs and AABs as a newline `\n` or pipe `|` separated list.
       is_required: true
   - expansionfile_path: ""
     opts:
