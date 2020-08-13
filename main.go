@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -23,6 +24,9 @@ func failf(format string, v ...interface{}) {
 func uploadApplications(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (map[int64]int, error) {
 	appPaths, _ := configs.appPaths()
 	versionCodes := make(map[int64]int)
+
+	var versionCodeListLog bytes.Buffer
+	versionCodeListLog.WriteString("New version codes to upload: ")
 
 	expansionFilePaths, err := expansionFiles(appPaths, configs.ExpansionfilePath)
 	if err != nil {
@@ -68,9 +72,13 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 		}
 
 		versionCodes[versionCode]++
+		versionCodeListLog.WriteString(fmt.Sprintf("%d", versionCode))
+		if i < len(appPaths)-1 {
+			versionCodeListLog.WriteString(", ")
+		}
 	}
 	log.Printf("Done uploading of %v apps", len(appPaths))
-	log.Printf("New version codes to upload: %v", versionCodes)
+	log.Printf(versionCodeListLog.String())
 	return versionCodes, nil
 }
 
