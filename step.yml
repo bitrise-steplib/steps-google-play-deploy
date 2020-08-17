@@ -141,3 +141,9 @@ inputs:
       title: Location of your mapping.txt file
       description: |-
         The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names.
+  - release_name:
+    opts:
+      title: Name of the release
+      description: |-
+        By default Play Store uses the application versionName as the name of the release, but you can override it here.
+      is_required: false
