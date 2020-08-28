@@ -19,7 +19,7 @@ type Configs struct {
 	ExpansionfilePath string          `env:"expansionfile_path"`
 	Track             string          `env:"track,required"`
 	UserFraction      float64         `env:"user_fraction,range]0.0..1.0["`
-	UpdatePriority    int64           `env:"update_priority,range[0..5]"`
+	UpdatePriority    int             `env:"update_priority,range[0..5]"`
 	WhatsnewsDir      string          `env:"whatsnews_dir"`
 	MappingFile       string          `env:"mapping_file"`
 }
