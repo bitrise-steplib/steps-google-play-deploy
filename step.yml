@@ -1,56 +1,78 @@
-title: Deploy to Google Play
-summary: Uploads and releases apps to Google Play Store
+title: Google Play Deploy
+summary: Uploads your Android app to Google Play.
 description: |-
-  Uploads and releases apps to Google Play Store.
-
-  The step supports single APK, [multiple APK](https://developer.android.com/google/play/publishing/multiple-apks.html) and Bundle deploys.
-
-  To use this step:
-
-  1. Upload the first apk/aab manually (using the web interface):
   
-    Visit the [Google Play Console](https://play.google.com/apps/publish) -> All applications -> CREATE APPLICATION
-
-  2. Link your Google Play Developer Console to an API project:
+  The Step uploads your Android app to Google Play. It works with both APK and AAB files.
   
-    Described in [Google Play Developer API](https://developers.google.com/android-publisher/getting_started)'s __Linking your API Project__ section
-
-  3. Setup API Access Clients, using a service account:
+  Please note that in order to successfully use this Step, you must [upload your first APK or AAB file manually](https://support.google.com/googleplay/android-developer/answer/9859152?hl=en&visit_id=637407764704794872-3953166533&rd=1), using Google's own web interface! 
+  Once you uploaded one APK or AAB of your app to Google Play manually, you can use our Step for all subsequent versions. 
   
-    Described in [Google Play Developer API](https://developers.google.com/android-publisher/getting_started)'s __Using a service account__ section
-
-    __NOTE__: When you create your service account on the Google Play Developer Console, choose json as `Key Type`.
-
-  4. Grant the necessary rights to the service account:
+  ### Configuring the Step
   
-    Visit the [Google Play Console](https://play.google.com/apps/publish) -> Settings -> Users & permissions -> Invite new user.
-
-    Due to the way the Google Play Publisher API works, you have to grant at least the following permissions to that service account:
-
-      - ACCESS LEVEL: View app information
-      - RELEASE MANAGEMENT: Manage production releases, Manage testing track releases
-      - STORE PRESENCE: Edit store listing, pricing & distribution
-
-  5. OPTIONAL - Add translations for your Store Listing:
+  The Step uses Google's API so before attempting to use the Step, you need to [Set up Google API access](https://devcenter.bitrise.io/deploy/android-deploy/deploying-android-apps/#setting-up-google-play-api-access). This includes:
+  - [Linking your Google Developer Console to an API project](https://developers.google.com/android-publisher/getting_started#linking_your_api_project).
+  - [Setting up API access using a service account](https://developers.google.com/android-publisher/getting_started#using_a_service_account).
+  - Granting the necessary access rights to the service account. 
+  - Upload the service account JSON key to Bitrise and store it in a [Secret Env Var](https://devcenter.bitrise.io/builds/env-vars-secret-env-vars/). 
   
-    To allow the step to assign your 'whatsnew' files to the uploaded apk version.
-
-    Visit [Play Console Help](https://support.google.com/googleplay/android-developer/answer/3125566?hl=en)'s __Add translations for your Store Listing__ section
+  Due to the way the Google Play Publisher API works, you have to grant at least the following permissions to that service account:
+  - Edit store listing, pricing & distribution
+  - Manage Production APKs
+  - Manage Alpha & Beta APKs
+  - Manage Alpha & Beta users
+  
+  Read the full process in our [Deploying Android apps guide](https://devcenter.bitrise.io/deploy/android-deploy/deploying-android-apps/).
+  
+  To deploy your app with the Step:
+  
+  1. In the **Service Account JSON key file path**, add the Secret that stores your service account JSON key. 
+  1. In the **App file path** input, set the path to your APK and/or AAB files. You can add multiple paths here, separated with a newline. 
+     In most cases, the default values work well unless you changed the output variable of the Step that build your APK or AAB.
+  1. In the **Package name**  input, set the package name of your app.  
+  1. In the **Track** input, add the track to which you want to assign the app. This can be any of the built-in tracks or a custom track of your own.
+  
+  ### Troubleshooting 
+  
+  If the Step fails, check the following:
+  - If it's an authentication error, check that your Secret points to the correct file (and that a file is uploaded at all). 
+  - Make sure your service account has the necessary access rights.
+  - Check that there's no typo in the package name and that you selected an existing track for the app. 
+  
+  ### Useful links 
+  
+  - [Google Play Developer API - Getting Started](https://developers.google.com/android-publisher/getting_started)
+  - [Deploying Android apps](https://devcenter.bitrise.io/deploy/android-deploy/deploying-android-apps/)
+  
+  ### Related Steps 
+  
+  - [TestFairy Deploy Android](https://www.bitrise.io/integrations/steps/testfairy-deploy-android)
+  - [AppCenter Android Deploy](https://www.bitrise.io/integrations/steps/appcenter-deploy-android)
+  - [Appetize.io Deploy](https://www.bitrise.io/integrations/steps/appetize-deploy)
+  - [Android Sign](https://www.bitrise.io/integrations/steps/sign-apk)
+  
 website: https://github.com/bitrise-io/steps-google-play-deploy
 source_code_url: https://github.com/bitrise-io/steps-google-play-deploy
 support_url: https://github.com/bitrise-io/steps-google-play-deploy/issues
+host_os_tags:
+  - osx-10.10
+  - ubuntu
 project_type_tags:
   - android
   - xamarin
   - cordova
   - ionic
   - react-native
-  - flutter
 type_tags:
   - deploy
 is_requires_admin_user: false
 is_always_run: false
 is_skippable: false
+deps:
+  brew:
+  - name: go
+  apt_get:
+  - name: golang
+    bin_name: go
 toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-google-play-deploy
@@ -59,94 +81,83 @@ inputs:
     opts:
       title: Service Account JSON key file path
       description: |-
-        Path to the Service Account's JSON key file.
-
-        For remote JSON key file you can provide any download location (ex: `https://URL/TO/key.json`).  
-        For local JSON key file provide file path url. (ex: `file://PATH/TO/key.json`).
-      is_required: true
-      is_sensitive: true
+        Path to the Service Account's JSON key file. It must be a Secret Env Var. You can either upload the file to Bitrise itself or use a download location as the value of the Secret. 
+        is_required: true
   - package_name:
     opts:
       title: Package name
       description: |-
-        Package name of the app.
+        Package name of the APK or app bundle to deploy.
       is_required: true
-  - app_path: $BITRISE_APK_PATH\n$BITRISE_AAB_PATH
+  - apk_path: "$BITRISE_APK_PATH"
     opts:
-      title: App file path
+      title: APK or app Bundle file path
       description: |-
-        Path to the App Bundle file(s) or APK file(s) to deploy.
-
-        In case of [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html) deploy, you can specify multiple APKs and AABs as a newline `\n` or pipe `|` separated list.
-      is_required: true
-  - expansionfile_path: ""
-    opts:
-      title: Expansion file Path
-      description: |-
-        Path to the expansion file.
-
-        Leave empty or provide exactly the same number of paths as in app_path, separated by `|` character and start each path with the expansion file's type
-        separated by a `:`. (main, patch)
-
+        Path to the APK or app Bundle to deploy.
+        You can provide multiple paths separated by `|` character.
         Format examples:
-
-        - `main:/path/to/my/app.obb`
-        - `patch:/path/to/my/app1.obb|main:/path/to/my/app2.obb|main:/path/to/my/app3.obb`
+        - `/path/to/my/app.apk`
+        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
+        - `/path/to/my/bundle.aab`
+      is_required: true
   - track: alpha
     opts:
       title: Track
-      summary: The track in which you want to assign the uploaded app.
       description: |-
-        The track in which you want to assign the uploaded app. 
-        
-        Can be one of the built-in tracks: internal, alpha, beta, production.
-        
-        Or you can set your custom track name as well. 
-        
-        For example: `pre-release`, or any of your closed track you added in Google Play Developer Console.
+        Track to assign the APK(s).
+      value_options:
+      - internal
+      - alpha
+      - beta
+      - rollout
+      - production
       is_required: true
-  - user_fraction:
+  - user_fraction: "0.5"
     opts:
       title: User Fraction
       description: |-
-        Portion of the users who should get the staged version of the app. Accepts values between 0.0 and 1.0 (exclusive-exclusive).
-        To release to all users, this input should not be defined (or should be blank).
-      is_required: false
-  - update_priority: 0
-    opts:
-      title: Update Priority
-      description: |-
-        This allows your app to decide how strongly to recommend an update to the user. 
-        Accepts values between 0 and 5 (inclusive-inclusive) with 0 being the lowest priority and 5 being the highest priority.
-        By default this value is 0.
-        For more information see here: https://developer.android.com/guide/playcore/in-app-updates#check-priority.
-      is_required: false
+        __Only available if `track` is `rollout`.__
+        Portion of the users who should get the staged rollout version of the APK.
+      value_options:
+      - "0.05"
+      - "0.1"
+      - "0.2"
+      - "0.5"
+      is_required: true
   - whatsnews_dir:
     opts:
-      title: "Directory of localized what's new files"
+      title: "Directory of localised whatsnew files"
       description: |-
-        Use this input to specify localized 'what's new' files directory.
-
-        This directory should contain 'whatsnew' files postfixed with the locale.
-
-        what's new file name pattern: `whatsnew-LOCALE`
-
+        Use this input to specify localised whatsnew files directory.
+        This directory should contain whatsnew files postfixed with the locale.
+        whatsnew file name pattern: `whatsnew-LOCALE`
         Example:
         
         ```
-        + - [PATH/TO/WHATSNEW]
+        + - [PATH/TO/WHATSNEWS]
             |
             + - whatsnew-en-US
             |
             + - whatsnew-de-DE
         ```
-
         Format examples:
-
-        - "./"         # what's new files are in the repo root directory
-        - "./whatsnew" # what's new files are in the whatsnew directory
+        - "./"         # whatsnew files are in the repo root directory
+        - "./whatsnew" # whatsnew files are in the whatsnew directory
   - mapping_file: "$BITRISE_MAPPING_PATH"
     opts:
       title: Location of your mapping.txt file
       description: |-
         The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names.
+  - untrack_blocking_versions: "true"
+    opts:
+      title: "Untrack blocking versions?"
+      description: |-
+        Should the Step deactivate APK files with lower version code on lower level tracks?
+        For example, if you have an __active apk on alpha__ track with version code: `42`.
+        And you try to __upload a new version (`43`), to the beta track__, you will see an error, something like this:
+        `Version 42 of this app can not be downloaded by any devices as they will all receive APKs with higher version codes`
+        To avoid this issue set this input to: `"true"` and the Step will deactivate every APK file with lower version code on lower level tracks.
+      value_options:
+      - "true"
+      - "false"
+      is_required: true
