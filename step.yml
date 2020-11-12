@@ -53,26 +53,18 @@ description: |-
 website: https://github.com/bitrise-io/steps-google-play-deploy
 source_code_url: https://github.com/bitrise-io/steps-google-play-deploy
 support_url: https://github.com/bitrise-io/steps-google-play-deploy/issues
-host_os_tags:
-  - osx-10.10
-  - ubuntu
 project_type_tags:
   - android
   - xamarin
   - cordova
   - ionic
   - react-native
+  - flutter
 type_tags:
   - deploy
 is_requires_admin_user: false
 is_always_run: false
 is_skippable: false
-deps:
-  brew:
-  - name: go
-  apt_get:
-  - name: golang
-    bin_name: go
 toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-google-play-deploy
@@ -81,83 +73,82 @@ inputs:
     opts:
       title: Service Account JSON key file path
       description: |-
-        Path to the Service Account's JSON key file. It must be a Secret Env Var. You can either upload the file to Bitrise itself or use a download location as the value of the Secret. 
-        is_required: true
+        Path to the service account's JSON key file. It must be a Secret Environment Variable, pointing to either a file uploaded to Bitrise or to a remote download location.
+      is_required: true
+      is_sensitive: true
   - package_name:
     opts:
       title: Package name
       description: |-
-        Package name of the APK or app bundle to deploy.
+        Package name of the app.
       is_required: true
-  - apk_path: "$BITRISE_APK_PATH"
+  - app_path: $BITRISE_APK_PATH\n$BITRISE_AAB_PATH
     opts:
-      title: APK or app Bundle file path
+      title: App file path
       description: |-
-        Path to the APK or app Bundle to deploy.
-        You can provide multiple paths separated by `|` character.
-        Format examples:
-        - `/path/to/my/app.apk`
-        - `/path/to/my/app1.apk|/path/to/my/app2.apk|/path/to/my/app3.apk`
-        - `/path/to/my/bundle.aab`
+        Path to the app bundle file(s) or APK file(s) to deploy.
+        In the case of [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html) deploy, you can specify multiple APKs and AABs as a newline `\n` or pipe `|` separated list.
       is_required: true
+  - expansionfile_path: ""
+    opts:
+      title: Expansion file Path
+      description: |-
+        Path to the expansion file.
+        Leave empty or provide exactly the same number of paths as in app_path, separated by `|` character and start each path with the expansion file's type
+        separated by a `:`. (main, patch)
+        Format examples:
+        - `main:/path/to/my/app.obb`
+        - `patch:/path/to/my/app1.obb|main:/path/to/my/app2.obb|main:/path/to/my/app3.obb`
   - track: alpha
     opts:
       title: Track
+      summary: The track in which you want to assign the uploaded app.
       description: |-
-        Track to assign the APK(s).
-      value_options:
-      - internal
-      - alpha
-      - beta
-      - rollout
-      - production
+        The track to which you want to assign the uploaded app. 
+        
+        Can be one of the built-in tracks: internal, alpha, beta, production.
+        
+        Or you can set your custom track name as well. 
+        
+        For example: `pre-release`, or any of your closed tracks you added in Google Play Developer Console.
       is_required: true
-  - user_fraction: "0.5"
+  - user_fraction:
     opts:
       title: User Fraction
       description: |-
-        __Only available if `track` is `rollout`.__
-        Portion of the users who should get the staged rollout version of the APK.
-      value_options:
-      - "0.05"
-      - "0.1"
-      - "0.2"
-      - "0.5"
-      is_required: true
+        Portion of the users who should get the staged version of the app. Accepts values between 0.0 and 1.0 (exclusive-exclusive).
+        To release to all users, this input should not be defined (or should be blank).
+      is_required: false
+  - update_priority: 0
+    opts:
+      title: Update Priority
+      description: |-
+        This allows your app to decide how strongly to recommend an update to the user. 
+        Accepts values between 0 and 5 with 0 being the lowest priority and 5 being the highest priority.
+        By default this value is 0.
+        For more information see here: https://developer.android.com/guide/playcore/in-app-updates#check-priority.
+      is_required: false
   - whatsnews_dir:
     opts:
-      title: "Directory of localised whatsnew files"
+      title: "Directory of localized what's new files"
       description: |-
-        Use this input to specify localised whatsnew files directory.
-        This directory should contain whatsnew files postfixed with the locale.
-        whatsnew file name pattern: `whatsnew-LOCALE`
+        Use this input to specify localized 'what's new' files directory.
+        This directory should contain 'whatsnew' files postfixed with the locale.
+        what's new file name pattern: `whatsnew-LOCALE`
         Example:
         
         ```
-        + - [PATH/TO/WHATSNEWS]
+        + - [PATH/TO/WHATSNEW]
             |
             + - whatsnew-en-US
             |
             + - whatsnew-de-DE
         ```
         Format examples:
-        - "./"         # whatsnew files are in the repo root directory
-        - "./whatsnew" # whatsnew files are in the whatsnew directory
+        - "./"         # what's new files are in the repo root directory
+        - "./whatsnew" # what's new files are in the whatsnew directory
   - mapping_file: "$BITRISE_MAPPING_PATH"
     opts:
       title: Location of your mapping.txt file
       description: |-
         The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names.
-  - untrack_blocking_versions: "true"
-    opts:
-      title: "Untrack blocking versions?"
-      description: |-
-        Should the Step deactivate APK files with lower version code on lower level tracks?
-        For example, if you have an __active apk on alpha__ track with version code: `42`.
-        And you try to __upload a new version (`43`), to the beta track__, you will see an error, something like this:
-        `Version 42 of this app can not be downloaded by any devices as they will all receive APKs with higher version codes`
-        To avoid this issue set this input to: `"true"` and the Step will deactivate every APK file with lower version code on lower level tracks.
-      value_options:
-      - "true"
-      - "false"
-      is_required: true
