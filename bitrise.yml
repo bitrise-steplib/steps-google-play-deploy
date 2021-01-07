@@ -101,7 +101,7 @@ workflows:
       - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_ALIAS
       - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
       # google play deploy
-      - PACKAGE_NAME: "com.bitrise_io.sample_apps_android_simple.google-play-deploy"
+      - PACKAGE_NAME: "com.bitrise_io.sample_apps_android_simple_google_play_deploy"
       - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
       - TRACK: production
     steps:
