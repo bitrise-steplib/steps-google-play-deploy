@@ -25,15 +25,15 @@ workflows:
     envs:
       # sample app
       - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-wear-os.git
-      - SAMPLE_APP_BRANCH: master
+      - SAMPLE_APP_BRANCH: sample_package_name
       # codesigning
       - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_2_URL
       - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_2_PASSWORD
       - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $BITRISEIO_ANDROID_KEYSTORE_2_ALIAS
       - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_2_PRIVATE_KEY_PASSWORD
       # google play deploy
-      - PACKAGE_NAME: "io.bitrise.android.xyztouristattractions"
-      - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
+      - PACKAGE_NAME: "io.bitrise.android.sample_xyztouristattractions"
+      - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_2_URL
       - TRACK: internal
     steps:
       - script:
