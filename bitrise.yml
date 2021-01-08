@@ -94,7 +94,7 @@ workflows:
     envs:
       # sample app
       - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
-      - SAMPLE_APP_BRANCH: api_29
+      - SAMPLE_APP_BRANCH: master
       # codesigning
       - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_1_URL
       - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PASSWORD
@@ -151,7 +151,7 @@ workflows:
       - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD
       # sample app
       - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-android-realmtasks.git
-      - SAMPLE_APP_BRANCH: api_30
+      - SAMPLE_APP_BRANCH: master
       # google play deploy
       - BITRISEIO_JSON_KEY_URL: $BITRISEIO_JSON_KEY_URL
     steps:
