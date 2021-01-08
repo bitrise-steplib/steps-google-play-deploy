@@ -25,7 +25,7 @@ workflows:
     envs:
       # sample app
       - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-wear-os.git
-      - SAMPLE_APP_BRANCH: sample_package_name
+      - SAMPLE_APP_BRANCH: master
       # codesigning
       - BITRISEIO_ANDROID_KEYSTORE_URL: $BITRISEIO_ANDROID_KEYSTORE_2_URL
       - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $BITRISEIO_ANDROID_KEYSTORE_2_PASSWORD
