@@ -187,7 +187,7 @@ func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, err
 }
 
 // createTrackRelease returns a release object with the given version codes and adds the listing information.
-func createTrackRelease(whatsNewsDir string, versionCodes googleapi.Int64s, userFraction float64, updatePriority int) (*androidpublisher.TrackRelease, error) {
+func createTrackRelease(whatsNewsDir string, versionCodes googleapi.Int64s, userFraction float64, updatePriority int, releaseName string) (*androidpublisher.TrackRelease, error) {
 	status := releaseStatusFromConfig(userFraction)
 
 	newRelease := &androidpublisher.TrackRelease{
@@ -198,6 +198,10 @@ func createTrackRelease(whatsNewsDir string, versionCodes googleapi.Int64s, user
 	log.Infof("Release version codes are: %v", newRelease.VersionCodes)
 	if userFraction != 0 {
 		newRelease.UserFraction = userFraction
+	}
+
+	if releaseName != "" {
+		newRelease.Name = releaseName
 	}
 
 	if err := updateListing(whatsNewsDir, newRelease); err != nil {
