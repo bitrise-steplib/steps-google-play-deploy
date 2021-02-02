@@ -22,6 +22,7 @@ type Configs struct {
 	UpdatePriority    int             `env:"update_priority,range[0..5]"`
 	WhatsnewsDir      string          `env:"whatsnews_dir"`
 	MappingFile       string          `env:"mapping_file"`
+	ReleaseName       string          `env:"release_name"`
 }
 
 // validate validates the Configs.

@@ -141,6 +141,7 @@ workflows:
             - app_path: $BITRISE_SIGNED_AAB_PATH
             - track: $TRACK
             - user_fraction: 0.6
+            - release_name: "Overwritten release name"
 
   _common_apk:
     envs:
