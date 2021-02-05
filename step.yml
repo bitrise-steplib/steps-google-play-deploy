@@ -107,7 +107,7 @@ inputs:
         The track to which you want to assign the uploaded app. 
         
         Can be one of the built-in tracks: internal, alpha, beta, production.
-        
+
         Or you can set your custom track name as well. 
         
         For example: `pre-release`, or any of your closed tracks you added in Google Play Developer Console.
@@ -118,6 +118,12 @@ inputs:
       description: |-
         Portion of the users who should get the staged version of the app. Accepts values between 0.0 and 1.0 (exclusive-exclusive).
         To release to all users, this input should not be defined (or should be blank).
+      is_required: false
+  - release_name:
+    opts:
+      title: Name of the release
+      description: |-
+        The name of the release. By default Play Store generates the name from the APK's versionName.
       is_required: false
   - update_priority: 0
     opts:
@@ -136,7 +142,7 @@ inputs:
         This directory should contain 'whatsnew' files postfixed with the locale.
         what's new file name pattern: `whatsnew-LOCALE`
         Example:
-        
+
         ```
         + - [PATH/TO/WHATSNEW]
             |
