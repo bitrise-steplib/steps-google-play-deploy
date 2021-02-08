@@ -26,10 +26,10 @@ description: |-
   To deploy your app with the Step:
   
   1. In the **Service Account JSON key file path**, add the Secret that stores your service account JSON key. 
-  1. In the **App file path** input, set the path to your APK and/or AAB files. You can add multiple paths here, separated with a newline. 
+  2. In the **App file path** input, set the path to your APK and/or AAB files. You can add multiple paths here, separated with a newline. 
      In most cases, the default values work well unless you changed the output variable of the Step that build your APK or AAB.
-  1. In the **Package name**  input, set the package name of your app.  
-  1. In the **Track** input, add the track to which you want to assign the app. This can be any of the built-in tracks or a custom track of your own.
+  3. In the **Package name**  input, set the package name of your app.  
+  4. In the **Track** input, add the track to which you want to assign the app. This can be any of the built-in tracks or a custom track of your own.
   
   ### Troubleshooting 
   
