@@ -23,18 +23,18 @@ func Test_status(t *testing.T) {
 			WantErr: true,
 		},
 		{
-			Input:   "draft",
-			Value:   "draft",
+			Input:   releaseStatusDraft,
+			Value:   releaseStatusDraft,
 			WantErr: false,
 		},
 		{
-			Input:   "inProgress",
-			Value:   "inProgress",
+			Input:   releaseStatusInProgress,
+			Value:   releaseStatusInProgress,
 			WantErr: false,
 		},
 		{
-			Input:   "completed",
-			Value:   "completed",
+			Input:   releaseStatusCompleted,
+			Value:   releaseStatusCompleted,
 			WantErr: false,
 		},
 		{
