@@ -8,6 +8,55 @@ import (
 	"github.com/bitrise-io/go-steputils/stepconf"
 )
 
+func Test_status(t *testing.T) {
+	type cfgs struct {
+		Status  string `env:"status,opt[draft,inProgress,completed]"`
+		Input   string
+		Value   string
+		WantErr bool
+	}
+
+	for _, cfg := range []cfgs{
+		{
+			Input:   "",
+			Value:   "",
+			WantErr: true,
+		},
+		{
+			Input:   "draft",
+			Value:   "draft",
+			WantErr: false,
+		},
+		{
+			Input:   "inProgress",
+			Value:   "inProgress",
+			WantErr: false,
+		},
+		{
+			Input:   "completed",
+			Value:   "completed",
+			WantErr: false,
+		},
+		{
+			Input:   "notListedStatus",
+			Value:   "",
+			WantErr: true,
+		},
+	} {
+		if err := os.Setenv("status", cfg.Input); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := stepconf.Parse(&cfg); err != nil && !cfg.WantErr {
+			t.Fatal(err)
+		}
+
+		if cfg.Status != cfg.Value {
+			t.Fatal("Invalid status")
+		}
+	}
+}
+
 func Test_fraction(t *testing.T) {
 	type cfgs struct {
 		UserFraction float64 `env:"user_fraction,range]0.0..1.0["`
