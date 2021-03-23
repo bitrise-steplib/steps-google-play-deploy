@@ -117,17 +117,15 @@ inputs:
       title: User Fraction
       description: |-
         Portion of the users who should get the staged version of the app. Accepts values between 0.0 and 1.0 (exclusive-exclusive).
+        Only applied if the `status` is set to `inProgress`.
+        
         To release to all users, this input should not be defined (or should be blank).
       is_required: false
   - status:
     opts:
       title: Status
-      description: The status of a release
+      description: The status of a release.
       is_required: false
-      value_options:
-      - "draft"
-      - "inProgress"
-      - "completed"
   - release_name:
     opts:
       title: Name of the release
