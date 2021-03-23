@@ -201,7 +201,7 @@ func createTrackRelease(config Configs, versionCodes googleapi.Int64s) (*android
 		newRelease.Status = releaseStatusFromConfig(config.UserFraction)
 	}
 
-	if shouldApplyUserFraction(config.Status) {
+	if shouldApplyUserFraction(newRelease.Status) {
 		newRelease.UserFraction = config.UserFraction
 	}
 
