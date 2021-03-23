@@ -42,21 +42,21 @@ func Test_verifyStatusOfTheCreatedRelease(t *testing.T) {
 
 func Test_verifyUserFractionOfTheCreatedRelease(t *testing.T) {
 	tests := []struct {
-		name           string
-		config         Configs
-		expectedStatus string
+		name                 string
+		config               Configs
+		expectedUserFraction float64
 	}{
 		{
-			"Given the user fraction is equal to 0 and the status is not set when the release is created then expect the status to be COMPLETED",
-			Configs{UserFraction: 0}, releaseStatusCompleted,
+			"Given status is IN_PROGRESS and the user fraction is set when the release is created then expect the user fraction to be applied",
+			Configs{UserFraction: 1, Status: releaseStatusInProgress}, 1,
 		},
 		{
-			"Given the user fraction is greather than 0 and the status is not set when the release is created then expect the status to be IN_PROGRESS",
-			Configs{UserFraction: 0.5}, releaseStatusInProgress,
+			"Given status is DRAFT and the user fraction is set when the release is created then expect the user fraction not to be applied",
+			Configs{UserFraction: 1, Status: releaseStatusDraft}, 0,
 		},
 		{
-			"Given the status when the release is created then expect the status to be the same as in the config",
-			Configs{Status: releaseStatusDraft}, releaseStatusDraft,
+			"Given status is COMPLETED and the user fraction is set when the release is created then expect the user fraction not to be applied",
+			Configs{UserFraction: 1, Status: releaseStatusCompleted}, 0,
 		},
 	}
 
@@ -65,33 +65,10 @@ func Test_verifyUserFractionOfTheCreatedRelease(t *testing.T) {
 			trackRelease, err := createTrackRelease(tt.config, []int64{})
 
 			assert.NoError(t, err)
-			assert.Equal(t, tt.expectedStatus, trackRelease.Status)
+			assert.Equal(t, tt.expectedUserFraction, trackRelease.UserFraction)
 		})
 	}
 }
-
-// func Test_shouldApplyUserFraction(t *testing.T) {
-// 	tests := []struct {
-// 		name         string
-// 		status       string
-// 		userFraction float64
-// 		want         bool
-// 	}{
-// 		{"1", releaseStatusCompleted, 0, false},
-// 		{"2", releaseStatusCompleted, 0.5, false},
-// 		{"4", releaseStatusDraft, 0, false},
-// 		{"6", releaseStatusDraft, 1, false},
-// 		{"7", releaseStatusInProgress, 0, false},
-// 		{"9", releaseStatusInProgress, 1, true},
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			if got := shouldApplyUserFraction(tt.status, tt.userFraction); got != tt.want {
-// 				t.Errorf("releaseStatusFromConfig() = %v, want %v", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
 
 func Test_releaseStatusFromConfig(t *testing.T) {
 
