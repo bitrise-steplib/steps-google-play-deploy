@@ -16,6 +16,8 @@ import (
 const (
 	releaseStatusCompleted  = "completed"
 	releaseStatusInProgress = "inProgress"
+	releaseStatusDraft      = "draft"
+	releaseStatusHalted     = "halted"
 )
 
 // uploadExpansionFiles uploads the expansion files for given applications, like .obb files.
@@ -187,24 +189,27 @@ func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, err
 }
 
 // createTrackRelease returns a release object with the given version codes and adds the listing information.
-func createTrackRelease(whatsNewsDir string, versionCodes googleapi.Int64s, userFraction float64, updatePriority int, releaseName string) (*androidpublisher.TrackRelease, error) {
-	status := releaseStatusFromConfig(userFraction)
-
+func createTrackRelease(config Configs, versionCodes googleapi.Int64s) (*androidpublisher.TrackRelease, error) {
 	newRelease := &androidpublisher.TrackRelease{
 		VersionCodes:        versionCodes,
-		Status:              status,
-		InAppUpdatePriority: int64(updatePriority),
+		Status:              config.Status,
+		InAppUpdatePriority: int64(config.UpdatePriority),
 	}
 	log.Infof("Release version codes are: %v", newRelease.VersionCodes)
-	if userFraction != 0 {
-		newRelease.UserFraction = userFraction
+
+	if newRelease.Status == "" {
+		newRelease.Status = releaseStatusFromConfig(config.UserFraction)
 	}
 
-	if releaseName != "" {
-		newRelease.Name = releaseName
+	if shouldApplyUserFraction(newRelease.Status) {
+		newRelease.UserFraction = config.UserFraction
 	}
 
-	if err := updateListing(whatsNewsDir, newRelease); err != nil {
+	if config.ReleaseName != "" {
+		newRelease.Name = config.ReleaseName
+	}
+
+	if err := updateListing(config.WhatsnewsDir, newRelease); err != nil {
 		return nil, fmt.Errorf("failed to update listing, reason: %v", err)
 	}
 
@@ -218,4 +223,8 @@ func releaseStatusFromConfig(userFraction float64) string {
 		return releaseStatusInProgress
 	}
 	return releaseStatusCompleted
+}
+
+func shouldApplyUserFraction(status string) bool {
+	return status == releaseStatusInProgress || status == releaseStatusHalted
 }

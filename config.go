@@ -23,6 +23,7 @@ type Configs struct {
 	WhatsnewsDir      string          `env:"whatsnews_dir"`
 	MappingFile       string          `env:"mapping_file"`
 	ReleaseName       string          `env:"release_name"`
+	Status            string          `env:"status"`
 }
 
 // validate validates the Configs.

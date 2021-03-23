@@ -86,7 +86,7 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) error {
 	editsTracksService := androidpublisher.NewEditsTracksService(service)
 
-	newRelease, err := createTrackRelease(configs.WhatsnewsDir, versionCodes, configs.UserFraction, configs.UpdatePriority, configs.ReleaseName)
+	newRelease, err := createTrackRelease(configs, versionCodes)
 	if err != nil {
 		return err
 	}

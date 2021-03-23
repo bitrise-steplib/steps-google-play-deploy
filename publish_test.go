@@ -6,7 +6,73 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
+
+func Test_verifyStatusOfTheCreatedRelease(t *testing.T) {
+	tests := []struct {
+		name           string
+		config         Configs
+		expectedStatus string
+	}{
+		{
+			"Given the user fraction is equal to 0 and the status is not set when the release is created then expect the status to be COMPLETED",
+			Configs{UserFraction: 0}, releaseStatusCompleted,
+		},
+		{
+			"Given the user fraction is greather than 0 and the status is not set when the release is created then expect the status to be IN_PROGRESS",
+			Configs{UserFraction: 0.5}, releaseStatusInProgress,
+		},
+		{
+			"Given the status when the release is created then expect the status to be the same as in the config",
+			Configs{Status: releaseStatusDraft}, releaseStatusDraft,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			trackRelease, err := createTrackRelease(tt.config, []int64{})
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedStatus, trackRelease.Status)
+		})
+	}
+}
+
+func Test_verifyUserFractionOfTheCreatedRelease(t *testing.T) {
+	tests := []struct {
+		name                 string
+		config               Configs
+		expectedUserFraction float64
+	}{
+		{
+			"Given status is IN_PROGRESS and the user fraction is set when the release is created then expect the user fraction to be applied",
+			Configs{UserFraction: 1, Status: releaseStatusInProgress}, 1,
+		},
+		{
+			"Given status is HALTED and the user fraction is set when the release is created then expect the user fraction to be applied",
+			Configs{UserFraction: 1, Status: releaseStatusHalted}, 1,
+		},
+		{
+			"Given status is DRAFT and the user fraction is set when the release is created then expect the user fraction not to be applied",
+			Configs{UserFraction: 1, Status: releaseStatusDraft}, 0,
+		},
+		{
+			"Given status is COMPLETED and the user fraction is set when the release is created then expect the user fraction not to be applied",
+			Configs{UserFraction: 1, Status: releaseStatusCompleted}, 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			trackRelease, err := createTrackRelease(tt.config, []int64{})
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedUserFraction, trackRelease.UserFraction)
+		})
+	}
+}
 
 func Test_releaseStatusFromConfig(t *testing.T) {
 
