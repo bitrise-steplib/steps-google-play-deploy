@@ -124,7 +124,9 @@ inputs:
   - status:
     opts:
       title: Status
-      description: The status of a release.
+      description: |-
+        The status of a release.
+        For more information see here: https://developers.google.com/android-publisher/api-ref/rest/v3/edits.tracks#Status
       is_required: false
   - release_name:
     opts:
