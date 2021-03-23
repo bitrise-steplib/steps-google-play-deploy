@@ -51,6 +51,10 @@ func Test_verifyUserFractionOfTheCreatedRelease(t *testing.T) {
 			Configs{UserFraction: 1, Status: releaseStatusInProgress}, 1,
 		},
 		{
+			"Given status is HALTED and the user fraction is set when the release is created then expect the user fraction to be applied",
+			Configs{UserFraction: 1, Status: releaseStatusHalted}, 1,
+		},
+		{
 			"Given status is DRAFT and the user fraction is set when the release is created then expect the user fraction not to be applied",
 			Configs{UserFraction: 1, Status: releaseStatusDraft}, 0,
 		},

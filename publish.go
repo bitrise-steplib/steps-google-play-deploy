@@ -17,6 +17,7 @@ const (
 	releaseStatusCompleted  = "completed"
 	releaseStatusInProgress = "inProgress"
 	releaseStatusDraft      = "draft"
+	releaseStatusHalted     = "halted"
 )
 
 // uploadExpansionFiles uploads the expansion files for given applications, like .obb files.
@@ -200,7 +201,7 @@ func createTrackRelease(config Configs, versionCodes googleapi.Int64s) (*android
 		newRelease.Status = releaseStatusFromConfig(config.UserFraction)
 	}
 
-	if newRelease.Status == releaseStatusInProgress {
+	if shouldApplyUserFraction(config.Status) {
 		newRelease.UserFraction = config.UserFraction
 	}
 
@@ -222,4 +223,8 @@ func releaseStatusFromConfig(userFraction float64) string {
 		return releaseStatusInProgress
 	}
 	return releaseStatusCompleted
+}
+
+func shouldApplyUserFraction(status string) bool {
+	return status == releaseStatusInProgress || status == releaseStatusHalted
 }
