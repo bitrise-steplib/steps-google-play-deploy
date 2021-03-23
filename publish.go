@@ -196,11 +196,11 @@ func createTrackRelease(config Configs, versionCodes googleapi.Int64s) (*android
 	}
 	log.Infof("Release version codes are: %v", newRelease.VersionCodes)
 
-	if config.Status == "" {
+	if newRelease.Status == "" {
 		newRelease.Status = releaseStatusFromConfig(config.UserFraction)
 	}
 
-	if config.Status == releaseStatusInProgress {
+	if newRelease.Status == releaseStatusInProgress {
 		newRelease.UserFraction = config.UserFraction
 	}
 
