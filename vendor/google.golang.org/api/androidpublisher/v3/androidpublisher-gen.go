@@ -3515,10 +3515,11 @@ type EditsValidateCall struct {
 //
 // - editId: Identifier of the edit.
 // - packageName: Package name of the app.
-func (r *EditsService) Validate(packageName string, editId string) *EditsValidateCall {
+func (r *EditsService) Validate(packageName string, editId string, changesNotSentForReview bool) *EditsValidateCall {
 	c := &EditsValidateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
 	c.editId = editId
+	c.urlParams_.Set("changesNotSentForReview", fmt.Sprint(changesNotSentForReview))
 	return c
 }
 
