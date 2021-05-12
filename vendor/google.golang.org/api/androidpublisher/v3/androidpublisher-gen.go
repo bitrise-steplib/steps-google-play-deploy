@@ -2944,10 +2944,23 @@ type EditsCommitCall struct {
 }
 
 // Commit: Commits an app edit.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsService) Commit(packageName string, editId string) *EditsCommitCall {
 	c := &EditsCommitCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
 	c.editId = editId
+	return c
+}
+
+// ChangesNotSentForReview sets the optional parameter
+// "changesNotSentForReview": Indicates that the changes in this edit
+// will not be reviewed until they are explicitly sent for review from
+// the Google Play Console UI. These changes will be added to any other
+// changes that are not yet sent for review.
+func (c *EditsCommitCall) ChangesNotSentForReview(changesNotSentForReview bool) *EditsCommitCall {
+	c.urlParams_.Set("changesNotSentForReview", fmt.Sprint(changesNotSentForReview))
 	return c
 }
 
@@ -2978,7 +2991,7 @@ func (c *EditsCommitCall) Header() http.Header {
 
 func (c *EditsCommitCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3047,6 +3060,11 @@ func (c *EditsCommitCall) Do(opts ...googleapi.CallOption) (*AppEdit, error) {
 	//     "editId"
 	//   ],
 	//   "parameters": {
+	//     "changesNotSentForReview": {
+	//       "description": "Indicates that the changes in this edit will not be reviewed until they are explicitly sent for review from the Google Play Console UI. These changes will be added to any other changes that are not yet sent for review.",
+	//       "location": "query",
+	//       "type": "boolean"
+	//     },
 	//     "editId": {
 	//       "description": "Identifier of the edit.",
 	//       "location": "path",
@@ -3083,6 +3101,9 @@ type EditsDeleteCall struct {
 }
 
 // Delete: Deletes an app edit.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsService) Delete(packageName string, editId string) *EditsDeleteCall {
 	c := &EditsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -3117,7 +3138,7 @@ func (c *EditsDeleteCall) Header() http.Header {
 
 func (c *EditsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3195,6 +3216,9 @@ type EditsGetCall struct {
 }
 
 // Get: Gets an app edit.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsService) Get(packageName string, editId string) *EditsGetCall {
 	c := &EditsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -3239,7 +3263,7 @@ func (c *EditsGetCall) Header() http.Header {
 
 func (c *EditsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3347,6 +3371,8 @@ type EditsInsertCall struct {
 }
 
 // Insert: Creates a new edit for an app.
+//
+// - packageName: Package name of the app.
 func (r *EditsService) Insert(packageName string, appedit *AppEdit) *EditsInsertCall {
 	c := &EditsInsertCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -3381,7 +3407,7 @@ func (c *EditsInsertCall) Header() http.Header {
 
 func (c *EditsInsertCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3486,6 +3512,9 @@ type EditsValidateCall struct {
 }
 
 // Validate: Validates an app edit.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsService) Validate(packageName string, editId string) *EditsValidateCall {
 	c := &EditsValidateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -3520,7 +3549,7 @@ func (c *EditsValidateCall) Header() http.Header {
 
 func (c *EditsValidateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3630,6 +3659,9 @@ type EditsApksAddexternallyhostedCall struct {
 // This function is only available to organizations using Managed Play
 // whose application is configured to restrict distribution to the
 // organizations.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsApksService) Addexternallyhosted(packageName string, editId string, apksaddexternallyhostedrequest *ApksAddExternallyHostedRequest) *EditsApksAddexternallyhostedCall {
 	c := &EditsApksAddexternallyhostedCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -3665,7 +3697,7 @@ func (c *EditsApksAddexternallyhostedCall) Header() http.Header {
 
 func (c *EditsApksAddexternallyhostedCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3779,6 +3811,9 @@ type EditsApksListCall struct {
 }
 
 // List: Lists all current APKs of the app and edit.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsApksService) List(packageName string, editId string) *EditsApksListCall {
 	c := &EditsApksListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -3823,7 +3858,7 @@ func (c *EditsApksListCall) Header() http.Header {
 
 func (c *EditsApksListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3932,6 +3967,9 @@ type EditsApksUploadCall struct {
 }
 
 // Upload: Uploads an APK and adds to the current edit.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsApksService) Upload(packageName string, editId string) *EditsApksUploadCall {
 	c := &EditsApksUploadCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -4005,7 +4043,7 @@ func (c *EditsApksUploadCall) Header() http.Header {
 
 func (c *EditsApksUploadCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4157,6 +4195,9 @@ type EditsBundlesListCall struct {
 }
 
 // List: Lists all current Android App Bundles of the app and edit.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsBundlesService) List(packageName string, editId string) *EditsBundlesListCall {
 	c := &EditsBundlesListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -4201,7 +4242,7 @@ func (c *EditsBundlesListCall) Header() http.Header {
 
 func (c *EditsBundlesListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4315,6 +4356,9 @@ type EditsBundlesUploadCall struct {
 // is recommended). See Timeouts and Errors
 // (https://developers.google.com/api-client-library/java/google-api-java-client/errors)
 // for an example in java.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsBundlesService) Upload(packageName string, editId string) *EditsBundlesUploadCall {
 	c := &EditsBundlesUploadCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -4397,7 +4441,7 @@ func (c *EditsBundlesUploadCall) Header() http.Header {
 
 func (c *EditsBundlesUploadCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4556,6 +4600,12 @@ type EditsDeobfuscationfilesUploadCall struct {
 
 // Upload: Uploads a new deobfuscation file and attaches to the
 // specified APK.
+//
+// - apkVersionCode: The version code of the APK whose Deobfuscation
+//   File is being uploaded.
+// - deobfuscationFileType: The type of the deobfuscation file.
+// - editId: Unique identifier for this edit.
+// - packageName: Unique identifier for the Android app.
 func (r *EditsDeobfuscationfilesService) Upload(packageNameid string, editId string, apkVersionCode int64, deobfuscationFileType string) *EditsDeobfuscationfilesUploadCall {
 	c := &EditsDeobfuscationfilesUploadCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageNameid = packageNameid
@@ -4631,7 +4681,7 @@ func (c *EditsDeobfuscationfilesUploadCall) Header() http.Header {
 
 func (c *EditsDeobfuscationfilesUploadCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4809,6 +4859,9 @@ type EditsDetailsGetCall struct {
 }
 
 // Get: Gets details of an app.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsDetailsService) Get(packageName string, editId string) *EditsDetailsGetCall {
 	c := &EditsDetailsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -4853,7 +4906,7 @@ func (c *EditsDetailsGetCall) Header() http.Header {
 
 func (c *EditsDetailsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4962,6 +5015,9 @@ type EditsDetailsPatchCall struct {
 }
 
 // Patch: Patches details of an app.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsDetailsService) Patch(packageName string, editId string, appdetails *AppDetails) *EditsDetailsPatchCall {
 	c := &EditsDetailsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -4997,7 +5053,7 @@ func (c *EditsDetailsPatchCall) Header() http.Header {
 
 func (c *EditsDetailsPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5111,6 +5167,9 @@ type EditsDetailsUpdateCall struct {
 }
 
 // Update: Updates details of an app.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsDetailsService) Update(packageName string, editId string, appdetails *AppDetails) *EditsDetailsUpdateCall {
 	c := &EditsDetailsUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -5146,7 +5205,7 @@ func (c *EditsDetailsUpdateCall) Header() http.Header {
 
 func (c *EditsDetailsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5262,6 +5321,13 @@ type EditsExpansionfilesGetCall struct {
 }
 
 // Get: Fetches the expansion file configuration for the specified APK.
+//
+// - apkVersionCode: The version code of the APK whose expansion file
+//   configuration is being read or modified.
+// - editId: Identifier of the edit.
+// - expansionFileType: The file type of the file configuration which is
+//   being read or modified.
+// - packageName: Package name of the app.
 func (r *EditsExpansionfilesService) Get(packageName string, editId string, apkVersionCode int64, expansionFileType string) *EditsExpansionfilesGetCall {
 	c := &EditsExpansionfilesGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -5308,7 +5374,7 @@ func (c *EditsExpansionfilesGetCall) Header() http.Header {
 
 func (c *EditsExpansionfilesGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5448,6 +5514,13 @@ type EditsExpansionfilesPatchCall struct {
 // Patch: Patches the APK's expansion file configuration to reference
 // another APK's expansion file. To add a new expansion file use the
 // Upload method.
+//
+// - apkVersionCode: The version code of the APK whose expansion file
+//   configuration is being read or modified.
+// - editId: Identifier of the edit.
+// - expansionFileType: The file type of the expansion file
+//   configuration which is being updated.
+// - packageName: Package name of the app.
 func (r *EditsExpansionfilesService) Patch(packageName string, editId string, apkVersionCode int64, expansionFileType string, expansionfile *ExpansionFile) *EditsExpansionfilesPatchCall {
 	c := &EditsExpansionfilesPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -5485,7 +5558,7 @@ func (c *EditsExpansionfilesPatchCall) Header() http.Header {
 
 func (c *EditsExpansionfilesPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5630,6 +5703,13 @@ type EditsExpansionfilesUpdateCall struct {
 // Update: Updates the APK's expansion file configuration to reference
 // another APK's expansion file. To add a new expansion file use the
 // Upload method.
+//
+// - apkVersionCode: The version code of the APK whose expansion file
+//   configuration is being read or modified.
+// - editId: Identifier of the edit.
+// - expansionFileType: The file type of the file configuration which is
+//   being read or modified.
+// - packageName: Package name of the app.
 func (r *EditsExpansionfilesService) Update(packageName string, editId string, apkVersionCode int64, expansionFileType string, expansionfile *ExpansionFile) *EditsExpansionfilesUpdateCall {
 	c := &EditsExpansionfilesUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -5667,7 +5747,7 @@ func (c *EditsExpansionfilesUpdateCall) Header() http.Header {
 
 func (c *EditsExpansionfilesUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5811,6 +5891,13 @@ type EditsExpansionfilesUploadCall struct {
 
 // Upload: Uploads a new expansion file and attaches to the specified
 // APK.
+//
+// - apkVersionCode: The version code of the APK whose expansion file
+//   configuration is being read or modified.
+// - editId: Identifier of the edit.
+// - expansionFileType: The file type of the expansion file
+//   configuration which is being updated.
+// - packageName: Package name of the app.
 func (r *EditsExpansionfilesService) Upload(packageName string, editId string, apkVersionCode int64, expansionFileType string) *EditsExpansionfilesUploadCall {
 	c := &EditsExpansionfilesUploadCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -5886,7 +5973,7 @@ func (c *EditsExpansionfilesUploadCall) Header() http.Header {
 
 func (c *EditsExpansionfilesUploadCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6066,6 +6153,14 @@ type EditsImagesDeleteCall struct {
 }
 
 // Delete: Deletes the image (specified by id) from the edit.
+//
+// - editId: Identifier of the edit.
+// - imageId: Unique identifier an image within the set of images
+//   attached to this edit.
+// - imageType: Type of the Image.
+// - language: Language localization code (a BCP-47 language tag; for
+//   example, "de-AT" for Austrian German).
+// - packageName: Package name of the app.
 func (r *EditsImagesService) Delete(packageName string, editId string, language string, imageType string, imageId string) *EditsImagesDeleteCall {
 	c := &EditsImagesDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -6103,7 +6198,7 @@ func (c *EditsImagesDeleteCall) Header() http.Header {
 
 func (c *EditsImagesDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6229,6 +6324,14 @@ type EditsImagesDeleteallCall struct {
 
 // Deleteall: Deletes all images for the specified language and image
 // type. Returns an empty response if no images are found.
+//
+// - editId: Identifier of the edit.
+// - imageType: Type of the Image. Providing an image type that refers
+//   to no images is a no-op.
+// - language: Language localization code (a BCP-47 language tag; for
+//   example, "de-AT" for Austrian German). Providing a language that is
+//   not supported by the App is a no-op.
+// - packageName: Package name of the app.
 func (r *EditsImagesService) Deleteall(packageName string, editId string, language string, imageType string) *EditsImagesDeleteallCall {
 	c := &EditsImagesDeleteallCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -6265,7 +6368,7 @@ func (c *EditsImagesDeleteallCall) Header() http.Header {
 
 func (c *EditsImagesDeleteallCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6411,6 +6514,14 @@ type EditsImagesListCall struct {
 }
 
 // List: Lists all images. The response may be empty.
+//
+// - editId: Identifier of the edit.
+// - imageType: Type of the Image. Providing an image type that refers
+//   to no images will return an empty response.
+// - language: Language localization code (a BCP-47 language tag; for
+//   example, "de-AT" for Austrian German). There must be a store
+//   listing for the specified language.
+// - packageName: Package name of the app.
 func (r *EditsImagesService) List(packageName string, editId string, language string, imageType string) *EditsImagesListCall {
 	c := &EditsImagesListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -6457,7 +6568,7 @@ func (c *EditsImagesListCall) Header() http.Header {
 
 func (c *EditsImagesListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6607,6 +6718,13 @@ type EditsImagesUploadCall struct {
 
 // Upload: Uploads an image of the specified language and image type,
 // and adds to the edit.
+//
+// - editId: Identifier of the edit.
+// - imageType: Type of the Image.
+// - language: Language localization code (a BCP-47 language tag; for
+//   example, "de-AT" for Austrian German). Providing a language that is
+//   not supported by the App is a no-op.
+// - packageName: Package name of the app.
 func (r *EditsImagesService) Upload(packageName string, editId string, language string, imageType string) *EditsImagesUploadCall {
 	c := &EditsImagesUploadCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -6682,7 +6800,7 @@ func (c *EditsImagesUploadCall) Header() http.Header {
 
 func (c *EditsImagesUploadCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6871,6 +6989,11 @@ type EditsListingsDeleteCall struct {
 }
 
 // Delete: Deletes a localized store listing.
+//
+// - editId: Identifier of the edit.
+// - language: Language localization code (a BCP-47 language tag; for
+//   example, "de-AT" for Austrian German).
+// - packageName: Package name of the app.
 func (r *EditsListingsService) Delete(packageName string, editId string, language string) *EditsListingsDeleteCall {
 	c := &EditsListingsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -6906,7 +7029,7 @@ func (c *EditsListingsDeleteCall) Header() http.Header {
 
 func (c *EditsListingsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6991,6 +7114,9 @@ type EditsListingsDeleteallCall struct {
 }
 
 // Deleteall: Deletes all store listings.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsListingsService) Deleteall(packageName string, editId string) *EditsListingsDeleteallCall {
 	c := &EditsListingsDeleteallCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -7025,7 +7151,7 @@ func (c *EditsListingsDeleteallCall) Header() http.Header {
 
 func (c *EditsListingsDeleteallCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7104,6 +7230,11 @@ type EditsListingsGetCall struct {
 }
 
 // Get: Gets a localized store listing.
+//
+// - editId: Identifier of the edit.
+// - language: Language localization code (a BCP-47 language tag; for
+//   example, "de-AT" for Austrian German).
+// - packageName: Package name of the app.
 func (r *EditsListingsService) Get(packageName string, editId string, language string) *EditsListingsGetCall {
 	c := &EditsListingsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -7149,7 +7280,7 @@ func (c *EditsListingsGetCall) Header() http.Header {
 
 func (c *EditsListingsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7266,6 +7397,9 @@ type EditsListingsListCall struct {
 }
 
 // List: Lists all localized store listings.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsListingsService) List(packageName string, editId string) *EditsListingsListCall {
 	c := &EditsListingsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -7310,7 +7444,7 @@ func (c *EditsListingsListCall) Header() http.Header {
 
 func (c *EditsListingsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7420,6 +7554,11 @@ type EditsListingsPatchCall struct {
 }
 
 // Patch: Patches a localized store listing.
+//
+// - editId: Identifier of the edit.
+// - language: Language localization code (a BCP-47 language tag; for
+//   example, "de-AT" for Austrian German).
+// - packageName: Package name of the app.
 func (r *EditsListingsService) Patch(packageName string, editId string, language string, listing *Listing) *EditsListingsPatchCall {
 	c := &EditsListingsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -7456,7 +7595,7 @@ func (c *EditsListingsPatchCall) Header() http.Header {
 
 func (c *EditsListingsPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7579,6 +7718,11 @@ type EditsListingsUpdateCall struct {
 }
 
 // Update: Creates or updates a localized store listing.
+//
+// - editId: Identifier of the edit.
+// - language: Language localization code (a BCP-47 language tag; for
+//   example, "de-AT" for Austrian German).
+// - packageName: Package name of the app.
 func (r *EditsListingsService) Update(packageName string, editId string, language string, listing *Listing) *EditsListingsUpdateCall {
 	c := &EditsListingsUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -7615,7 +7759,7 @@ func (c *EditsListingsUpdateCall) Header() http.Header {
 
 func (c *EditsListingsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7738,6 +7882,10 @@ type EditsTestersGetCall struct {
 }
 
 // Get: Gets testers.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
+// - track: The track to read from.
 func (r *EditsTestersService) Get(packageName string, editId string, track string) *EditsTestersGetCall {
 	c := &EditsTestersGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -7783,7 +7931,7 @@ func (c *EditsTestersGetCall) Header() http.Header {
 
 func (c *EditsTestersGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7901,6 +8049,10 @@ type EditsTestersPatchCall struct {
 }
 
 // Patch: Patches testers.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
+// - track: The track to update.
 func (r *EditsTestersService) Patch(packageName string, editId string, track string, testers *Testers) *EditsTestersPatchCall {
 	c := &EditsTestersPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -7937,7 +8089,7 @@ func (c *EditsTestersPatchCall) Header() http.Header {
 
 func (c *EditsTestersPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8060,6 +8212,10 @@ type EditsTestersUpdateCall struct {
 }
 
 // Update: Updates testers.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
+// - track: The track to update.
 func (r *EditsTestersService) Update(packageName string, editId string, track string, testers *Testers) *EditsTestersUpdateCall {
 	c := &EditsTestersUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -8096,7 +8252,7 @@ func (c *EditsTestersUpdateCall) Header() http.Header {
 
 func (c *EditsTestersUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8219,6 +8375,10 @@ type EditsTracksGetCall struct {
 }
 
 // Get: Gets a track.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
+// - track: Identifier of the track.
 func (r *EditsTracksService) Get(packageName string, editId string, track string) *EditsTracksGetCall {
 	c := &EditsTracksGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -8264,7 +8424,7 @@ func (c *EditsTracksGetCall) Header() http.Header {
 
 func (c *EditsTracksGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8381,6 +8541,9 @@ type EditsTracksListCall struct {
 }
 
 // List: Lists all tracks.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
 func (r *EditsTracksService) List(packageName string, editId string) *EditsTracksListCall {
 	c := &EditsTracksListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -8425,7 +8588,7 @@ func (c *EditsTracksListCall) Header() http.Header {
 
 func (c *EditsTracksListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8535,6 +8698,10 @@ type EditsTracksPatchCall struct {
 }
 
 // Patch: Patches a track.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
+// - track: Identifier of the track.
 func (r *EditsTracksService) Patch(packageName string, editId string, track string, track2 *Track) *EditsTracksPatchCall {
 	c := &EditsTracksPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -8571,7 +8738,7 @@ func (c *EditsTracksPatchCall) Header() http.Header {
 
 func (c *EditsTracksPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8694,6 +8861,10 @@ type EditsTracksUpdateCall struct {
 }
 
 // Update: Updates a track.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
+// - track: Identifier of the track.
 func (r *EditsTracksService) Update(packageName string, editId string, track string, track2 *Track) *EditsTracksUpdateCall {
 	c := &EditsTracksUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -8730,7 +8901,7 @@ func (c *EditsTracksUpdateCall) Header() http.Header {
 
 func (c *EditsTracksUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8852,6 +9023,9 @@ type InappproductsDeleteCall struct {
 
 // Delete: Deletes an in-app product (i.e. a managed product or a
 // subscriptions).
+//
+// - packageName: Package name of the app.
+// - sku: Unique identifier for the in-app product.
 func (r *InappproductsService) Delete(packageName string, skuid string) *InappproductsDeleteCall {
 	c := &InappproductsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -8886,7 +9060,7 @@ func (c *InappproductsDeleteCall) Header() http.Header {
 
 func (c *InappproductsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8965,6 +9139,9 @@ type InappproductsGetCall struct {
 
 // Get: Gets an in-app product, which can be a managed product or a
 // subscription.
+//
+// - packageName: Package name of the app.
+// - sku: Unique identifier for the in-app product.
 func (r *InappproductsService) Get(packageName string, skuid string) *InappproductsGetCall {
 	c := &InappproductsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -9009,7 +9186,7 @@ func (c *InappproductsGetCall) Header() http.Header {
 
 func (c *InappproductsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9118,6 +9295,8 @@ type InappproductsInsertCall struct {
 
 // Insert: Creates an in-app product (i.e. a managed product or a
 // subscriptions).
+//
+// - packageName: Package name of the app.
 func (r *InappproductsService) Insert(packageName string, inappproduct *InAppProduct) *InappproductsInsertCall {
 	c := &InappproductsInsertCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -9162,7 +9341,7 @@ func (c *InappproductsInsertCall) Header() http.Header {
 
 func (c *InappproductsInsertCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9273,6 +9452,8 @@ type InappproductsListCall struct {
 
 // List: Lists all in-app products - both managed products and
 // subscriptions.
+//
+// - packageName: Package name of the app.
 func (r *InappproductsService) List(packageName string) *InappproductsListCall {
 	c := &InappproductsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -9337,7 +9518,7 @@ func (c *InappproductsListCall) Header() http.Header {
 
 func (c *InappproductsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9456,6 +9637,9 @@ type InappproductsPatchCall struct {
 
 // Patch: Patches an in-app product (i.e. a managed product or a
 // subscriptions).
+//
+// - packageName: Package name of the app.
+// - sku: Unique identifier for the in-app product.
 func (r *InappproductsService) Patch(packageName string, skuid string, inappproduct *InAppProduct) *InappproductsPatchCall {
 	c := &InappproductsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -9501,7 +9685,7 @@ func (c *InappproductsPatchCall) Header() http.Header {
 
 func (c *InappproductsPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9621,6 +9805,9 @@ type InappproductsUpdateCall struct {
 
 // Update: Updates an in-app product (i.e. a managed product or a
 // subscriptions).
+//
+// - packageName: Package name of the app.
+// - sku: Unique identifier for the in-app product.
 func (r *InappproductsService) Update(packageName string, skuid string, inappproduct *InAppProduct) *InappproductsUpdateCall {
 	c := &InappproductsUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -9666,7 +9853,7 @@ func (c *InappproductsUpdateCall) Header() http.Header {
 
 func (c *InappproductsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9789,6 +9976,8 @@ type InternalappsharingartifactsUploadapkCall struct {
 // recommended). See Timeouts and Errors
 // (https://developers.google.com/api-client-library/java/google-api-java-client/errors)
 // for an example in java.
+//
+// - packageName: Package name of the app.
 func (r *InternalappsharingartifactsService) Uploadapk(packageName string) *InternalappsharingartifactsUploadapkCall {
 	c := &InternalappsharingartifactsUploadapkCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -9861,7 +10050,7 @@ func (c *InternalappsharingartifactsUploadapkCall) Header() http.Header {
 
 func (c *InternalappsharingartifactsUploadapkCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10009,6 +10198,8 @@ type InternalappsharingartifactsUploadbundleCall struct {
 // of 2 minutes is recommended). See Timeouts and Errors
 // (https://developers.google.com/api-client-library/java/google-api-java-client/errors)
 // for an example in java.
+//
+// - packageName: Package name of the app.
 func (r *InternalappsharingartifactsService) Uploadbundle(packageName string) *InternalappsharingartifactsUploadbundleCall {
 	c := &InternalappsharingartifactsUploadbundleCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -10081,7 +10272,7 @@ func (c *InternalappsharingartifactsUploadbundleCall) Header() http.Header {
 
 func (c *InternalappsharingartifactsUploadbundleCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10223,6 +10414,12 @@ type OrdersRefundCall struct {
 }
 
 // Refund: Refund a user's subscription or in-app purchase order.
+//
+// - orderId: The order ID provided to the user when the subscription or
+//   in-app order was purchased.
+// - packageName: The package name of the application for which this
+//   subscription or in-app item was purchased (for example,
+//   'com.some.thing').
 func (r *OrdersService) Refund(packageName string, orderId string) *OrdersRefundCall {
 	c := &OrdersRefundCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -10267,7 +10464,7 @@ func (c *OrdersRefundCall) Header() http.Header {
 
 func (c *OrdersRefundCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10351,6 +10548,13 @@ type PurchasesProductsAcknowledgeCall struct {
 }
 
 // Acknowledge: Acknowledges a purchase of an inapp item.
+//
+// - packageName: The package name of the application the inapp product
+//   was sold in (for example, 'com.some.thing').
+// - productId: The inapp product SKU (for example,
+//   'com.some.thing.inapp1').
+// - token: The token provided to the user's device when the inapp
+//   product was purchased.
 func (r *PurchasesProductsService) Acknowledge(packageName string, productId string, token string, productpurchasesacknowledgerequest *ProductPurchasesAcknowledgeRequest) *PurchasesProductsAcknowledgeCall {
 	c := &PurchasesProductsAcknowledgeCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -10387,7 +10591,7 @@ func (c *PurchasesProductsAcknowledgeCall) Header() http.Header {
 
 func (c *PurchasesProductsAcknowledgeCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10482,6 +10686,13 @@ type PurchasesProductsGetCall struct {
 }
 
 // Get: Checks the purchase and consumption status of an inapp item.
+//
+// - packageName: The package name of the application the inapp product
+//   was sold in (for example, 'com.some.thing').
+// - productId: The inapp product SKU (for example,
+//   'com.some.thing.inapp1').
+// - token: The token provided to the user's device when the inapp
+//   product was purchased.
 func (r *PurchasesProductsService) Get(packageName string, productId string, token string) *PurchasesProductsGetCall {
 	c := &PurchasesProductsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -10527,7 +10738,7 @@ func (c *PurchasesProductsGetCall) Header() http.Header {
 
 func (c *PurchasesProductsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10645,6 +10856,13 @@ type PurchasesSubscriptionsAcknowledgeCall struct {
 }
 
 // Acknowledge: Acknowledges a subscription purchase.
+//
+// - packageName: The package name of the application for which this
+//   subscription was purchased (for example, 'com.some.thing').
+// - subscriptionId: The purchased subscription ID (for example,
+//   'monthly001').
+// - token: The token provided to the user's device when the
+//   subscription was purchased.
 func (r *PurchasesSubscriptionsService) Acknowledge(packageName string, subscriptionId string, token string, subscriptionpurchasesacknowledgerequest *SubscriptionPurchasesAcknowledgeRequest) *PurchasesSubscriptionsAcknowledgeCall {
 	c := &PurchasesSubscriptionsAcknowledgeCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -10681,7 +10899,7 @@ func (c *PurchasesSubscriptionsAcknowledgeCall) Header() http.Header {
 
 func (c *PurchasesSubscriptionsAcknowledgeCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10776,6 +10994,13 @@ type PurchasesSubscriptionsCancelCall struct {
 
 // Cancel: Cancels a user's subscription purchase. The subscription
 // remains valid until its expiration time.
+//
+// - packageName: The package name of the application for which this
+//   subscription was purchased (for example, 'com.some.thing').
+// - subscriptionId: The purchased subscription ID (for example,
+//   'monthly001').
+// - token: The token provided to the user's device when the
+//   subscription was purchased.
 func (r *PurchasesSubscriptionsService) Cancel(packageName string, subscriptionId string, token string) *PurchasesSubscriptionsCancelCall {
 	c := &PurchasesSubscriptionsCancelCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -10811,7 +11036,7 @@ func (c *PurchasesSubscriptionsCancelCall) Header() http.Header {
 
 func (c *PurchasesSubscriptionsCancelCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10899,6 +11124,13 @@ type PurchasesSubscriptionsDeferCall struct {
 
 // Defer: Defers a user's subscription purchase until a specified future
 // expiration time.
+//
+// - packageName: The package name of the application for which this
+//   subscription was purchased (for example, 'com.some.thing').
+// - subscriptionId: The purchased subscription ID (for example,
+//   'monthly001').
+// - token: The token provided to the user's device when the
+//   subscription was purchased.
 func (r *PurchasesSubscriptionsService) Defer(packageName string, subscriptionId string, token string, subscriptionpurchasesdeferrequest *SubscriptionPurchasesDeferRequest) *PurchasesSubscriptionsDeferCall {
 	c := &PurchasesSubscriptionsDeferCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -10935,7 +11167,7 @@ func (c *PurchasesSubscriptionsDeferCall) Header() http.Header {
 
 func (c *PurchasesSubscriptionsDeferCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11060,6 +11292,13 @@ type PurchasesSubscriptionsGetCall struct {
 
 // Get: Checks whether a user's subscription purchase is valid and
 // returns its expiry time.
+//
+// - packageName: The package name of the application for which this
+//   subscription was purchased (for example, 'com.some.thing').
+// - subscriptionId: The purchased subscription ID (for example,
+//   'monthly001').
+// - token: The token provided to the user's device when the
+//   subscription was purchased.
 func (r *PurchasesSubscriptionsService) Get(packageName string, subscriptionId string, token string) *PurchasesSubscriptionsGetCall {
 	c := &PurchasesSubscriptionsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -11105,7 +11344,7 @@ func (c *PurchasesSubscriptionsGetCall) Header() http.Header {
 
 func (c *PurchasesSubscriptionsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11224,6 +11463,13 @@ type PurchasesSubscriptionsRefundCall struct {
 // Refund: Refunds a user's subscription purchase, but the subscription
 // remains valid until its expiration time and it will continue to
 // recur.
+//
+// - packageName: The package name of the application for which this
+//   subscription was purchased (for example, 'com.some.thing').
+// - subscriptionId: "The purchased subscription ID (for example,
+//   'monthly001').
+// - token: The token provided to the user's device when the
+//   subscription was purchased.
 func (r *PurchasesSubscriptionsService) Refund(packageName string, subscriptionId string, token string) *PurchasesSubscriptionsRefundCall {
 	c := &PurchasesSubscriptionsRefundCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -11259,7 +11505,7 @@ func (c *PurchasesSubscriptionsRefundCall) Header() http.Header {
 
 func (c *PurchasesSubscriptionsRefundCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11347,6 +11593,13 @@ type PurchasesSubscriptionsRevokeCall struct {
 // Revoke: Refunds and immediately revokes a user's subscription
 // purchase. Access to the subscription will be terminated immediately
 // and it will stop recurring.
+//
+// - packageName: The package name of the application for which this
+//   subscription was purchased (for example, 'com.some.thing').
+// - subscriptionId: The purchased subscription ID (for example,
+//   'monthly001').
+// - token: The token provided to the user's device when the
+//   subscription was purchased.
 func (r *PurchasesSubscriptionsService) Revoke(packageName string, subscriptionId string, token string) *PurchasesSubscriptionsRevokeCall {
 	c := &PurchasesSubscriptionsRevokeCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -11382,7 +11635,7 @@ func (c *PurchasesSubscriptionsRevokeCall) Header() http.Header {
 
 func (c *PurchasesSubscriptionsRevokeCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11468,6 +11721,9 @@ type PurchasesVoidedpurchasesListCall struct {
 
 // List: Lists the purchases that were canceled, refunded or
 // charged-back.
+//
+// - packageName: The package name of the application for which voided
+//   purchases need to be returned (for example, 'com.some.thing').
 func (r *PurchasesVoidedpurchasesService) List(packageName string) *PurchasesVoidedpurchasesListCall {
 	c := &PurchasesVoidedpurchasesListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -11574,7 +11830,7 @@ func (c *PurchasesVoidedpurchasesListCall) Header() http.Header {
 
 func (c *PurchasesVoidedpurchasesListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11710,6 +11966,9 @@ type ReviewsGetCall struct {
 }
 
 // Get: Gets a single review.
+//
+// - packageName: Package name of the app.
+// - reviewId: Unique identifier for a review.
 func (r *ReviewsService) Get(packageName string, reviewId string) *ReviewsGetCall {
 	c := &ReviewsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -11761,7 +12020,7 @@ func (c *ReviewsGetCall) Header() http.Header {
 
 func (c *ReviewsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11874,6 +12133,8 @@ type ReviewsListCall struct {
 }
 
 // List: Lists all reviews.
+//
+// - packageName: Package name of the app.
 func (r *ReviewsService) List(packageName string) *ReviewsListCall {
 	c := &ReviewsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -11945,7 +12206,7 @@ func (c *ReviewsListCall) Header() http.Header {
 
 func (c *ReviewsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12068,6 +12329,9 @@ type ReviewsReplyCall struct {
 }
 
 // Reply: Replies to a single review, or updates an existing reply.
+//
+// - packageName: Package name of the app.
+// - reviewId: Unique identifier for a review.
 func (r *ReviewsService) Reply(packageName string, reviewId string, reviewsreplyrequest *ReviewsReplyRequest) *ReviewsReplyCall {
 	c := &ReviewsReplyCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -12103,7 +12367,7 @@ func (c *ReviewsReplyCall) Header() http.Header {
 
 func (c *ReviewsReplyCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12218,6 +12482,9 @@ type SystemapksVariantsCreateCall struct {
 
 // Create: Creates an APK which is suitable for inclusion in a system
 // image from an already uploaded Android App Bundle.
+//
+// - packageName: Package name of the app.
+// - versionCode: The version code of the App Bundle.
 func (r *SystemapksVariantsService) Create(packageName string, versionCode int64, variant *Variant) *SystemapksVariantsCreateCall {
 	c := &SystemapksVariantsCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -12253,7 +12520,7 @@ func (c *SystemapksVariantsCreateCall) Header() http.Header {
 
 func (c *SystemapksVariantsCreateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12370,6 +12637,10 @@ type SystemapksVariantsDownloadCall struct {
 
 // Download: Downloads a previously created system APK which is suitable
 // for inclusion in a system image.
+//
+// - packageName: Package name of the app.
+// - variantId: The ID of a previously created system APK variant.
+// - versionCode: The version code of the App Bundle.
 func (r *SystemapksVariantsService) Download(packageName string, versionCode int64, variantId int64) *SystemapksVariantsDownloadCall {
 	c := &SystemapksVariantsDownloadCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -12415,7 +12686,7 @@ func (c *SystemapksVariantsDownloadCall) Header() http.Header {
 
 func (c *SystemapksVariantsDownloadCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12525,6 +12796,10 @@ type SystemapksVariantsGetCall struct {
 }
 
 // Get: Returns a previously created system APK variant.
+//
+// - packageName: Package name of the app.
+// - variantId: The ID of a previously created system APK variant.
+// - versionCode: The version code of the App Bundle.
 func (r *SystemapksVariantsService) Get(packageName string, versionCode int64, variantId int64) *SystemapksVariantsGetCall {
 	c := &SystemapksVariantsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -12570,7 +12845,7 @@ func (c *SystemapksVariantsGetCall) Header() http.Header {
 
 func (c *SystemapksVariantsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12689,6 +12964,9 @@ type SystemapksVariantsListCall struct {
 }
 
 // List: Returns the list of previously created system APK variants.
+//
+// - packageName: Package name of the app.
+// - versionCode: The version code of the App Bundle.
 func (r *SystemapksVariantsService) List(packageName string, versionCode int64) *SystemapksVariantsListCall {
 	c := &SystemapksVariantsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -12733,7 +13011,7 @@ func (c *SystemapksVariantsListCall) Header() http.Header {
 
 func (c *SystemapksVariantsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210314")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210502")
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
