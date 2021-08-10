@@ -189,9 +189,12 @@ func main() {
 
 	//
 	// Validate edit
+	editsCommitCall := editsService.Commit(configs.PackageName, appEdit.Id)
+	editsCommitCall.ChangesNotSentForReview(true)
+
 	fmt.Println()
 	log.Infof("Validating edit")
-	editsValidateCall := editsService.Validate(configs.PackageName, appEdit.Id, true)
+	editsValidateCall := editsService.Validate(configs.PackageName, appEdit.Id)
 	if _, err := editsValidateCall.Do(); err != nil {
 		failf("Failed to validate edit, error: %s", err)
 	}
@@ -201,8 +204,6 @@ func main() {
 	// Commit edit
 	fmt.Println()
 	log.Infof("Committing edit")
-	editsCommitCall := editsService.Commit(configs.PackageName, appEdit.Id)
-	editsCommitCall.ChangesNotSentForReview(true)
 	if _, err := editsCommitCall.Do(); err != nil {
 		failf("Failed to commit edit, error: %s", err)
 	}
