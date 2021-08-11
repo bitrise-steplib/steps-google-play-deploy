@@ -14,6 +14,8 @@ import (
 	"google.golang.org/api/option"
 )
 
+const changesNotSentForReviewMessage = "Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true"
+
 func failf(format string, v ...interface{}) {
 	log.Errorf(format, v...)
 	os.Exit(1)
@@ -155,15 +157,35 @@ func main() {
 	}
 	log.Donef("Authenticated client created")
 
+	errorString := executeEdit(service, configs, false)
+	if errorString == "" {
+		return
+	}
+	if strings.Contains(errorString, changesNotSentForReviewMessage) {
+		if configs.RetryWithoutSendingToReview {
+			log.Warnf(errorString)
+			log.Warnf("Trying to commit edit with setting changesNotSentForReview to true. Please make sure to send the changes to review from Google Play Console UI.")
+			errorString = executeEdit(service, configs, true)
+			if errorString == "" {
+				return
+			}
+		} else {
+			log.Warnf("Sending the edit to review failed. Please change \"Retry changes without sending to review\" input to true if you wish to send the changes with the changesNotSentForReview flag. Please note that in that case the review has to be manually initiated from Google Play Console UI")
+		}
+	}
+	failf(errorString)
+}
+
+func executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool) (errorString string) {
+	editsService := androidpublisher.NewEditsService(service)
 	//
 	// Create insert edit
 	fmt.Println()
 	log.Infof("Create new edit")
-	editsService := androidpublisher.NewEditsService(service)
 	editsInsertCall := editsService.Insert(configs.PackageName, &androidpublisher.AppEdit{})
 	appEdit, err := editsInsertCall.Do()
 	if err != nil {
-		failf("Failed to perform edit insert call, error: %s", err)
+		return fmt.Sprintf("Failed to perform edit insert call, error: %s", err)
 	}
 	log.Printf(" editID: %s", appEdit.Id)
 	log.Donef("Edit insert created")
@@ -174,7 +196,7 @@ func main() {
 	log.Infof("Upload apks or app bundles")
 	versionCodes, err := uploadApplications(configs, service, appEdit)
 	if err != nil {
-		failf("Failed to upload APKs: %v", err)
+		return fmt.Sprintf("Failed to upload APKs: %v", err)
 	}
 	log.Donef("Applications uploaded")
 
@@ -183,28 +205,19 @@ func main() {
 	log.Infof("Update track")
 	versionCodeSlice := versionCodeMapToSlice(versionCodes)
 	if err := updateTracks(configs, service, appEdit, versionCodeSlice); err != nil {
-		failf("Failed to update track, reason: %v", err)
+		return fmt.Sprintf("Failed to update track, reason: %v", err)
 	}
 	log.Donef("Track updated")
-
-	//
-	// Validate edit
-	fmt.Println()
-	log.Infof("Validating edit")
-	editsValidateCall := editsService.Validate(configs.PackageName, appEdit.Id)
-	if _, err := editsValidateCall.Do(); err != nil {
-		failf("Failed to validate edit, error: %s", err)
-	}
-	log.Donef("Edit is valid")
 
 	//
 	// Commit edit
 	fmt.Println()
 	log.Infof("Committing edit")
 	editsCommitCall := editsService.Commit(configs.PackageName, appEdit.Id)
+	editsCommitCall.ChangesNotSentForReview(changesNotSentForReview)
 	if _, err := editsCommitCall.Do(); err != nil {
-		failf("Failed to commit edit, error: %s", err)
+		return fmt.Sprintf("Failed to commit edit, error: %s", err)
 	}
-
 	log.Donef("Edit committed")
+	return ""
 }
