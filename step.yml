@@ -171,8 +171,8 @@ inputs:
   opts:
     title: Retry changes without sending to review
     description: |-
-      If set to `true` and initial change request fails, the changes will not be reviewed until they are manually sent
-      for review from the Google Play Console UI. If set to `false` the step fails if the changes can't be automatically
+      If set to `true` and the initial change request fails, the changes will not be reviewed until they are manually sent
+      for review from the Google Play Console UI. If set to `false`, the step fails if the changes can't be automatically
       sent to review.
     is_required: true
     value_options:
