@@ -208,24 +208,13 @@ func executeEdit(service *androidpublisher.Service, configs Configs, changesNotS
 		return fmt.Sprintf("Failed to update track, reason: %v", err)
 	}
 	log.Donef("Track updated")
-
-	editsCommitCall := editsService.Commit(configs.PackageName, appEdit.Id)
-	editsCommitCall.ChangesNotSentForReview(changesNotSentForReview)
-
-	//
-	// Validate edit
-	fmt.Println()
-	log.Infof("Validating edit")
-	editsValidateCall := editsService.Validate(configs.PackageName, appEdit.Id)
-	if _, err := editsValidateCall.Do(); err != nil {
-		return fmt.Sprintf("Failed to validate edit, error: %s", err)
-	}
-	log.Donef("Edit is valid")
-
+	
 	//
 	// Commit edit
 	fmt.Println()
 	log.Infof("Committing edit")
+	editsCommitCall := editsService.Commit(configs.PackageName, appEdit.Id)
+	editsCommitCall.ChangesNotSentForReview(changesNotSentForReview)
 	if _, err := editsCommitCall.Do(); err != nil {
 		return fmt.Sprintf("Failed to commit edit, error: %s", err)
 	}
