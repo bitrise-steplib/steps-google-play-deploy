@@ -206,6 +206,7 @@ workflows:
             - track: $TRACK
             - mapping_file: ""
             - user_fraction: ""
+            - retry_without_sending_to_review : true
 
   # This is needed to test the possible shadowing of releases, it should run after apk_deploy_test_1
   apk_deploy_test_2:
