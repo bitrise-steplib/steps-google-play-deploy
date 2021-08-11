@@ -208,7 +208,7 @@ func executeEdit(service *androidpublisher.Service, configs Configs, changesNotS
 		return fmt.Sprintf("Failed to update track, reason: %v", err)
 	}
 	log.Donef("Track updated")
-	
+
 	//
 	// Commit edit
 	fmt.Println()

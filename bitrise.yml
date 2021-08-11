@@ -229,6 +229,7 @@ workflows:
             - track: $TRACK
             - mapping_file: ""
             - user_fraction: ""
+            - retry_without_sending_to_review : true
 
   dep-update:
     steps:
