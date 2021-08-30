@@ -8,6 +8,7 @@ workflows:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-wear-os.git
     - BRANCH: master
+    - GOOGLE_SERVICES_JSON: $GOOGLE_SERVICES_JSON_KEY
 
     - BITRISEIO_ANDROID_KEYSTORE_URL: $DEFAULT_ALIAS_ANDROID_KEYSTORE_URL
     - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEYSTORE_PASSWORD
@@ -15,7 +16,8 @@ workflows:
     - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEY_PASSWORD
 
     - PACKAGE_NAME: "io.bitrise.android.sample_xyztouristattractions"
-    - BITRISEIO_JSON_KEY_URL: $GOOGLE_SERVICES_JSON_KEY
+
+    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY
     - TRACK: internal
     before_run:
     - _setup
@@ -57,7 +59,7 @@ workflows:
     - path::./:
         title: Execute step
         inputs:
-        - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
+        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
         - app_path: "/bitrise/deploy/_tmp-Wearable-release-bitrise-signed.aab|/bitrise/deploy/_tmp-Application-release-bitrise-signed.aab"
         - track: $TRACK
@@ -66,6 +68,7 @@ workflows:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
     - BRANCH: master
+    - GOOGLE_SERVICES_JSON: $GOOGLE_SERVICES_JSON_KEY
 
     - BITRISEIO_ANDROID_KEYSTORE_URL: $DEFAULT_ALIAS_ANDROID_KEYSTORE_URL
     - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEYSTORE_PASSWORD
@@ -73,7 +76,7 @@ workflows:
     - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEY_PASSWORD
 
     - PACKAGE_NAME: "com.bitrise_io.sample_apps_android_simple_google_play_deploy"
-    - BITRISEIO_JSON_KEY_URL: $GOOGLE_SERVICES_JSON_KEY
+    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY
     - TRACK: internal
     before_run:
     - _setup
@@ -93,7 +96,7 @@ workflows:
     - path::./:
         title: Execute step
         inputs:
-        - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
+        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
         - app_path: $BITRISE_SIGNED_AAB_PATH
         - track: $TRACK
@@ -104,6 +107,7 @@ workflows:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-realmtasks.git
     - BRANCH: master
+    - GOOGLE_SERVICES_JSON: $GOOGLE_SERVICES_JSON_KEY
 
     - BITRISEIO_ANDROID_KEYSTORE_URL: $DEFAULT_ALIAS_ANDROID_KEYSTORE_URL
     - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEYSTORE_PASSWORD
@@ -111,9 +115,8 @@ workflows:
     - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEY_PASSWORD
 
     - PACKAGE_NAME: "io.bitrise.realmtasks"
-    - BITRISEIO_JSON_KEY_URL: $GOOGLE_SERVICES_JSON_KEY
+    - GOOGLE_SERVICES_JSON: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY
     - TRACK: "beta"
-
     before_run:
     - _setup
     steps:
@@ -133,7 +136,7 @@ workflows:
     - path::./:
         title: Execute step
         inputs:
-        - service_account_json_key_path: $BITRISEIO_JSON_KEY_URL
+        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
         - app_path: $BITRISE_SIGNED_APK_PATH
         - track: $TRACK
@@ -160,7 +163,7 @@ workflows:
     - script:
         title: Download google-services.json
         inputs:
-        - content: curl -o "./app/google-services.json" "$BITRISEIO_GOOGLE_SERVICES_JSON_URL"
+        - content: cat $GOOGLE_SERVICES_JSON > ./app/google-services.json
     - install-missing-android-tools: # TODO: check if needed
         inputs:
         - gradlew_path: ./gradlew
