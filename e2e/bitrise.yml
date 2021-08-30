@@ -143,7 +143,7 @@ workflows:
             set -ex
             printenv GOOGLE_SERVICES_JSON > ./app/google-services.json
 
-            ./app/google-services.json
+            cat ./app/google-services.json
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
