@@ -94,9 +94,7 @@ workflows:
         inputs:
         - content: |-
             set -ex
-            echo $GOOGLE_SERVICES_JSON_KEY
-            echo $GOOGLE_SERVICES_JSON
-            printenv $GOOGLE_SERVICES_JSON > ./app/google-services.json
+            printenv GOOGLE_SERVICES_JSON > ./app/google-services.json
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
@@ -141,9 +139,7 @@ workflows:
         inputs:
         - content: |-
             set -ex
-            echo $GOOGLE_SERVICES_JSON_KEY
-            echo $GOOGLE_SERVICES_JSON
-            printenv $GOOGLE_SERVICES_JSON > ./app/google-services.json
+            printenv GOOGLE_SERVICES_JSON > ./app/google-services.json
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
