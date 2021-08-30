@@ -25,7 +25,7 @@ workflows:
 
     - PACKAGE_NAME: "io.bitrise.android.sample_xyztouristattractions"
 
-    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - SERVICE_ACCOUNT_KEY_URL: $SIMPLE_GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
     - TRACK: internal
     before_run:
     - _setup
