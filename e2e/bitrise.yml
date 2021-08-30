@@ -26,6 +26,9 @@ workflows:
         inputs:
         - content: |-
             set -ex
+
+            echo $DEFAULT_ALIAS_ANDROID_KEY_ALIAS
+
             envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 ))
     - change-android-versioncode-and-versionname:
         inputs:
