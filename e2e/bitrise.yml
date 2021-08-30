@@ -1,8 +1,14 @@
 format_version: "11"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
-workflows:
+app:
+  envs:
+  - DEFAULT_ALIAS_ANDROID_KEYSTORE_URL: $DEFAULT_ALIAS_ANDROID_KEYSTORE_URL
+  - DEFAULT_ALIAS_ANDROID_KEYSTORE_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEYSTORE_PASSWORD
+  - DEFAULT_ALIAS_ANDROID_KEY_ALIAS: $DEFAULT_ALIAS_ANDROID_KEY_ALIAS
+  - DEFAULT_ALIAS_ANDROID_KEY_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEY_PASSWORD
 
+workflows:
   test_multiple_aab_deploy:
     summary: Builds and deploys a main app and a wearable app as AAB
     envs:
