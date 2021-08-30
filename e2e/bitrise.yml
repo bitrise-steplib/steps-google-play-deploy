@@ -96,8 +96,6 @@ workflows:
         - content: |-
             set -ex
             printenv GOOGLE_SERVICES_JSON > ./app/google-services.json
-
-            cat ./app/google-services.json
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
@@ -132,7 +130,7 @@ workflows:
     - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEY_PASSWORD
 
     - PACKAGE_NAME: "io.bitrise.realmtasks"
-    - GOOGLE_SERVICES_JSON: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
     - TRACK: "beta"
     before_run:
     - _setup
@@ -143,8 +141,6 @@ workflows:
         - content: |-
             set -ex
             printenv GOOGLE_SERVICES_JSON > ./app/google-services.json
-
-            cat ./app/google-services.json
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
