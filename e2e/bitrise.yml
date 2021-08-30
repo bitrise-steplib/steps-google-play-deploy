@@ -17,7 +17,7 @@ workflows:
 
     - PACKAGE_NAME: "io.bitrise.android.sample_xyztouristattractions"
 
-    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY
+    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
     - TRACK: internal
     before_run:
     - _setup
@@ -76,7 +76,7 @@ workflows:
     - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEY_PASSWORD
 
     - PACKAGE_NAME: "com.bitrise_io.sample_apps_android_simple_google_play_deploy"
-    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY
+    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
     - TRACK: internal
     before_run:
     - _setup
@@ -115,7 +115,7 @@ workflows:
     - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEY_PASSWORD
 
     - PACKAGE_NAME: "io.bitrise.realmtasks"
-    - GOOGLE_SERVICES_JSON: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY
+    - GOOGLE_SERVICES_JSON: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
     - TRACK: "beta"
     before_run:
     - _setup
@@ -163,7 +163,7 @@ workflows:
     - script:
         title: Download google-services.json
         inputs:
-        - content: cat $GOOGLE_SERVICES_JSON > ./app/google-services.json
+        - content: printenv $GOOGLE_SERVICES_JSON > ./app/google-services.json
     - install-missing-android-tools: # TODO: check if needed
         inputs:
         - gradlew_path: ./gradlew
