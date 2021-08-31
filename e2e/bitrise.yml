@@ -17,73 +17,73 @@ app:
   - SIMPLESAMPLE_GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL: $SIMPLESAMPLE_GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
 
 workflows:
-  test_multiple_aab_deploy:
-    summary: Builds and deploys a main app and a wearable app as AAB
-    envs:
-    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-wear-os.git
-    - BRANCH: master
-
-    - BITRISEIO_ANDROID_KEYSTORE_URL: $MULTIAAB_ANDROID_KEYSTORE_URL
-    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $MULTIAAB_ANDROID_KEYSTORE_PASSWORD
-    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $MULTIAAB_ANDROID_KEY_ALIAS
-    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $MULTIAAB_ANDROID_KEY_PASSWORD
-
-    - PACKAGE_NAME: io.bitrise.android.sample_xyztouristattractions
-
-    - SERVICE_ACCOUNT_KEY_URL: $SIMPLESAMPLE_GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
-    - TRACK: internal
-    before_run:
-    - _setup
-    steps:
-    - script:
-        title: Visual Studio stack workaround
-        description: A specific build-tools version is missing from the stack and Gradle can't install it at runtime because licenses have not been accepted
-        inputs:
-        - content: |-
-            set -ex
-            yes | sdkmanager --install "build-tools;29.0.2"
-    - script:
-        title: Set $VERSION_CODE
-        inputs:
-        - content: |-
-            set -ex
-
-            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 ))
-    - change-android-versioncode-and-versionname:
-        inputs:
-        - new_version_code: $VERSION_CODE
-        - version_code_offset: "0"
-        - build_gradle_path: $BITRISE_SOURCE_DIR/Application/build.gradle
-    - change-android-versioncode-and-versionname:
-        inputs:
-        - new_version_code: $VERSION_CODE
-        - version_code_offset: "1"
-        - build_gradle_path: $BITRISE_SOURCE_DIR/Wearable/build.gradle
-    - android-build:
-        title: Build main app
-        inputs:
-        - variant: release
-        - build_type: aab
-        - module: Application
-    - sign-apk:
-        inputs:
-        - android_app: $BITRISE_AAB_PATH
-    - android-build:
-        title: Build wearable app
-        inputs:
-        - variant: release
-        - build_type: aab
-        - module: Wearable
-    - sign-apk:
-        inputs:
-        - android_app: $BITRISE_AAB_PATH
-    - path::./:
-        title: Execute step
-        inputs:
-        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
-        - package_name: $PACKAGE_NAME
-        - app_path: $BITRISE_DEPLOY_DIR/Wearable-release-bitrise-signed.aab|$BITRISE_DEPLOY_DIR/Application-release-bitrise-signed.aab
-        - track: $TRACK
+#  test_multiple_aab_deploy:
+#    summary: Builds and deploys a main app and a wearable app as AAB
+#    envs:
+#    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-wear-os.git
+#    - BRANCH: master
+#
+#    - BITRISEIO_ANDROID_KEYSTORE_URL: $MULTIAAB_ANDROID_KEYSTORE_URL
+#    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $MULTIAAB_ANDROID_KEYSTORE_PASSWORD
+#    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $MULTIAAB_ANDROID_KEY_ALIAS
+#    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $MULTIAAB_ANDROID_KEY_PASSWORD
+#
+#    - PACKAGE_NAME: io.bitrise.android.sample_xyztouristattractions
+#
+#    - SERVICE_ACCOUNT_KEY_URL: $SIMPLESAMPLE_GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+#    - TRACK: internal
+#    before_run:
+#    - _setup
+#    steps:
+#    - script:
+#        title: Visual Studio stack workaround
+#        description: A specific build-tools version is missing from the stack and Gradle can't install it at runtime because licenses have not been accepted
+#        inputs:
+#        - content: |-
+#            set -ex
+#            yes | sdkmanager --install "build-tools;29.0.2"
+#    - script:
+#        title: Set $VERSION_CODE
+#        inputs:
+#        - content: |-
+#            set -ex
+#
+#            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 ))
+#    - change-android-versioncode-and-versionname:
+#        inputs:
+#        - new_version_code: $VERSION_CODE
+#        - version_code_offset: "0"
+#        - build_gradle_path: $BITRISE_SOURCE_DIR/Application/build.gradle
+#    - change-android-versioncode-and-versionname:
+#        inputs:
+#        - new_version_code: $VERSION_CODE
+#        - version_code_offset: "1"
+#        - build_gradle_path: $BITRISE_SOURCE_DIR/Wearable/build.gradle
+#    - android-build:
+#        title: Build main app
+#        inputs:
+#        - variant: release
+#        - build_type: aab
+#        - module: Application
+#    - sign-apk:
+#        inputs:
+#        - android_app: $BITRISE_AAB_PATH
+#    - android-build:
+#        title: Build wearable app
+#        inputs:
+#        - variant: release
+#        - build_type: aab
+#        - module: Wearable
+#    - sign-apk:
+#        inputs:
+#        - android_app: $BITRISE_AAB_PATH
+#    - path::./:
+#        title: Execute step
+#        inputs:
+#        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
+#        - package_name: $PACKAGE_NAME
+#        - app_path: $BITRISE_DEPLOY_DIR/Wearable-release-bitrise-signed.aab|$BITRISE_DEPLOY_DIR/Application-release-bitrise-signed.aab
+#        - track: $TRACK
 
 #  test_aab_deploy:
 #    envs:
@@ -123,46 +123,46 @@ workflows:
 #        - user_fraction: 0.6
 #        - release_name: "Overwritten release name"
 
-#  test_apk_deploy_custom_track:
-#    summary: Tests deploying an APK to a user-defined track
-#    envs:
-#
-#    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
-#    - BRANCH: master
-#
-#    - BITRISEIO_ANDROID_KEYSTORE_URL: $SIMPLESAMPLE_ANDROID_KEYSTORE_URL
-#    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $SIMPLESAMPLE_ANDROID_KEYSTORE_PASSWORD
-#    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $SIMPLESAMPLE_ANDROID_KEY_ALIAS
-#    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
-#
-#    - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
-#    - SERVICE_ACCOUNT_KEY_URL: $SIMPLESAMPLE_GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
-#    - TRACK: apk-testing
-#    before_run:
-#    - _setup
-#    steps:
-#    - change-android-versioncode-and-versionname:
-#        inputs:
-#        - build_gradle_path: ./app/build.gradle
-#        - new_version_code: $BITRISE_BUILD_NUMBER
-#        - new_version_name: "0.2.4"
-#    - gradle-runner:
-#        inputs:
-#        - gradle_task: assembleRelease
-#        - gradlew_path: ./gradlew
-#    - sign-apk:
-#        inputs:
-#        - android_app: $BITRISE_APK_PATH_LIST
-#    - path::./:
-#        title: Execute step
-#        inputs:
-#        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
-#        - package_name: $PACKAGE_NAME
-#        - app_path: $BITRISE_SIGNED_APK_PATH
-#        - track: $TRACK
-#        - mapping_file: ""
-#        - user_fraction: ""
-#        - retry_without_sending_to_review: true
+  test_apk_deploy_custom_track:
+    summary: Tests deploying an APK to a user-defined track
+    envs:
+
+    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
+    - BRANCH: master
+
+    - BITRISEIO_ANDROID_KEYSTORE_URL: $SIMPLESAMPLE_ANDROID_KEYSTORE_URL
+    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $SIMPLESAMPLE_ANDROID_KEYSTORE_PASSWORD
+    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $SIMPLESAMPLE_ANDROID_KEY_ALIAS
+    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
+
+    - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
+    - SERVICE_ACCOUNT_KEY_URL: $SIMPLESAMPLE_GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - TRACK: apk-testing
+    before_run:
+    - _setup
+    steps:
+    - change-android-versioncode-and-versionname:
+        inputs:
+        - build_gradle_path: ./app/build.gradle
+        - new_version_code: $BITRISE_BUILD_NUMBER
+        - new_version_name: "0.2.4"
+    - gradle-runner:
+        inputs:
+        - gradle_task: assembleRelease
+        - gradlew_path: ./gradlew
+    - sign-apk:
+        inputs:
+        - android_app: $BITRISE_APK_PATH_LIST
+    - path::./:
+        title: Execute step
+        inputs:
+        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
+        - package_name: $PACKAGE_NAME
+        - app_path: $BITRISE_SIGNED_APK_PATH
+        - track: $TRACK
+        - mapping_file: ""
+        - user_fraction: ""
+        - retry_without_sending_to_review: true
   _setup:
     steps:
     - script:
