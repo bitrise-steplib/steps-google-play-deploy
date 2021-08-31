@@ -16,8 +16,6 @@ app:
   - GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL: $SIMPLESAMPLE_GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
   - SIMPLESAMPLE_GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL: $SIMPLESAMPLE_GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
 
-  - GOOGLE_SERVICES_JSON_KEY: $GOOGLE_SERVICES_JSON_KEY
-
 workflows:
   test_multiple_aab_deploy:
     summary: Builds and deploys a main app and a wearable app as AAB
@@ -30,7 +28,7 @@ workflows:
     - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $MULTIAAB_ANDROID_KEY_ALIAS
     - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $MULTIAAB_ANDROID_KEY_PASSWORD
 
-    - PACKAGE_NAME: "io.bitrise.android.sample_xyztouristattractions"
+    - PACKAGE_NAME: io.bitrise.android.sample_xyztouristattractions
 
     - SERVICE_ACCOUNT_KEY_URL: $SIMPLESAMPLE_GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
     - TRACK: internal
@@ -55,12 +53,12 @@ workflows:
         inputs:
         - new_version_code: $VERSION_CODE
         - version_code_offset: "0"
-        - build_gradle_path: "$BITRISE_SOURCE_DIR/Application/build.gradle"
+        - build_gradle_path: $BITRISE_SOURCE_DIR/Application/build.gradle
     - change-android-versioncode-and-versionname:
         inputs:
         - new_version_code: $VERSION_CODE
         - version_code_offset: "1"
-        - build_gradle_path: "$BITRISE_SOURCE_DIR/Wearable/build.gradle"
+        - build_gradle_path: $BITRISE_SOURCE_DIR/Wearable/build.gradle
     - android-build:
         title: Build main app
         inputs:
@@ -69,7 +67,7 @@ workflows:
         - module: Application
     - sign-apk:
         inputs:
-        - android_app: "$BITRISE_AAB_PATH"
+        - android_app: $BITRISE_AAB_PATH
     - android-build:
         title: Build wearable app
         inputs:
@@ -78,13 +76,13 @@ workflows:
         - module: Wearable
     - sign-apk:
         inputs:
-        - android_app: "$BITRISE_AAB_PATH"
+        - android_app: $BITRISE_AAB_PATH
     - path::./:
         title: Execute step
         inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
-        - app_path: "/bitrise/deploy/Wearable-release-bitrise-signed.aab|/bitrise/deploy/Application-release-bitrise-signed.aab"
+        - app_path: $BITRISE_DEPLOY_DIR/Wearable-release-bitrise-signed.aab|$BITRISE_DEPLOY_DIR/Application-release-bitrise-signed.aab
         - track: $TRACK
 
 #  test_aab_deploy:
@@ -97,7 +95,7 @@ workflows:
 #    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $SIMPLESAMPLE_ANDROID_KEY_ALIAS
 #    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
 #
-#    - PACKAGE_NAME: "com.bitrise_io.sample_apps_android_simple_google_play_deploy"
+#    - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
 #    - SERVICE_ACCOUNT_KEY_URL: $SIMPLESAMPLE_GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
 #    - TRACK: internal
 #    before_run:
@@ -125,35 +123,29 @@ workflows:
 #        - user_fraction: 0.6
 #        - release_name: "Overwritten release name"
 
-#  test_apk_deploy:
+#  test_apk_deploy_custom_track:
+#    summary: Tests deploying an APK to a user-defined track
 #    envs:
-#    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-realmtasks.git
+#
+#    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
 #    - BRANCH: master
-#    - GOOGLE_SERVICES_JSON: $GOOGLE_SERVICES_JSON_KEY
 #
-#    - BITRISEIO_ANDROID_KEYSTORE_URL: $DEFAULT_ALIAS_ANDROID_KEYSTORE_URL
-#    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEYSTORE_PASSWORD
-#    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $DEFAULT_ALIAS_ANDROID_KEY_ALIAS
-#    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $DEFAULT_ALIAS_ANDROID_KEY_PASSWORD
+#    - BITRISEIO_ANDROID_KEYSTORE_URL: $SIMPLESAMPLE_ANDROID_KEYSTORE_URL
+#    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $SIMPLESAMPLE_ANDROID_KEYSTORE_PASSWORD
+#    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $SIMPLESAMPLE_ANDROID_KEY_ALIAS
+#    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
 #
-#    - PACKAGE_NAME: "io.bitrise.realmtasks"
-#    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
-#    - TRACK: "beta"
+#    - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
+#    - SERVICE_ACCOUNT_KEY_URL: $SIMPLESAMPLE_GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+#    - TRACK: apk-testing
 #    before_run:
 #    - _setup
 #    steps:
-#    - script:
-#        title: Download google-services.json
-#        inputs:
-#        - content: |-
-#            set -ex
-#            printenv GOOGLE_SERVICES_JSON > ./app/google-services.json
 #    - change-android-versioncode-and-versionname:
 #        inputs:
 #        - build_gradle_path: ./app/build.gradle
 #        - new_version_code: $BITRISE_BUILD_NUMBER
 #        - new_version_name: "0.2.4"
-#        - version_code_offset: 1
 #    - gradle-runner:
 #        inputs:
 #        - gradle_task: assembleRelease
