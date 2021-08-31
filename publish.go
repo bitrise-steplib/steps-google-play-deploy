@@ -98,6 +98,7 @@ func uploadAppBundle(service *androidpublisher.Service, packageName string, appE
 
 	editsBundlesUploadCall := editsBundlesService.Upload(packageName, appEditID)
 	editsBundlesUploadCall.Media(appFile, googleapi.ContentType("application/octet-stream"))
+	editsBundlesUploadCall.AckBundleInstallationWarning(true)
 
 	bundle, err := editsBundlesUploadCall.Do()
 	if err != nil {
