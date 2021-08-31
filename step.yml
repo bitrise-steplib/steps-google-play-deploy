@@ -55,11 +55,7 @@ source_code_url: https://github.com/bitrise-io/steps-google-play-deploy
 support_url: https://github.com/bitrise-io/steps-google-play-deploy/issues
 project_type_tags:
 - android
-- xamarin
-- cordova
-- ionic
-- react-native
-- flutter
+
 type_tags:
 - deploy
 is_requires_admin_user: false
