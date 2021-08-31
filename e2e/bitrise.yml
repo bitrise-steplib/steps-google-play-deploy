@@ -38,6 +38,13 @@ workflows:
     - _setup
     steps:
     - script:
+        title: Visual Studio stack workaround
+        description: A specific build-tools version is missing from the stack and Gradle can't install it at runtime because licenses have not been accepted
+        inputs:
+        - content: |-
+            set -ex
+            yes | sdkmanager --install "build-tools;29.0.2"
+    - script:
         title: Set $VERSION_CODE
         inputs:
         - content: |-
