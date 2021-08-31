@@ -91,12 +91,6 @@ workflows:
     before_run:
     - _setup
     steps:
-    - script:
-        title: Download google-services.json
-        inputs:
-        - content: |-
-            set -ex
-            printenv GOOGLE_SERVICES_JSON > ./app/google-services.json
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
