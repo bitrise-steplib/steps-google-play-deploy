@@ -78,7 +78,7 @@ workflows:
         - android_app: $BITRISE_AAB_PATH
     - path::./:
         title: Execute step
-        run_if: "{{ or (not .IsCi) $IS_LATEST_STACK_UBUNTU }}"
+        run_if: '{{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}'
         inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
@@ -115,7 +115,7 @@ workflows:
         - android_app: $BITRISE_AAB_PATH
     - path::./:
         title: Execute step
-        run_if: "{{ or (not .IsCi) $IS_LATEST_STACK_XCODE }}"
+        run_if: '{{ or (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}'
         inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
