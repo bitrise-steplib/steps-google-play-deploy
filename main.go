@@ -196,7 +196,7 @@ func executeEdit(service *androidpublisher.Service, configs Configs, changesNotS
 	log.Infof("Upload apks or app bundles")
 	versionCodes, err := uploadApplications(configs, service, appEdit)
 	if err != nil {
-		return fmt.Sprintf("Failed to upload APKs: %v", err)
+		return fmt.Sprintf("Failed to upload application(s): %v", err)
 	}
 	log.Donef("Applications uploaded")
 
