@@ -13,18 +13,19 @@ import (
 
 // Configs stores the step's inputs
 type Configs struct {
-	JSONKeyPath                 stepconf.Secret `env:"service_account_json_key_path,required"`
-	PackageName                 string          `env:"package_name,required"`
-	AppPath                     string          `env:"app_path,required"`
-	ExpansionfilePath           string          `env:"expansionfile_path"`
-	Track                       string          `env:"track,required"`
-	UserFraction                float64         `env:"user_fraction,range]0.0..1.0["`
-	UpdatePriority              int             `env:"update_priority,range[0..5]"`
-	WhatsnewsDir                string          `env:"whatsnews_dir"`
-	MappingFile                 string          `env:"mapping_file"`
-	ReleaseName                 string          `env:"release_name"`
-	Status                      string          `env:"status"`
-	RetryWithoutSendingToReview bool            `env:"retry_without_sending_to_review,opt[true,false]"`
+	JSONKeyPath                  stepconf.Secret `env:"service_account_json_key_path,required"`
+	PackageName                  string          `env:"package_name,required"`
+	AppPath                      string          `env:"app_path,required"`
+	ExpansionfilePath            string          `env:"expansionfile_path"`
+	Track                        string          `env:"track,required"`
+	UserFraction                 float64         `env:"user_fraction,range]0.0..1.0["`
+	UpdatePriority               int             `env:"update_priority,range[0..5]"`
+	WhatsnewsDir                 string          `env:"whatsnews_dir"`
+	MappingFile                  string          `env:"mapping_file"`
+	ReleaseName                  string          `env:"release_name"`
+	Status                       string          `env:"status"`
+	RetryWithoutSendingToReview  bool            `env:"retry_without_sending_to_review,opt[true,false]"`
+	AckBundleInstallationWarning bool            `env:"ack_bundle_installation_warning,opt[true,false]"`
 }
 
 // validate validates the Configs.
