@@ -109,7 +109,7 @@ func uploadAppBundle(service *androidpublisher.Service, packageName string, appE
 		if strings.Contains(err.Error(), bundleInstallationWarning) {
 			msg = fmt.Sprintf("%s\nTo acknowledge this warning, set the Acknowledge Bundle Installation Warning (ack_bundle_installation_warning) input to true.", msg)
 		}
-		return &androidpublisher.Bundle{}, fmt.Errorf(msg)
+		return nil, fmt.Errorf(msg)
 	}
 	log.Infof("Uploaded app bundle version: %d", bundle.VersionCode)
 	return bundle, nil
