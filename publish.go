@@ -20,6 +20,9 @@ const (
 	releaseStatusHalted     = "halted"
 )
 
+const bundleInstallationWarning = "Error 403: The installation of the app bundle may be too large " +
+	"and trigger user warning on some devices, and this needs to be explicitly acknowledged in the request."
+
 // uploadExpansionFiles uploads the expansion files for given applications, like .obb files.
 func uploadExpansionFiles(service *androidpublisher.Service, expFileEntry string, packageName string, appEditID string, versionCode int64) error {
 	cleanExpFileConfigEntry := strings.TrimSpace(expFileEntry)
@@ -102,7 +105,11 @@ func uploadAppBundle(service *androidpublisher.Service, packageName string, appE
 
 	bundle, err := editsBundlesUploadCall.Do()
 	if err != nil {
-		return &androidpublisher.Bundle{}, fmt.Errorf("failed to upload app bundle, error: %s", err)
+		msg := fmt.Sprintf("failed to upload app bundle, error: %s", err)
+		if strings.Contains(err.Error(), bundleInstallationWarning) {
+			msg = fmt.Sprintf("%s\nTo acknowledge this warning, set the Acknowledge Bundle Installation Warning (ack_bundle_installation_warning) input to true.", msg)
+		}
+		return &androidpublisher.Bundle{}, fmt.Errorf(msg)
 	}
 	log.Infof("Uploaded app bundle version: %d", bundle.VersionCode)
 	return bundle, nil
