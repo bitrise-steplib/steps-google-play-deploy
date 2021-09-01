@@ -178,3 +178,14 @@ inputs:
     value_options:
     - "true"
     - "false"
+
+- ack_bundle_installation_warning: "false"
+  opts:
+    title: Acknowledge Bundle Installation Warning
+    description: |-
+      Must be set to `true` if the app bundle installation may trigger a warning on user devices
+      (for example, if installation size may be over a threshold, typically 100 MB).
+    is_required: true
+    value_options:
+    - "true"
+    - "false"
