@@ -1,97 +1,125 @@
-# Google Play Deploy Step
+# Google Play Deploy
 
-Deploy your Android .apk file to Google Play
+[![Step changelog](https://shields.io/github/v/release/bitrise-io/steps-google-play-deploy?include_prereleases&label=changelog&color=blueviolet)](https://github.com/bitrise-io/steps-google-play-deploy/releases)
 
-## How to use this Step
+Upload your Android app to Google Play.
 
-Can be run directly with the [bitrise CLI](https://github.com/bitrise-io/bitrise),
-just `git clone` this repository, `cd` into it's folder in your Terminal/Command Line
-and call `bitrise run test`.
+<details>
+<summary>Description</summary>
 
-*Check the `bitrise.yml` file for required inputs which have to be
-added to your `.bitrise.secrets.yml` file!*
 
-Step by step:
+The Step uploads your Android app to Google Play. It works with both APK and AAB files.
 
-1. Open up your Terminal / Command Line
-2. `git clone` the repository
-3. `cd` into the directory of the step (the one you just `git clone`d)
-5. Create a `.bitrise.secrets.yml` file in the same directory of `bitrise.yml`
-   (the `.bitrise.secrets.yml` is a git ignored file, you can store your secrets in it)
-6. Check the `bitrise.yml` file for any secret you should set in `.bitrise.secrets.yml`
-  * Best practice is to mark these options with something like `# define these in your .bitrise.secrets.yml`, in the `app:envs` section.
-7. Once you have all the required secret parameters in your `.bitrise.secrets.yml` you can just run this step with the [bitrise CLI](https://github.com/bitrise-io/bitrise): `bitrise run test`
+Please note that in order to successfully use this Step, you must [upload your first APK or AAB file manually](https://support.google.com/googleplay/android-developer/answer/9859152?hl=en&visit_id=637407764704794872-3953166533&rd=1), using Google's own web interface! 
+Once you uploaded one APK or AAB of your app to Google Play manually, you can use our Step for all subsequent versions. 
 
-An example `.bitrise.secrets.yml` file:
+### Configuring the Step
 
+The Step uses Google's API so before attempting to use the Step, you need to [Set up Google API access](https://devcenter.bitrise.io/deploy/android-deploy/deploying-android-apps/#setting-up-google-play-api-access). This includes:
+- [Linking your Google Developer Console to an API project](https://developers.google.com/android-publisher/getting_started#linking_your_api_project).
+- [Setting up API access using a service account](https://developers.google.com/android-publisher/getting_started#using_a_service_account).
+- Granting the necessary access rights to the service account. 
+- Upload the service account JSON key to Bitrise and store it in a [Secret Env Var](https://devcenter.bitrise.io/builds/env-vars-secret-env-vars/). 
+
+Due to the way the Google Play Publisher API works, you have to grant at least the following permissions to that service account:
+- Edit store listing, pricing & distribution
+- Manage Production APKs
+- Manage Alpha & Beta APKs
+- Manage Alpha & Beta users
+
+Read the full process in our [Deploying Android apps guide](https://devcenter.bitrise.io/deploy/android-deploy/deploying-android-apps/).
+
+To deploy your app with the Step:
+
+1. In the **Service Account JSON key file path**, add the Secret that stores your service account JSON key. 
+1. In the **App file path** input, set the path to your APK and/or AAB files. You can add multiple paths here, separated with a newline. 
+   In most cases, the default values work well unless you changed the output variable of the Step that build your APK or AAB.
+1. In the **Package name**  input, set the package name of your app.  
+1. In the **Track** input, add the track to which you want to assign the app. This can be any of the built-in tracks or a custom track of your own.
+
+### Troubleshooting 
+
+If the Step fails, check the following:
+- If it's an authentication error, check that your Secret points to the correct file (and that a file is uploaded at all). 
+- Make sure your service account has the necessary access rights.
+- Check that there's no typo in the package name and that you selected an existing track for the app. 
+
+### Useful links 
+
+- [Google Play Developer API - Getting Started](https://developers.google.com/android-publisher/getting_started)
+- [Deploying Android apps](https://devcenter.bitrise.io/deploy/android-deploy/deploying-android-apps/)
+
+### Related Steps 
+
+- [TestFairy Deploy Android](https://www.bitrise.io/integrations/steps/testfairy-deploy-android)
+- [AppCenter Android Deploy](https://www.bitrise.io/integrations/steps/appcenter-deploy-android)
+- [Appetize.io Deploy](https://www.bitrise.io/integrations/steps/appetize-deploy)
+- [Android Sign](https://www.bitrise.io/integrations/steps/sign-apk)
+</details>
+
+## 🧩 Get started
+
+Add this step directly to your workflow in the [Bitrise Workflow Editor](https://devcenter.bitrise.io/steps-and-workflows/steps-and-workflows-index/).
+
+You can also run this step directly with [Bitrise CLI](https://github.com/bitrise-io/bitrise).
+
+### Example
+
+Build, sign and deploy your app to Google Play:
+
+```yaml
+steps:
+- android-build:
+    inputs:
+    - variant: release
+    - build_type: aab
+- sign-apk:
+    inputs:
+    - android_app: $BITRISE_AAB_PATH
+    # Make sure that the keystore file is uploaded in Code Signing settings
+- google-play-deploy:
+    inputs:
+    - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL # Upload this in Code Signing settings
+    - package_name: my.example.package
+    - app_path: $BITRISE_SIGNED_AAB_PATH
+    - track: alpha
 ```
-envs:
-- A_SECRET_PARAM_ONE: the value for secret one
-- A_SECRET_PARAM_TWO: the value for secret two
-```
 
-## How to create your own step
+## ⚙️ Configuration
 
-1. Create a new git repository for your step (**don't fork** the *step template*, create a *new* repository)
-2. Copy the [step template](https://github.com/bitrise-steplib/step-template) files into your repository
-3. Fill the `step.sh` with your functionality
-4. Wire out your inputs to `step.yml` (`inputs` section)
-5. Fill out the other parts of the `step.yml` too
-6. Provide test values for the inputs in the `bitrise.yml`
-7. Run your step with `bitrise run test` - if it works, you're ready
+<details>
+<summary>Inputs</summary>
 
-__For Step development guidelines & best practices__ check this documentation: [https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md](https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md).
+| Key | Description | Flags | Default |
+| --- | --- | --- | --- |
+| `service_account_json_key_path` | Path to the service account's JSON key file. It must be a Secret Environment Variable, pointing to either a file uploaded to Bitrise or to a remote download location. | required, sensitive |  |
+| `package_name` | Package name of the app. | required |  |
+| `app_path` | Path to the app bundle file(s) or APK file(s) to deploy. In the case of [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html) deploy, you can specify multiple APKs and AABs as a newline (`\n`) or pipe (`\|`) separated list. | required | `$BITRISE_APK_PATH\n$BITRISE_AAB_PATH` |
+| `expansionfile_path` | Path to the [expansion file](https://developer.android.com/google/play/expansion-files). Leave empty or provide exactly the same number of paths as in app_path, separated by `\|` character and start each path with the expansion file's type separated by a `:`. (main, patch) Format examples: - `main:/path/to/my/app.obb` - `patch:/path/to/my/app1.obb\|main:/path/to/my/app2.obb\|main:/path/to/my/app3.obb` |  |  |
+| `track` | The track to which you want to assign the uploaded app.  Can be one of the built-in tracks (internal, alpha, beta, production), or a custom track name you added in Google Play Developer Console. | required | `alpha` |
+| `user_fraction` | Portion of the users who should get the staged version of the app. Accepts values between 0.0 and 1.0 (exclusive-exclusive). Only applies if `Status` is `inProgress` or `halted`.  To release to all users, this input should not be defined (or should be blank). |  |  |
+| `status` | The status of a release. For more information see the [API reference](https://developers.google.com/android-publisher/api-ref/rest/v3/edits.tracks#Status) |  |  |
+| `release_name` | The name of the release. By default Play Store generates the name from the APK's `versionName` value. |  |  |
+| `update_priority` | This allows your app to decide how strongly to recommend an update to the user. Accepts values between 0 and 5 with 0 being the lowest priority and 5 being the highest priority. By default this value is 0. For more information see here: https://developer.android.com/guide/playcore/in-app-updates#check-priority. |  | `0` |
+| `whatsnews_dir` | Use this input to specify localized 'what's new' files directory. This directory should contain 'whatsnew' files postfixed with the locale. what's new file name pattern: `whatsnew-LOCALE` Example:  ``` + - [PATH/TO/WHATSNEW]     \|     + - whatsnew-en-US     \|     + - whatsnew-de-DE ``` Format examples: - "./"         # what's new files are in the repo root directory - "./whatsnew" # what's new files are in the whatsnew directory |  |  |
+| `mapping_file` | The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names. |  | `$BITRISE_MAPPING_PATH` |
+| `retry_without_sending_to_review` | If set to `true` and the initial change request fails, the changes will not be reviewed until they are manually sent for review from the Google Play Console UI. If set to `false`, the step fails if the changes can't be automatically sent to review. | required | `false` |
+</details>
 
-**NOTE:**
+<details>
+<summary>Outputs</summary>
+There are no outputs defined in this step
+</details>
 
-If you want to use your step in your project's `bitrise.yml`:
+## 🙋 Contributing
 
-1. git push the step into it's repository
-2. reference it in your `bitrise.yml` with the `git::PUBLIC-GIT-CLONE-URL@BRANCH` step reference style:
+We welcome [pull requests](https://github.com/bitrise-io/steps-google-play-deploy/pulls) and [issues](https://github.com/bitrise-io/steps-google-play-deploy/issues) against this repository.
 
-```
-- git::https://github.com/user/my-step.git@branch:
-   title: My step
-   inputs:
-   - my_input_1: "my value 1"
-   - my_input_2: "my value 2"
-```
+For pull requests, work on your changes in a forked repository and use the Bitrise CLI to [run step tests locally](https://devcenter.bitrise.io/bitrise-cli/run-your-first-build/).
 
-You can find more examples of step reference styles
-in the [bitrise CLI repository](https://github.com/bitrise-io/bitrise/blob/master/_examples/tutorials/steps-and-workflows/bitrise.yml#L65).
+**Note:** this step's end-to-end tests (defined in `e2e/bitrise.yml`) are working with secrets which are intentionally not stored in this repo. External contributors won't be able to run those tests. Don't worry, if you open a PR with your contribution, we will help with running tests and make sure that they pass.
 
-## How to contribute to this Step
+Learn more about developing steps:
 
-1. Fork this repository
-2. `git clone` it
-3. Create a branch you'll work on
-4. To use/test the step just follow the **How to use this Step** section
-5. Do the changes you want to
-6. Run/test the step before sending your contribution
-  * You can also test the step in your `bitrise` project, either on your Mac or on [bitrise.io](https://www.bitrise.io)
-  * You just have to replace the step ID in your project's `bitrise.yml` with either a relative path, or with a git URL format
-  * (relative) path format: instead of `- original-step-id:` use `- path::./relative/path/of/script/on/your/Mac:`
-  * direct git URL format: instead of `- original-step-id:` use `- git::https://github.com/user/step.git@branch:`
-  * You can find more examples of alternative step referencing at: https://github.com/bitrise-io/bitrise/blob/master/_examples/tutorials/steps-and-workflows/bitrise.yml
-7. Once you're done just commit your changes & create a Pull Request
-
-
-## Share your own Step
-
-You can share your Step or step version with the [bitrise CLI](https://github.com/bitrise-io/bitrise). If you use the `bitrise.yml` included in this repository, all you have to do is:
-
-1. In your Terminal / Command Line `cd` into this directory (where the `bitrise.yml` of the step is located)
-1. Run: `bitrise run test` to test the step
-1. Run: `bitrise run audit-this-step` to audit the `step.yml`
-1. Check the `share-this-step` workflow in the `bitrise.yml`, and fill out the
-   `envs` if you haven't done so already (don't forget to bump the version number if this is an update
-   of your step!)
-1. Then run: `bitrise run share-this-step` to share the step (version) you specified in the `envs`
-1. Send the Pull Request, as described in the logs of `bitrise run share-this-step`
-
-That's all ;)
-
-## Trigger a new release
-
-- __merge every code changes__ to the `master` branch
-- __push the new version tag__ to the `master` branch
+- [Create your own step](https://devcenter.bitrise.io/contributors/create-your-own-step/)
+- [Testing your Step](https://devcenter.bitrise.io/contributors/testing-and-versioning-your-steps/)

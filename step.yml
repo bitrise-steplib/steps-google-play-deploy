@@ -1,5 +1,5 @@
 title: Google Play Deploy
-summary: Uploads your Android app to Google Play.
+summary: Upload your Android app to Google Play.
 description: |-
 
   The Step uploads your Android app to Google Play. It works with both APK and AAB files.
@@ -55,7 +55,11 @@ source_code_url: https://github.com/bitrise-io/steps-google-play-deploy
 support_url: https://github.com/bitrise-io/steps-google-play-deploy/issues
 project_type_tags:
 - android
-
+- xamarin
+- cordova
+- ionic
+- react-native
+- flutter
 type_tags:
 - deploy
 is_requires_admin_user: false
@@ -83,13 +87,13 @@ inputs:
     title: App file path
     description: |-
       Path to the app bundle file(s) or APK file(s) to deploy.
-      In the case of [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html) deploy, you can specify multiple APKs and AABs as a newline `\n` or pipe `|` separated list.
+      In the case of [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html) deploy, you can specify multiple APKs and AABs as a newline (`\n`) or pipe (`|`) separated list.
     is_required: true
 - expansionfile_path: ""
   opts:
     title: Expansion file Path
     description: |-
-      Path to the expansion file.
+      Path to the [expansion file](https://developer.android.com/google/play/expansion-files).
       Leave empty or provide exactly the same number of paths as in app_path, separated by `|` character and start each path with the expansion file's type
       separated by a `:`. (main, patch)
       Format examples:
@@ -102,11 +106,7 @@ inputs:
     description: |-
       The track to which you want to assign the uploaded app.
 
-      Can be one of the built-in tracks: internal, alpha, beta, production.
-
-      Or you can set your custom track name as well.
-
-      For example: `pre-release`, or any of your closed tracks you added in Google Play Developer Console.
+      Can be one of the built-in tracks (internal, alpha, beta, production), or a custom track name you added in Google Play Developer Console.
     is_required: true
 - user_fraction:
   opts:
@@ -122,13 +122,13 @@ inputs:
     title: Status
     description: |-
       The status of a release.
-      For more information see here: https://developers.google.com/android-publisher/api-ref/rest/v3/edits.tracks#Status
+      For more information see the [API reference](https://developers.google.com/android-publisher/api-ref/rest/v3/edits.tracks#Status)
     is_required: false
 - release_name:
   opts:
     title: Name of the release
     description: |-
-      The name of the release. By default Play Store generates the name from the APK's versionName.
+      The name of the release. By default Play Store generates the name from the APK's `versionName` value.
     is_required: false
 - update_priority: 0
   opts:
