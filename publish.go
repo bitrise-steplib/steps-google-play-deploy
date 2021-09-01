@@ -92,13 +92,13 @@ func uploadMappingFile(service *androidpublisher.Service, configs Configs, appEd
 }
 
 // uploadAppBundle uploads aab files to Google Play. Returns the uploaded bundle itself or an error.
-func uploadAppBundle(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File) (*androidpublisher.Bundle, error) {
+func uploadAppBundle(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File, ackBundleInstallationWarning bool) (*androidpublisher.Bundle, error) {
 	log.Debugf("Uploading file %v with package name '%v', AppEditId '%v", appFile, packageName, appEditID)
 	editsBundlesService := androidpublisher.NewEditsBundlesService(service)
 
 	editsBundlesUploadCall := editsBundlesService.Upload(packageName, appEditID)
 	editsBundlesUploadCall.Media(appFile, googleapi.ContentType("application/octet-stream"))
-	editsBundlesUploadCall.AckBundleInstallationWarning(true)
+	editsBundlesUploadCall.AckBundleInstallationWarning(ackBundleInstallationWarning)
 
 	bundle, err := editsBundlesUploadCall.Do()
 	if err != nil {

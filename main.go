@@ -44,7 +44,7 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 		}
 
 		if strings.ToLower(filepath.Ext(appPath)) == ".aab" {
-			bundle, err := uploadAppBundle(service, configs.PackageName, appEdit.Id, appFile)
+			bundle, err := uploadAppBundle(service, configs.PackageName, appEdit.Id, appFile, configs.AckBundleInstallationWarning)
 			if err != nil {
 				return nil, err
 			}
