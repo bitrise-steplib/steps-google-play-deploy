@@ -125,7 +125,7 @@ func uploadAppApk(service *androidpublisher.Service, packageName string, appEdit
 
 	apk, err := editsApksUploadCall.Do()
 	if err != nil {
-		return &androidpublisher.Apk{}, fmt.Errorf("failed to upload apk, error: %s", err)
+		return nil, fmt.Errorf("failed to upload apk, error: %s", err)
 	}
 	log.Infof("Uploaded apk version: %d", apk.VersionCode)
 	return apk, nil
