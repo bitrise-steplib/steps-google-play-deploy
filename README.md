@@ -1,4 +1,4 @@
-gst# Google Play Deploy
+# Google Play Deploy
 
 [![Step changelog](https://shields.io/github/v/release/bitrise-io/steps-google-play-deploy?include_prereleases&label=changelog&color=blueviolet)](https://github.com/bitrise-io/steps-google-play-deploy/releases)
 
