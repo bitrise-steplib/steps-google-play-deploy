@@ -25,6 +25,7 @@ func failf(format string, v ...interface{}) {
 // the uploaded apps.
 func uploadApplications(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (map[int64]int, error) {
 	appPaths, _ := configs.appPaths()
+	mappingPaths := configs.mappingPaths()
 	versionCodes := make(map[int64]int)
 
 	var versionCodeListLog bytes.Buffer
@@ -35,8 +36,8 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 		return nil, err
 	}
 
-	for i, appPath := range appPaths {
-		log.Printf("Uploading %v %d/%d", appPath, i+1, len(appPaths))
+	for appIndex, appPath := range appPaths {
+		log.Printf("Uploading %v %d/%d", appPath, appIndex+1, len(appPaths))
 		versionCode := int64(0)
 		appFile, err := os.Open(appPath)
 		if err != nil {
@@ -57,25 +58,26 @@ func uploadApplications(configs Configs, service *androidpublisher.Service, appE
 			versionCode = apk.VersionCode
 
 			if len(expansionFilePaths) > 0 {
-				if err := uploadExpansionFiles(service, expansionFilePaths[i], configs.PackageName, appEdit.Id, versionCode); err != nil {
+				if err := uploadExpansionFiles(service, expansionFilePaths[appIndex], configs.PackageName, appEdit.Id, versionCode); err != nil {
 					return nil, err
 				}
 			}
 		}
 
-		// Upload mapping.txt
-		if configs.MappingFile != "" && versionCode != 0 {
-			if err := uploadMappingFile(service, configs, appEdit.Id, versionCode); err != nil {
+		// Upload mapping.txt files
+		if len(mappingPaths)-1 >= appIndex && versionCode != 0 {
+			filePath := mappingPaths[appIndex]
+			if err := uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
 				return nil, err
 			}
-			if i < len(appPaths)-1 {
+			if appIndex < len(appPaths)-1 {
 				fmt.Println()
 			}
 		}
 
 		versionCodes[versionCode]++
 		versionCodeListLog.WriteString(fmt.Sprintf("%d", versionCode))
-		if i < len(appPaths)-1 {
+		if appIndex < len(appPaths)-1 {
 			versionCodeListLog.WriteString(", ")
 		}
 	}

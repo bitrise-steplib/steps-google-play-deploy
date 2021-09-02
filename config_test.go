@@ -47,7 +47,9 @@ func Test_fraction(t *testing.T) {
 	}
 }
 
-func Test_parseAppList(t *testing.T) {
+// TODO: test mapping input list
+
+func Test_parseInputList(t *testing.T) {
 	tests := []struct {
 		name     string
 		list     string
@@ -81,8 +83,8 @@ func Test_parseAppList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotApps := parseAppList(tt.list); !reflect.DeepEqual(gotApps, tt.wantApps) {
-				t.Errorf("parseAppList() = %v, want %v", gotApps, tt.wantApps)
+			if gotApps := parseInputList(tt.list); !reflect.DeepEqual(gotApps, tt.wantApps) {
+				t.Errorf("parseInputList() = %v, want %v", gotApps, tt.wantApps)
 			}
 		})
 	}

@@ -159,9 +159,11 @@ inputs:
       - "./whatsnew" # what's new files are in the whatsnew directory
 - mapping_file: "$BITRISE_MAPPING_PATH"
   opts:
-    title: Location of your mapping.txt file
+    title: Mapping txt file path
     description: |-
       The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names.
+
+      In case of deploying [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html), you can specify multiple mapping.txt files as a newline (`\n`) or pipe (`|`) separated list. The order of mapping files should match the list of APK or AAB files in the `app_path` input.
 - retry_without_sending_to_review: "false"
   opts:
     title: Retry changes without sending to review

@@ -86,6 +86,7 @@ workflows:
         - package_name: $PACKAGE_NAME
         - app_path: $BITRISE_DEPLOY_DIR/Wearable-release-bitrise-signed.aab|$BITRISE_DEPLOY_DIR/Application-release-bitrise-signed.aab
         - track: $TRACK
+        - mapping_file: $BITRISE_DEPLOY_DIR/Wearable-mapping.txt|$BITRISE_DEPLOY_DIR/Application-mapping.txt
 
   test_aab_deploy:
     envs:
