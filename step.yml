@@ -1,7 +1,6 @@
 title: Google Play Deploy
 summary: Upload your Android app to Google Play.
 description: |-
-
   The Step uploads your Android app to Google Play. It works with both APK and AAB files.
 
   Please note that in order to successfully use this Step, you must [upload your first APK or AAB file manually](https://support.google.com/googleplay/android-developer/answer/9859152?hl=en&visit_id=637407764704794872-3953166533&rd=1), using Google's own web interface! 
@@ -122,7 +121,7 @@ inputs:
     title: Status
     description: |-
       The status of a release.
-      For more information see the [API reference](https://developers.google.com/android-publisher/api-ref/rest/v3/edits.tracks#Status)
+      For more information see the [API reference](https://developers.google.com/android-publisher/api-ref/rest/v3/edits.tracks#Status).
     is_required: false
 - release_name:
   opts:
