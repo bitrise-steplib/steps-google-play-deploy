@@ -20,6 +20,9 @@ const (
 	releaseStatusHalted     = "halted"
 )
 
+const bundleInstallationWarning = "Error 403: The installation of the app bundle may be too large " +
+	"and trigger user warning on some devices, and this needs to be explicitly acknowledged in the request."
+
 // uploadExpansionFiles uploads the expansion files for given applications, like .obb files.
 func uploadExpansionFiles(service *androidpublisher.Service, expFileEntry string, packageName string, appEditID string, versionCode int64) error {
 	cleanExpFileConfigEntry := strings.TrimSpace(expFileEntry)
@@ -92,16 +95,21 @@ func uploadMappingFile(service *androidpublisher.Service, configs Configs, appEd
 }
 
 // uploadAppBundle uploads aab files to Google Play. Returns the uploaded bundle itself or an error.
-func uploadAppBundle(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File) (*androidpublisher.Bundle, error) {
+func uploadAppBundle(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File, ackBundleInstallationWarning bool) (*androidpublisher.Bundle, error) {
 	log.Debugf("Uploading file %v with package name '%v', AppEditId '%v", appFile, packageName, appEditID)
 	editsBundlesService := androidpublisher.NewEditsBundlesService(service)
 
 	editsBundlesUploadCall := editsBundlesService.Upload(packageName, appEditID)
 	editsBundlesUploadCall.Media(appFile, googleapi.ContentType("application/octet-stream"))
+	editsBundlesUploadCall.AckBundleInstallationWarning(ackBundleInstallationWarning)
 
 	bundle, err := editsBundlesUploadCall.Do()
 	if err != nil {
-		return &androidpublisher.Bundle{}, fmt.Errorf("failed to upload app bundle, error: %s", err)
+		msg := fmt.Sprintf("failed to upload app bundle, error: %s", err)
+		if strings.Contains(err.Error(), bundleInstallationWarning) {
+			msg = fmt.Sprintf("%s\nTo acknowledge this warning, set the Acknowledge Bundle Installation Warning (ack_bundle_installation_warning) input to true.", msg)
+		}
+		return nil, fmt.Errorf(msg)
 	}
 	log.Infof("Uploaded app bundle version: %d", bundle.VersionCode)
 	return bundle, nil
@@ -117,7 +125,7 @@ func uploadAppApk(service *androidpublisher.Service, packageName string, appEdit
 
 	apk, err := editsApksUploadCall.Do()
 	if err != nil {
-		return &androidpublisher.Apk{}, fmt.Errorf("failed to upload apk, error: %s", err)
+		return nil, fmt.Errorf("failed to upload apk, error: %s", err)
 	}
 	log.Infof("Uploaded apk version: %d", apk.VersionCode)
 	return apk, nil
