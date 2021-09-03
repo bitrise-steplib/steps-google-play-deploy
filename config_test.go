@@ -47,8 +47,6 @@ func Test_fraction(t *testing.T) {
 	}
 }
 
-// TODO: test mapping input list
-
 func Test_parseInputList(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -146,6 +144,69 @@ func TestConfigs_appPaths(t *testing.T) {
 				t.Errorf("Configs.appPaths() gotWarnings = %v, want %v", gotWarnings, tt.wantWarnings)
 			}
 		})
+	}
+}
+
+func TestConfigs_mappingPaths(t *testing.T) {
+	tests := []struct {
+		name        string
+		configs     Configs
+		wantErr     bool
+		createFiles []string
+	}{
+		{
+			name:    "no mapping file",
+			configs: Configs{},
+			wantErr: false,
+		},
+		{
+			name:        "single mapping file",
+			configs:     Configs{MappingFile: os.TempDir() + "TestConfigs_mappingPaths_mapping.txt"},
+			wantErr:     false,
+			createFiles: []string{os.TempDir() + "TestConfigs_mappingPaths_mapping.txt"},
+		},
+		{
+			name:    "single non-existent mapping file",
+			configs: Configs{MappingFile: os.TempDir() + "TestConfigs_mappingPaths_mapping.txt"},
+			wantErr: true,
+		},
+		{
+			name:        "multiple existing mapping files",
+			configs:     Configs{MappingFile: os.TempDir() + "TestConfigs_mappingPaths_mapping.txt" + "|" + os.TempDir() + "TestConfigs_mappingPaths_mapping2.txt"},
+			wantErr:     false,
+			createFiles: []string{os.TempDir() + "TestConfigs_mappingPaths_mapping.txt", os.TempDir() + "TestConfigs_mappingPaths_mapping2.txt"},
+		},
+		{
+			name:        "1 existing 1 invalid mapping file",
+			configs:     Configs{MappingFile: os.TempDir() + "TestConfigs_mappingPaths_mapping.txt" + "\n" + os.TempDir() + "TestConfigs_mappingPaths_mapping2.txt"},
+			wantErr:     true,
+			createFiles: []string{os.TempDir() + "TestConfigs_mappingPaths_mapping.txt"},
+		},
+	}
+
+	for _, tt := range tests {
+		var tempFiles []*os.File
+		for _, path := range tt.createFiles {
+			file, err := os.Create(path)
+			if err != nil {
+				t.Errorf("failed to create file: %s", err)
+			}
+			tempFiles = append(tempFiles, file)
+		}
+
+		gotErr := tt.configs.validateMappingFile()
+		for _, file := range tempFiles {
+			err := os.Remove(file.Name())
+			if err != nil {
+				t.Errorf("failed to delete leftover test file: %s", err)
+			}
+		}
+
+		if tt.wantErr && gotErr == nil {
+			t.Errorf("Configs.validateMappingFile(): wanted error but result is nil")
+		} else if !tt.wantErr && gotErr != nil {
+			t.Errorf("Configs.validateMappingFile(): wanted no error, got: %v", gotErr)
+		}
 	}
 }
 
