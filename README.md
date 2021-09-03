@@ -7,7 +7,6 @@ Upload your Android app to Google Play.
 <details>
 <summary>Description</summary>
 
-
 The Step uploads your Android app to Google Play. It works with both APK and AAB files.
 
 Please note that in order to successfully use this Step, you must [upload your first APK or AAB file manually](https://support.google.com/googleplay/android-developer/answer/9859152?hl=en&visit_id=637407764704794872-3953166533&rd=1), using Google's own web interface! 
@@ -98,12 +97,13 @@ steps:
 | `expansionfile_path` | Path to the [expansion file](https://developer.android.com/google/play/expansion-files). Leave empty or provide exactly the same number of paths as in app_path, separated by `\|` character and start each path with the expansion file's type separated by a `:`. (main, patch) Format examples: - `main:/path/to/my/app.obb` - `patch:/path/to/my/app1.obb\|main:/path/to/my/app2.obb\|main:/path/to/my/app3.obb` |  |  |
 | `track` | The track to which you want to assign the uploaded app.  Can be one of the built-in tracks (internal, alpha, beta, production), or a custom track name you added in Google Play Developer Console. | required | `alpha` |
 | `user_fraction` | Portion of the users who should get the staged version of the app. Accepts values between 0.0 and 1.0 (exclusive-exclusive). Only applies if `Status` is `inProgress` or `halted`.  To release to all users, this input should not be defined (or should be blank). |  |  |
-| `status` | The status of a release. For more information see the [API reference](https://developers.google.com/android-publisher/api-ref/rest/v3/edits.tracks#Status) |  |  |
+| `status` | The status of a release. For more information see the [API reference](https://developers.google.com/android-publisher/api-ref/rest/v3/edits.tracks#Status). |  |  |
 | `release_name` | The name of the release. By default Play Store generates the name from the APK's `versionName` value. |  |  |
 | `update_priority` | This allows your app to decide how strongly to recommend an update to the user. Accepts values between 0 and 5 with 0 being the lowest priority and 5 being the highest priority. By default this value is 0. For more information see here: https://developer.android.com/guide/playcore/in-app-updates#check-priority. |  | `0` |
 | `whatsnews_dir` | Use this input to specify localized 'what's new' files directory. This directory should contain 'whatsnew' files postfixed with the locale. what's new file name pattern: `whatsnew-LOCALE` Example:  ``` + - [PATH/TO/WHATSNEW]     \|     + - whatsnew-en-US     \|     + - whatsnew-de-DE ``` Format examples: - "./"         # what's new files are in the repo root directory - "./whatsnew" # what's new files are in the whatsnew directory |  |  |
 | `mapping_file` | The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names. |  | `$BITRISE_MAPPING_PATH` |
 | `retry_without_sending_to_review` | If set to `true` and the initial change request fails, the changes will not be reviewed until they are manually sent for review from the Google Play Console UI. If set to `false`, the step fails if the changes can't be automatically sent to review. | required | `false` |
+| `ack_bundle_installation_warning` | Must be set to `true` if the App Bundle installation may trigger a warning on user devices (for example, if installation size may be over a threshold, typically 100 MB). | required | `false` |
 </details>
 
 <details>
