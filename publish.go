@@ -74,16 +74,16 @@ func validateExpansionFileConfig(expFileEntry string) bool {
 	return strings.HasPrefix(cleanExpFileConfigEntry, "main:") || strings.HasPrefix(cleanExpFileConfigEntry, "patch:")
 }
 
-// uploadMappingFile uploads the mapping files (that are used for deobfuscation) to Google Play.
-func uploadMappingFile(service *androidpublisher.Service, configs Configs, appEditID string, versionCode int64) error {
-	log.Debugf("Getting mapping file from %v", configs.MappingFile)
-	mappingFile, err := os.Open(configs.MappingFile)
+// uploadMappingFile uploads a given mapping file to a given app artifact (based on versionCode) to Google Play.
+func uploadMappingFile(service *androidpublisher.Service, appEditID string, versionCode int64, packageName string, filePath string) error {
+	log.Debugf("Getting mapping file from %v", filePath)
+	mappingFile, err := os.Open(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to read mapping file (%s), error: %s", configs.MappingFile, err)
+		return fmt.Errorf("failed to read mapping file (%s), error: %s", filePath, err)
 	}
-	log.Debugf("Uploading mapping file %v with package name '%v', AppEditId '%v', version code '%v'", configs.MappingFile, configs.PackageName, appEditID, versionCode)
+	log.Debugf("Uploading mapping file %v with package name '%v', AppEditId '%v', version code '%v'", filePath, packageName, appEditID, versionCode)
 	editsDeobfuscationFilesService := androidpublisher.NewEditsDeobfuscationfilesService(service)
-	editsDeobfuscationFilesUploadCall := editsDeobfuscationFilesService.Upload(configs.PackageName, appEditID, versionCode, "proguard")
+	editsDeobfuscationFilesUploadCall := editsDeobfuscationFilesService.Upload(packageName, appEditID, versionCode, "proguard")
 	editsDeobfuscationFilesUploadCall.Media(mappingFile, googleapi.ContentType("application/octet-stream"))
 
 	if _, err = editsDeobfuscationFilesUploadCall.Do(); err != nil {

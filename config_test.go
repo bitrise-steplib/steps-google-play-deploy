@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -47,7 +48,7 @@ func Test_fraction(t *testing.T) {
 	}
 }
 
-func Test_parseAppList(t *testing.T) {
+func Test_parseInputList(t *testing.T) {
 	tests := []struct {
 		name     string
 		list     string
@@ -81,8 +82,8 @@ func Test_parseAppList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotApps := parseAppList(tt.list); !reflect.DeepEqual(gotApps, tt.wantApps) {
-				t.Errorf("parseAppList() = %v, want %v", gotApps, tt.wantApps)
+			if gotApps := parseInputList(tt.list); !reflect.DeepEqual(gotApps, tt.wantApps) {
+				t.Errorf("parseInputList() = %v, want %v", gotApps, tt.wantApps)
 			}
 		})
 	}
@@ -144,6 +145,66 @@ func TestConfigs_appPaths(t *testing.T) {
 				t.Errorf("Configs.appPaths() gotWarnings = %v, want %v", gotWarnings, tt.wantWarnings)
 			}
 		})
+	}
+}
+
+func TestConfigs_mappingPaths(t *testing.T) {
+	tmpDir := t.TempDir()
+	tests := []struct {
+		name        string
+		configs     Configs
+		wantErr     bool
+		createFiles []string
+	}{
+		{
+			name:    "no mapping file",
+			configs: Configs{},
+			wantErr: false,
+		},
+		{
+			name:        "single mapping file",
+			configs:     Configs{MappingFile: filepath.Join(tmpDir, "single", "mapping.txt")},
+			wantErr:     false,
+			createFiles: []string{filepath.Join(tmpDir, "single", "mapping.txt")},
+		},
+		{
+			name:    "single non-existent mapping file",
+			configs: Configs{MappingFile: filepath.Join(tmpDir, "single_nonexistent", "mapping.txt")},
+			wantErr: true,
+		},
+		{
+			name:        "multiple existing mapping files",
+			configs:     Configs{MappingFile: filepath.Join(tmpDir, "multiple", "mapping.txt") + "|" + filepath.Join(tmpDir, "multiple", "mapping2.txt")},
+			wantErr:     false,
+			createFiles: []string{filepath.Join(tmpDir, "multiple", "mapping.txt"), filepath.Join(tmpDir, "multiple", "mapping2.txt")},
+		},
+		{
+			name:        "1 existing 1 invalid mapping file",
+			configs:     Configs{MappingFile: filepath.Join(tmpDir, "multiple_nonexistent", "mapping.txt") + "\n" + filepath.Join(tmpDir, "multiple_nonexistent", "mapping2.txt")},
+			wantErr:     true,
+			createFiles: []string{filepath.Join(tmpDir, "multiple_nonexistent", "mapping.txt")},
+		},
+	}
+
+	for _, tt := range tests {
+		for _, path := range tt.createFiles {
+			err := os.MkdirAll(filepath.Dir(path), os.ModePerm)
+			if err != nil {
+				t.Errorf("failed to create path: %s", err)
+			}
+			_, err = os.Create(path)
+			if err != nil {
+				t.Errorf("failed to create file: %s", err)
+			}
+		}
+
+		gotErr := tt.configs.validateMappingFile()
+
+		if tt.wantErr && gotErr == nil {
+			t.Errorf("%s: wanted error but result is nil", tt.name)
+		} else if !tt.wantErr && gotErr != nil {
+			t.Errorf("%s: wanted no error, got: %v", tt.name, gotErr)
+		}
 	}
 }
 

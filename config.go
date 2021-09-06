@@ -71,6 +71,8 @@ func (c Configs) validateWhatsnewsDir() error {
 	} else if !exist {
 		return errors.New("what's new directory not exist at: " + c.WhatsnewsDir)
 	}
+
+	log.Infof("Using what's new data from: %v", c.WhatsnewsDir)
 	return nil
 }
 
@@ -80,10 +82,14 @@ func (c Configs) validateMappingFile() error {
 		return nil
 	}
 
-	if exist, err := pathutil.IsPathExists(c.MappingFile); err != nil {
-		return fmt.Errorf("failed to check if mapping file exist at: %s, error: %s", c.MappingFile, err)
-	} else if !exist {
-		return errors.New("mapping file not exist at: " + c.MappingFile)
+	for _, path := range parseInputList(c.MappingFile) {
+		if exist, err := pathutil.IsPathExists(path); err != nil {
+			return fmt.Errorf("failed to check if mapping file exist at: %s, error: %s", path, err)
+		} else if !exist {
+			return errors.New("mapping file doesn't exist at: " + path)
+		}
+
+		log.Infof("Using mapping file from: %v", path)
 	}
 	return nil
 }
@@ -95,8 +101,8 @@ func splitElements(list []string, sep string) (s []string) {
 	return
 }
 
-func parseAppList(list string) (apps []string) {
-	log.Debugf("Parsing app list: '%v'", list)
+func parseInputList(list string) (elements []string) {
+	log.Debugf("Parsing list input: '%v'", list)
 	list = strings.TrimSpace(list)
 	if len(list) == 0 {
 		return nil
@@ -107,11 +113,11 @@ func parseAppList(list string) (apps []string) {
 		s = splitElements(s, sep)
 	}
 
-	for _, app := range s {
-		app = strings.TrimSpace(app)
-		if len(app) > 0 {
-			apps = append(apps, app)
-			log.Debugf("Found app: %v", app)
+	for _, element := range s {
+		element = strings.TrimSpace(element)
+		if len(element) > 0 {
+			elements = append(elements, element)
+			log.Debugf("Found element: %v", element)
 		}
 	}
 	return
@@ -120,14 +126,12 @@ func parseAppList(list string) (apps []string) {
 // appPaths returns the app to deploy, by preferring .aab files.
 func (c Configs) appPaths() ([]string, []string) {
 	var apks, aabs, warnings []string
-	for _, pth := range parseAppList(c.AppPath) {
+	for _, pth := range parseInputList(c.AppPath) {
 		pth = strings.TrimSpace(pth)
 		ext := strings.ToLower(filepath.Ext(pth))
 		if ext == ".aab" {
-			log.Infof("Found .aab file: %v", pth)
 			aabs = append(aabs, pth)
 		} else if ext == ".apk" {
-			log.Infof("Found .apk file: %v", pth)
 			apks = append(apks, pth)
 		} else {
 			warnings = append(warnings, fmt.Sprintf("unknown app path extension in path: %s, supported extensions: .apk, .aab", pth))
@@ -143,6 +147,14 @@ func (c Configs) appPaths() ([]string, []string) {
 	}
 
 	return apks, warnings
+}
+
+func (c Configs) mappingPaths() []string {
+	var mappingPaths []string
+	for _, path := range parseInputList(c.MappingFile) {
+		mappingPaths = append(mappingPaths, strings.TrimSpace(path))
+	}
+	return mappingPaths
 }
 
 // validateApps validates if files provided via app_path are existing files,
@@ -163,6 +175,7 @@ func (c Configs) validateApps() error {
 		} else if !exist {
 			return errors.New("app not exist at: " + pth)
 		}
+		log.Infof("Using app from: %v", pth)
 	}
 
 	return nil
