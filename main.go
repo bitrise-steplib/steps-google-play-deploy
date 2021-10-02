@@ -118,6 +118,21 @@ func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *a
 	return nil
 }
 
+// listTracks lists the available tracks for an app
+func listTracks(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) {
+	editsTracksService := androidpublisher.NewEditsTracksService(service)
+	listTracksCall := editsTracksService.List(configs.PackageName, appEdit.Id)
+
+	tracks, err := listTracksCall.Do()
+	if err != nil {
+		log.Warnf("Unable to fetch track list, error: %s", err)
+	}
+
+	for _, track := range tracks.Tracks {
+		log.Printf("- %s", track.Track)
+	}
+}
+
 func versionCodeMapToSlice(codeMap map[int64]int) []int64 {
 	var versionCodes []int64
 	for code, numArtifacts := range codeMap {
@@ -191,6 +206,13 @@ func executeEdit(service *androidpublisher.Service, configs Configs, changesNotS
 	}
 	log.Printf(" editID: %s", appEdit.Id)
 	log.Donef("Edit insert created")
+
+	//
+	// List tracks that are available in the Play Store
+	fmt.Println()
+	log.Infof("Listing tracks")
+	listTracks(configs, service, appEdit)
+	log.Donef("Tracks listed")
 
 	//
 	// Upload applications
