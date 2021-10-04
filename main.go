@@ -210,7 +210,7 @@ func executeEdit(service *androidpublisher.Service, configs Configs, changesNotS
 	//
 	// List tracks that are available in the Play Store
 	fmt.Println()
-	log.Infof("Listing tracks")
+	log.Infof("Available tracks on Google Play:")
 	listTracks(configs, service, appEdit)
 	log.Donef("Tracks listed")
 
