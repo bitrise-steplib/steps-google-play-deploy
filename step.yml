@@ -162,6 +162,8 @@ inputs:
     title: Mapping txt file path
     description: |-
       The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names.
+      
+      Uploading a mapping file is not required when deploying an AAB as the app bundle contains the mapping file itself.
 
       In case of deploying [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html), you can specify multiple mapping.txt files as a newline (`\n`) or pipe (`|`) separated list. The order of mapping files should match the list of APK or AAB files in the `app_path` input.
 - retry_without_sending_to_review: "false"
