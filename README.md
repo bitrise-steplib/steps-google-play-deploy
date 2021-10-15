@@ -36,19 +36,19 @@ To deploy your app with the Step:
 1. In the **Package name**  input, set the package name of your app.  
 1. In the **Track** input, add the track to which you want to assign the app. This can be any of the built-in tracks or a custom track of your own.
 
-### Troubleshooting 
+### Troubleshooting: 
 
 If the Step fails, check the following:
 - If it's an authentication error, check that your Secret points to the correct file (and that a file is uploaded at all). 
 - Make sure your service account has the necessary access rights.
 - Check that there's no typo in the package name and that you selected an existing track for the app. 
 
-### Useful links 
+### Useful links: 
 
 - [Google Play Developer API - Getting Started](https://developers.google.com/android-publisher/getting_started)
 - [Deploying Android apps](https://devcenter.bitrise.io/deploy/android-deploy/deploying-android-apps/)
 
-### Related Steps 
+### Related Steps:
 
 - [TestFairy Deploy Android](https://www.bitrise.io/integrations/steps/testfairy-deploy-android)
 - [AppCenter Android Deploy](https://www.bitrise.io/integrations/steps/appcenter-deploy-android)
@@ -56,9 +56,9 @@ If the Step fails, check the following:
 - [Android Sign](https://www.bitrise.io/integrations/steps/sign-apk)
 </details>
 
-## 🧩 Get started
+## 🧩 Get started:-
 
-Add this step directly to your workflow in the [Bitrise Workflow Editor](https://devcenter.bitrise.io/steps-and-workflows/steps-and-workflows-index/).
+Kindly add this step directly to your workflow in the [Bitrise Workflow Editor](https://devcenter.bitrise.io/steps-and-workflows/steps-and-workflows-index/).
 
 You can also run this step directly with [Bitrise CLI](https://github.com/bitrise-io/bitrise).
 
@@ -117,7 +117,9 @@ We welcome [pull requests](https://github.com/bitrise-io/steps-google-play-deplo
 
 For pull requests, work on your changes in a forked repository and use the Bitrise CLI to [run step tests locally](https://devcenter.bitrise.io/bitrise-cli/run-your-first-build/).
 
-**Note:** this step's end-to-end tests (defined in `e2e/bitrise.yml`) are working with secrets which are intentionally not stored in this repo. External contributors won't be able to run those tests. Don't worry, if you open a PR with your contribution, we will help with running tests and make sure that they pass.
+**Note** 
+
+This step's end-to-end tests (defined in `e2e/bitrise.yml`) are working with secrets which are intentionally not stored in this repository. External contributors won't be able to run those tests.Don't worry, if you open a PR with your contribution, we will help with running tests and make sure that they pass.
 
 Learn more about developing steps:
 
