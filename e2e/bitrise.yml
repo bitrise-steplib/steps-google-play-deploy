@@ -80,7 +80,8 @@ workflows:
         title: Execute step
         # Limit running this test to only one stack to avoid parallel testing issues
         # Running E2E tests on all stacks in parallel would cause conflicting deployments in Google Play to the same app
-        run_if: '{{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}'
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
@@ -108,7 +109,7 @@ workflows:
         inputs:
         - build_gradle_path: ./app/build.gradle
         - new_version_code: $BITRISE_BUILD_NUMBER
-        - new_version_name: "0.2.4"
+        - new_version_name: 0.2.4
     - gradle-runner:
         inputs:
         - gradle_task: bundleRelease
@@ -120,14 +121,15 @@ workflows:
         title: Execute step
         # Limit running this test to only one stack to avoid parallel testing issues
         # Running E2E tests on all stacks in parallel would cause conflicting deployments in Google Play to the same app
-        run_if: '{{ or (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}'
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
         inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
         - app_path: $BITRISE_SIGNED_AAB_PATH
         - track: $TRACK
         - user_fraction: 0.6
-        - release_name: "Overwritten release name"
+        - release_name: Overwritten release name
 
   test_apk_deploy_custom_track:
     summary: Tests deploying an APK to a user-defined track
@@ -151,7 +153,7 @@ workflows:
         inputs:
         - build_gradle_path: ./app/build.gradle
         - new_version_code: $BITRISE_BUILD_NUMBER
-        - new_version_name: "0.2.4"
+        - new_version_name: 0.2.4
     - gradle-runner:
         inputs:
         - gradle_task: assembleRelease
@@ -163,7 +165,8 @@ workflows:
         title: Execute step
         # Limit running this test to only one stack to avoid parallel testing issues
         # Running E2E tests on all stacks in parallel would cause conflicting deployments in Google Play to the same app
-        run_if: '{{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}'
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
