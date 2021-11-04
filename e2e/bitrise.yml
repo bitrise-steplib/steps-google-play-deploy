@@ -67,6 +67,7 @@ workflows:
     - sign-apk:
         inputs:
         - android_app: $BITRISE_AAB_PATH
+        - use_apk_signer: true
     - android-build:
         title: Build wearable app
         inputs:
@@ -76,6 +77,7 @@ workflows:
     - sign-apk:
         inputs:
         - android_app: $BITRISE_AAB_PATH
+        - use_apk_signer: true
     - path::./:
         title: Execute step
         # Limit running this test to only one stack to avoid parallel testing issues
@@ -117,6 +119,7 @@ workflows:
     - sign-apk:
         inputs:
         - android_app: $BITRISE_AAB_PATH
+        - use_apk_signer: true
     - path::./:
         title: Execute step
         # Limit running this test to only one stack to avoid parallel testing issues
@@ -161,6 +164,7 @@ workflows:
     - sign-apk:
         inputs:
         - android_app: $BITRISE_APK_PATH_LIST
+        - use_apk_signer: true
     - path::./:
         title: Execute step
         # Limit running this test to only one stack to avoid parallel testing issues
