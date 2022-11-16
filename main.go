@@ -15,6 +15,7 @@ import (
 )
 
 const changesNotSentForReviewMessage = "Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true"
+const internalServerError = "googleapi: Error 500"
 
 func failf(format string, v ...interface{}) {
 	log.Errorf(format, v...)
@@ -189,6 +190,10 @@ func main() {
 		} else {
 			log.Warnf("Sending the edit to review failed. Please change \"Retry changes without sending to review\" input to true if you wish to send the changes with the changesNotSentForReview flag. Please note that in that case the review has to be manually initiated from Google Play Console UI")
 		}
+	}
+	if strings.Contains(errorString, internalServerError) {
+		log.Warnf("Google Play API responded with an unknown error")
+		log.Warnf("Suggestion: create a release manually in Google Play Console, it might reveal the real error")
 	}
 	failf(errorString)
 }
