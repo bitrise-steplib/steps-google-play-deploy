@@ -193,7 +193,7 @@ func main() {
 	}
 	if strings.Contains(errorString, internalServerError) {
 		log.Warnf("Google Play API responded with an unknown error")
-		log.Warnf("Suggestion: create a release manually in Google Play Console, it might reveal the real error")
+		log.Warnf("Suggestion: create a release manually in Google Play Console because the UI has the capability to present the underlying error in certain cases")
 	}
 	failf(errorString)
 }
