@@ -64,7 +64,7 @@ workflows:
         - variant: release
         - build_type: aab
         - module: Application
-    - sign-apk:
+    - git::https://github.com/atanas-bitrise/steps-sign-apk.git@sha-256:
         inputs:
         - android_app: $BITRISE_AAB_PATH
         - use_apk_signer: true
@@ -116,7 +116,7 @@ workflows:
         inputs:
         - gradle_task: bundleRelease
         - gradlew_path: ./gradlew
-    - sign-apk:
+    - git::https://github.com/atanas-bitrise/steps-sign-apk.git@sha-256:
         inputs:
         - android_app: $BITRISE_AAB_PATH
         - use_apk_signer: true
@@ -161,7 +161,7 @@ workflows:
         inputs:
         - gradle_task: assembleRelease
         - gradlew_path: ./gradlew
-    - sign-apk:
+    - git::https://github.com/atanas-bitrise/steps-sign-apk.git@sha-256:
         inputs:
         - android_app: $BITRISE_APK_PATH_LIST
         - use_apk_signer: true
