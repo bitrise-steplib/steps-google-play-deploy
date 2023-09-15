@@ -29,7 +29,7 @@ workflows:
 
     - PACKAGE_NAME: io.bitrise.android.sample_xyztouristattractions
 
-    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - SERVICE_ACCOUNT_KEY_URL: $API_ISSUE_PLAY_CONSOLE_SERVICE_ACCOUNT_URL
     - TRACK: internal
     before_run:
     - _setup
@@ -102,7 +102,7 @@ workflows:
     - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
 
     - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
-    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - SERVICE_ACCOUNT_KEY_URL: $API_ISSUE_PLAY_CONSOLE_SERVICE_ACCOUNT_URL
     - TRACK: internal
     before_run:
     - _setup
@@ -147,7 +147,7 @@ workflows:
     - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
 
     - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
-    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - SERVICE_ACCOUNT_KEY_URL: $API_ISSUE_PLAY_CONSOLE_SERVICE_ACCOUNT_URL
     - TRACK: apk-testing
     before_run:
     - _setup
