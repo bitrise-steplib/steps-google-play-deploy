@@ -189,7 +189,7 @@ inputs:
     - "false"
 
 - verbose_log: "false"
-  opts: 
+  opts:
     title: Enable verbose logging
     summary: If this input is set, the Step will print additional logs for debugging.
     description: If this input is set, the Step will print additional logs for debugging.
