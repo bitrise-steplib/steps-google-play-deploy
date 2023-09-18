@@ -26,6 +26,7 @@ type Configs struct {
 	Status                       string          `env:"status"`
 	RetryWithoutSendingToReview  bool            `env:"retry_without_sending_to_review,opt[true,false]"`
 	AckBundleInstallationWarning bool            `env:"ack_bundle_installation_warning,opt[true,false]"`
+	IsDebugLog                   bool            `env:"verbose_log,opt[true,false]"`
 }
 
 // validate validates the Configs.

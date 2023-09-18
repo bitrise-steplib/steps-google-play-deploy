@@ -54,7 +54,6 @@ source_code_url: https://github.com/bitrise-io/steps-google-play-deploy
 support_url: https://github.com/bitrise-io/steps-google-play-deploy/issues
 project_type_tags:
 - android
-- xamarin
 - cordova
 - ionic
 - react-native
@@ -184,6 +183,16 @@ inputs:
     description: |-
       Must be set to `true` if the App Bundle installation may trigger a warning on user devices
       (for example, if installation size may be over a threshold, typically 100 MB).
+    is_required: true
+    value_options:
+    - "true"
+    - "false"
+
+- verbose_log: "false"
+  opts: 
+    title: Enable verbose logging
+    summary: If this input is set, the Step will print additional logs for debugging.
+    description: If this input is set, the Step will print additional logs for debugging.
     is_required: true
     value_options:
     - "true"

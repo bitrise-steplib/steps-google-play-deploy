@@ -75,6 +75,7 @@ workflows:
         - app_path: $BITRISE_DEPLOY_DIR/Wearable-release-bitrise-signed.aab
         - track: $TRACK
         - mapping_file: $BITRISE_DEPLOY_DIR/Wearable-mapping.txt
+        - verbose_log: true
 
   test_aab_deploy:
     envs:
@@ -118,6 +119,7 @@ workflows:
         - track: $TRACK
         - user_fraction: 0.6
         - release_name: Overwritten release name
+        - verbose_log: true
 
   test_apk_deploy_custom_track:
     summary: Tests deploying an APK to a user-defined track
@@ -164,6 +166,7 @@ workflows:
         - mapping_file: ""
         - user_fraction: ""
         - retry_without_sending_to_review: true
+        - verbose_log: true
   _setup:
     steps:
     - script:

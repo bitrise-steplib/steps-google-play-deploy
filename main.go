@@ -159,6 +159,7 @@ func main() {
 	if err := configs.validate(); err != nil {
 		failf(err.Error())
 	}
+	log.SetEnableDebugLog(configs.IsDebugLog)
 	log.Donef("Configuration read successfully")
 
 	//
