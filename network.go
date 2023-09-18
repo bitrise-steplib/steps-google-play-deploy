@@ -12,6 +12,8 @@ import (
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/retry"
+	"github.com/hashicorp/go-retryablehttp"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/androidpublisher/v3"
@@ -41,7 +43,25 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 			return nil, fmt.Errorf("failed to create auth config from json key file %v, error: %s", jsonKeyPth, err)
 		}
 	}
-	return authConfig.Client(context.TODO()), nil
+
+	retryClient := retry.NewHTTPClient()
+	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if resp != nil && resp.StatusCode == http.StatusUnauthorized {
+			log.Debugf("Received HTTP 401 (Unauthorized), retrying request...")
+			return true, nil
+		}
+
+		shouldRetry, err := retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+		if shouldRetry && resp != nil {
+			log.Debugf("Retry network error: %d", resp.StatusCode)
+		}
+
+		return shouldRetry, err
+	}
+
+	refreshCtx := context.WithValue(context.Background(), oauth2.HTTPClient, retryClient.StandardClient())
+
+	return authConfig.Client(refreshCtx), nil
 }
 
 // jwtConfigFromJSONKeyFile gets the jwt config from the given file.
