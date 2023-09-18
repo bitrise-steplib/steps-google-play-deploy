@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC.
+// Copyright 2023 Google LLC.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -8,33 +8,46 @@
 //
 // For product documentation, see: https://developers.google.com/android-publisher
 //
-// Creating a client
+// # Library status
+//
+// These client libraries are officially supported by Google. However, this
+// library is considered complete and is in maintenance mode. This means
+// that we will address critical bugs and security issues but will not add
+// any new features.
+//
+// When possible, we recommend using our newer
+// [Cloud Client Libraries for Go](https://pkg.go.dev/cloud.google.com/go)
+// that are still actively being worked and iterated on.
+//
+// # Creating a client
 //
 // Usage example:
 //
-//   import "google.golang.org/api/androidpublisher/v3"
-//   ...
-//   ctx := context.Background()
-//   androidpublisherService, err := androidpublisher.NewService(ctx)
+//	import "google.golang.org/api/androidpublisher/v3"
+//	...
+//	ctx := context.Background()
+//	androidpublisherService, err := androidpublisher.NewService(ctx)
 //
-// In this example, Google Application Default Credentials are used for authentication.
+// In this example, Google Application Default Credentials are used for
+// authentication. For information on how to create and obtain Application
+// Default Credentials, see https://developers.google.com/identity/protocols/application-default-credentials.
 //
-// For information on how to create and obtain Application Default Credentials, see https://developers.google.com/identity/protocols/application-default-credentials.
+// # Other authentication options
 //
-// Other authentication options
+// To use an API key for authentication (note: some APIs do not support API
+// keys), use [google.golang.org/api/option.WithAPIKey]:
 //
-// To use an API key for authentication (note: some APIs do not support API keys), use option.WithAPIKey:
+//	androidpublisherService, err := androidpublisher.NewService(ctx, option.WithAPIKey("AIza..."))
 //
-//   androidpublisherService, err := androidpublisher.NewService(ctx, option.WithAPIKey("AIza..."))
+// To use an OAuth token (e.g., a user token obtained via a three-legged OAuth
+// flow, use [google.golang.org/api/option.WithTokenSource]:
 //
-// To use an OAuth token (e.g., a user token obtained via a three-legged OAuth flow), use option.WithTokenSource:
+//	config := &oauth2.Config{...}
+//	// ...
+//	token, err := config.Exchange(ctx, ...)
+//	androidpublisherService, err := androidpublisher.NewService(ctx, option.WithTokenSource(config.TokenSource(ctx, token)))
 //
-//   config := &oauth2.Config{...}
-//   // ...
-//   token, err := config.Exchange(ctx, ...)
-//   androidpublisherService, err := androidpublisher.NewService(ctx, option.WithTokenSource(config.TokenSource(ctx, token)))
-//
-// See https://godoc.org/google.golang.org/api/option/ for details on options.
+// See [google.golang.org/api/option.ClientOption] for details on options.
 package androidpublisher // import "google.golang.org/api/androidpublisher/v3"
 
 import (
@@ -50,6 +63,7 @@ import (
 	"strings"
 
 	googleapi "google.golang.org/api/googleapi"
+	internal "google.golang.org/api/internal"
 	gensupport "google.golang.org/api/internal/gensupport"
 	option "google.golang.org/api/option"
 	internaloption "google.golang.org/api/option/internaloption"
@@ -70,6 +84,7 @@ var _ = errors.New
 var _ = strings.Replace
 var _ = context.Canceled
 var _ = internaloption.WithDefaultEndpoint
+var _ = internal.Version
 
 const apiId = "androidpublisher:v3"
 const apiName = "androidpublisher"
@@ -85,7 +100,7 @@ const (
 
 // NewService creates a new Service.
 func NewService(ctx context.Context, opts ...option.ClientOption) (*Service, error) {
-	scopesOption := option.WithScopes(
+	scopesOption := internaloption.WithDefaultScopes(
 		"https://www.googleapis.com/auth/androidpublisher",
 	)
 	// NOTE: prepend, so we don't override user-specified scopes.
@@ -116,13 +131,19 @@ func New(client *http.Client) (*Service, error) {
 		return nil, errors.New("client is nil")
 	}
 	s := &Service{client: client, BasePath: basePath}
+	s.Applications = NewApplicationsService(s)
 	s.Edits = NewEditsService(s)
+	s.Externaltransactions = NewExternaltransactionsService(s)
+	s.Generatedapks = NewGeneratedapksService(s)
+	s.Grants = NewGrantsService(s)
 	s.Inappproducts = NewInappproductsService(s)
 	s.Internalappsharingartifacts = NewInternalappsharingartifactsService(s)
+	s.Monetization = NewMonetizationService(s)
 	s.Orders = NewOrdersService(s)
 	s.Purchases = NewPurchasesService(s)
 	s.Reviews = NewReviewsService(s)
 	s.Systemapks = NewSystemapksService(s)
+	s.Users = NewUsersService(s)
 	return s, nil
 }
 
@@ -131,11 +152,21 @@ type Service struct {
 	BasePath  string // API endpoint base URL
 	UserAgent string // optional additional User-Agent fragment
 
+	Applications *ApplicationsService
+
 	Edits *EditsService
+
+	Externaltransactions *ExternaltransactionsService
+
+	Generatedapks *GeneratedapksService
+
+	Grants *GrantsService
 
 	Inappproducts *InappproductsService
 
 	Internalappsharingartifacts *InternalappsharingartifactsService
+
+	Monetization *MonetizationService
 
 	Orders *OrdersService
 
@@ -144,6 +175,8 @@ type Service struct {
 	Reviews *ReviewsService
 
 	Systemapks *SystemapksService
+
+	Users *UsersService
 }
 
 func (s *Service) userAgent() string {
@@ -153,10 +186,32 @@ func (s *Service) userAgent() string {
 	return googleapi.UserAgent + " " + s.UserAgent
 }
 
+func NewApplicationsService(s *Service) *ApplicationsService {
+	rs := &ApplicationsService{s: s}
+	rs.DeviceTierConfigs = NewApplicationsDeviceTierConfigsService(s)
+	return rs
+}
+
+type ApplicationsService struct {
+	s *Service
+
+	DeviceTierConfigs *ApplicationsDeviceTierConfigsService
+}
+
+func NewApplicationsDeviceTierConfigsService(s *Service) *ApplicationsDeviceTierConfigsService {
+	rs := &ApplicationsDeviceTierConfigsService{s: s}
+	return rs
+}
+
+type ApplicationsDeviceTierConfigsService struct {
+	s *Service
+}
+
 func NewEditsService(s *Service) *EditsService {
 	rs := &EditsService{s: s}
 	rs.Apks = NewEditsApksService(s)
 	rs.Bundles = NewEditsBundlesService(s)
+	rs.Countryavailability = NewEditsCountryavailabilityService(s)
 	rs.Deobfuscationfiles = NewEditsDeobfuscationfilesService(s)
 	rs.Details = NewEditsDetailsService(s)
 	rs.Expansionfiles = NewEditsExpansionfilesService(s)
@@ -173,6 +228,8 @@ type EditsService struct {
 	Apks *EditsApksService
 
 	Bundles *EditsBundlesService
+
+	Countryavailability *EditsCountryavailabilityService
 
 	Deobfuscationfiles *EditsDeobfuscationfilesService
 
@@ -204,6 +261,15 @@ func NewEditsBundlesService(s *Service) *EditsBundlesService {
 }
 
 type EditsBundlesService struct {
+	s *Service
+}
+
+func NewEditsCountryavailabilityService(s *Service) *EditsCountryavailabilityService {
+	rs := &EditsCountryavailabilityService{s: s}
+	return rs
+}
+
+type EditsCountryavailabilityService struct {
 	s *Service
 }
 
@@ -270,6 +336,33 @@ type EditsTracksService struct {
 	s *Service
 }
 
+func NewExternaltransactionsService(s *Service) *ExternaltransactionsService {
+	rs := &ExternaltransactionsService{s: s}
+	return rs
+}
+
+type ExternaltransactionsService struct {
+	s *Service
+}
+
+func NewGeneratedapksService(s *Service) *GeneratedapksService {
+	rs := &GeneratedapksService{s: s}
+	return rs
+}
+
+type GeneratedapksService struct {
+	s *Service
+}
+
+func NewGrantsService(s *Service) *GrantsService {
+	rs := &GrantsService{s: s}
+	return rs
+}
+
+type GrantsService struct {
+	s *Service
+}
+
 func NewInappproductsService(s *Service) *InappproductsService {
 	rs := &InappproductsService{s: s}
 	return rs
@@ -288,6 +381,51 @@ type InternalappsharingartifactsService struct {
 	s *Service
 }
 
+func NewMonetizationService(s *Service) *MonetizationService {
+	rs := &MonetizationService{s: s}
+	rs.Subscriptions = NewMonetizationSubscriptionsService(s)
+	return rs
+}
+
+type MonetizationService struct {
+	s *Service
+
+	Subscriptions *MonetizationSubscriptionsService
+}
+
+func NewMonetizationSubscriptionsService(s *Service) *MonetizationSubscriptionsService {
+	rs := &MonetizationSubscriptionsService{s: s}
+	rs.BasePlans = NewMonetizationSubscriptionsBasePlansService(s)
+	return rs
+}
+
+type MonetizationSubscriptionsService struct {
+	s *Service
+
+	BasePlans *MonetizationSubscriptionsBasePlansService
+}
+
+func NewMonetizationSubscriptionsBasePlansService(s *Service) *MonetizationSubscriptionsBasePlansService {
+	rs := &MonetizationSubscriptionsBasePlansService{s: s}
+	rs.Offers = NewMonetizationSubscriptionsBasePlansOffersService(s)
+	return rs
+}
+
+type MonetizationSubscriptionsBasePlansService struct {
+	s *Service
+
+	Offers *MonetizationSubscriptionsBasePlansOffersService
+}
+
+func NewMonetizationSubscriptionsBasePlansOffersService(s *Service) *MonetizationSubscriptionsBasePlansOffersService {
+	rs := &MonetizationSubscriptionsBasePlansOffersService{s: s}
+	return rs
+}
+
+type MonetizationSubscriptionsBasePlansOffersService struct {
+	s *Service
+}
+
 func NewOrdersService(s *Service) *OrdersService {
 	rs := &OrdersService{s: s}
 	return rs
@@ -301,6 +439,7 @@ func NewPurchasesService(s *Service) *PurchasesService {
 	rs := &PurchasesService{s: s}
 	rs.Products = NewPurchasesProductsService(s)
 	rs.Subscriptions = NewPurchasesSubscriptionsService(s)
+	rs.Subscriptionsv2 = NewPurchasesSubscriptionsv2Service(s)
 	rs.Voidedpurchases = NewPurchasesVoidedpurchasesService(s)
 	return rs
 }
@@ -311,6 +450,8 @@ type PurchasesService struct {
 	Products *PurchasesProductsService
 
 	Subscriptions *PurchasesSubscriptionsService
+
+	Subscriptionsv2 *PurchasesSubscriptionsv2Service
 
 	Voidedpurchases *PurchasesVoidedpurchasesService
 }
@@ -330,6 +471,15 @@ func NewPurchasesSubscriptionsService(s *Service) *PurchasesSubscriptionsService
 }
 
 type PurchasesSubscriptionsService struct {
+	s *Service
+}
+
+func NewPurchasesSubscriptionsv2Service(s *Service) *PurchasesSubscriptionsv2Service {
+	rs := &PurchasesSubscriptionsv2Service{s: s}
+	return rs
+}
+
+type PurchasesSubscriptionsv2Service struct {
 	s *Service
 }
 
@@ -372,6 +522,122 @@ type SystemapksVariantsService struct {
 	s *Service
 }
 
+func NewUsersService(s *Service) *UsersService {
+	rs := &UsersService{s: s}
+	return rs
+}
+
+type UsersService struct {
+	s *Service
+}
+
+// Abi: Represents an Abi.
+type Abi struct {
+	// Alias: Alias for an abi.
+	//
+	// Possible values:
+	//   "UNSPECIFIED_CPU_ARCHITECTURE" - Unspecified abi.
+	//   "ARMEABI" - ARMEABI abi.
+	//   "ARMEABI_V7A" - ARMEABI_V7A abi.
+	//   "ARM64_V8A" - ARM64_V8A abi.
+	//   "X86" - X86 abi.
+	//   "X86_64" - X86_64 abi.
+	Alias string `json:"alias,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Alias") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Alias") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *Abi) MarshalJSON() ([]byte, error) {
+	type NoMethod Abi
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// AbiTargeting: Targeting based on Abi.
+type AbiTargeting struct {
+	// Alternatives: Targeting of other sibling directories that were in the
+	// Bundle. For main splits this is targeting of other main splits.
+	Alternatives []*Abi `json:"alternatives,omitempty"`
+
+	// Value: Value of an abi.
+	Value []*Abi `json:"value,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Alternatives") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Alternatives") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *AbiTargeting) MarshalJSON() ([]byte, error) {
+	type NoMethod AbiTargeting
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// AcquisitionTargetingRule: Represents a targeting rule of the form:
+// User never had {scope} before.
+type AcquisitionTargetingRule struct {
+	// Scope: Required. The scope of subscriptions this rule considers. Only
+	// allows "this subscription" and "any subscription in app".
+	Scope *TargetingRuleScope `json:"scope,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Scope") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Scope") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *AcquisitionTargetingRule) MarshalJSON() ([]byte, error) {
+	type NoMethod AcquisitionTargetingRule
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ActivateBasePlanRequest: Request message for ActivateBasePlan.
+type ActivateBasePlanRequest struct {
+}
+
+// ActivateSubscriptionOfferRequest: Request message for
+// ActivateSubscriptionOffer.
+type ActivateSubscriptionOfferRequest struct {
+}
+
 // Apk: Information about an APK. The resource for ApksService.
 type Apk struct {
 	// Binary: Information about the binary payload of this APK.
@@ -387,10 +653,10 @@ type Apk struct {
 
 	// ForceSendFields is a list of field names (e.g. "Binary") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Binary") to include in API
@@ -420,10 +686,10 @@ type ApkBinary struct {
 
 	// ForceSendFields is a list of field names (e.g. "Sha1") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Sha1") to include in API
@@ -441,6 +707,128 @@ func (s *ApkBinary) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// ApkDescription: Description of the created apks.
+type ApkDescription struct {
+	// AssetSliceMetadata: Set only for asset slices.
+	AssetSliceMetadata *SplitApkMetadata `json:"assetSliceMetadata,omitempty"`
+
+	// InstantApkMetadata: Set only for Instant split APKs.
+	InstantApkMetadata *SplitApkMetadata `json:"instantApkMetadata,omitempty"`
+
+	// Path: Path of the Apk, will be in the following format: .apk where
+	// DownloadId is the ID used to download the apk using
+	// GeneratedApks.Download API.
+	Path string `json:"path,omitempty"`
+
+	// SplitApkMetadata: Set only for Split APKs.
+	SplitApkMetadata *SplitApkMetadata `json:"splitApkMetadata,omitempty"`
+
+	// StandaloneApkMetadata: Set only for standalone APKs.
+	StandaloneApkMetadata *StandaloneApkMetadata `json:"standaloneApkMetadata,omitempty"`
+
+	// Targeting: Apk-level targeting.
+	Targeting *ApkTargeting `json:"targeting,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AssetSliceMetadata")
+	// to unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AssetSliceMetadata") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ApkDescription) MarshalJSON() ([]byte, error) {
+	type NoMethod ApkDescription
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ApkSet: A set of apks representing a module.
+type ApkSet struct {
+	// ApkDescription: Description of the generated apks.
+	ApkDescription []*ApkDescription `json:"apkDescription,omitempty"`
+
+	// ModuleMetadata: Metadata about the module represented by this ApkSet
+	ModuleMetadata *ModuleMetadata `json:"moduleMetadata,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ApkDescription") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ApkDescription") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ApkSet) MarshalJSON() ([]byte, error) {
+	type NoMethod ApkSet
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ApkTargeting: Represents a set of apk-level targetings.
+type ApkTargeting struct {
+	// AbiTargeting: The abi that the apk targets
+	AbiTargeting *AbiTargeting `json:"abiTargeting,omitempty"`
+
+	// LanguageTargeting: The language that the apk targets
+	LanguageTargeting *LanguageTargeting `json:"languageTargeting,omitempty"`
+
+	// MultiAbiTargeting: Multi-api-level targeting.
+	MultiAbiTargeting *MultiAbiTargeting `json:"multiAbiTargeting,omitempty"`
+
+	// ScreenDensityTargeting: The screen density that this apk supports.
+	ScreenDensityTargeting *ScreenDensityTargeting `json:"screenDensityTargeting,omitempty"`
+
+	// SdkVersionTargeting: The sdk version that the apk targets
+	SdkVersionTargeting *SdkVersionTargeting `json:"sdkVersionTargeting,omitempty"`
+
+	// TextureCompressionFormatTargeting: Texture-compression-format-level
+	// targeting
+	TextureCompressionFormatTargeting *TextureCompressionFormatTargeting `json:"textureCompressionFormatTargeting,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AbiTargeting") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AbiTargeting") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ApkTargeting) MarshalJSON() ([]byte, error) {
+	type NoMethod ApkTargeting
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // ApksAddExternallyHostedRequest: Request to create a new externally
 // hosted APK.
 type ApksAddExternallyHostedRequest struct {
@@ -450,10 +838,10 @@ type ApksAddExternallyHostedRequest struct {
 
 	// ForceSendFields is a list of field names (e.g. "ExternallyHostedApk")
 	// to unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "ExternallyHostedApk") to
@@ -485,10 +873,10 @@ type ApksAddExternallyHostedResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "ExternallyHostedApk")
 	// to unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "ExternallyHostedApk") to
@@ -522,10 +910,10 @@ type ApksListResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "Apks") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Apks") to include in API
@@ -564,10 +952,10 @@ type AppDetails struct {
 
 	// ForceSendFields is a list of field names (e.g. "ContactEmail") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "ContactEmail") to include
@@ -601,10 +989,10 @@ type AppEdit struct {
 
 	// ForceSendFields is a list of field names (e.g. "ExpiryTimeSeconds")
 	// to unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "ExpiryTimeSeconds") to
@@ -619,6 +1007,271 @@ type AppEdit struct {
 
 func (s *AppEdit) MarshalJSON() ([]byte, error) {
 	type NoMethod AppEdit
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ArchiveSubscriptionRequest: Request message for ArchiveSubscription.
+type ArchiveSubscriptionRequest struct {
+}
+
+// AssetModuleMetadata: Metadata of an asset module.
+type AssetModuleMetadata struct {
+	// DeliveryType: Indicates the delivery type for persistent install.
+	//
+	// Possible values:
+	//   "UNKNOWN_DELIVERY_TYPE" - Unspecified delivery type.
+	//   "INSTALL_TIME" - This module will always be downloaded as part of
+	// the initial install of the app.
+	//   "ON_DEMAND" - This module is requested on-demand, which means it
+	// will not be part of the initial install, and will only be sent when
+	// requested by the client.
+	//   "FAST_FOLLOW" - This module will be downloaded immediately after
+	// initial install finishes. The app can be opened before these modules
+	// are downloaded.
+	DeliveryType string `json:"deliveryType,omitempty"`
+
+	// Name: Module name.
+	Name string `json:"name,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DeliveryType") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DeliveryType") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *AssetModuleMetadata) MarshalJSON() ([]byte, error) {
+	type NoMethod AssetModuleMetadata
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// AssetSliceSet: Set of asset slices belonging to a single asset
+// module.
+type AssetSliceSet struct {
+	// ApkDescription: Asset slices.
+	ApkDescription []*ApkDescription `json:"apkDescription,omitempty"`
+
+	// AssetModuleMetadata: Module level metadata.
+	AssetModuleMetadata *AssetModuleMetadata `json:"assetModuleMetadata,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ApkDescription") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ApkDescription") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *AssetSliceSet) MarshalJSON() ([]byte, error) {
+	type NoMethod AssetSliceSet
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// AutoRenewingBasePlanType: Represents a base plan that automatically
+// renews at the end of its subscription period.
+type AutoRenewingBasePlanType struct {
+	// BillingPeriodDuration: Required. Subscription period, specified in
+	// ISO 8601 format. For a list of acceptable billing periods, refer to
+	// the help center.
+	BillingPeriodDuration string `json:"billingPeriodDuration,omitempty"`
+
+	// GracePeriodDuration: Grace period of the subscription, specified in
+	// ISO 8601 format. Acceptable values are P0D (zero days), P3D (3 days),
+	// P7D (7 days), P14D (14 days), and P30D (30 days). If not specified, a
+	// default value will be used based on the recurring period duration.
+	GracePeriodDuration string `json:"gracePeriodDuration,omitempty"`
+
+	// LegacyCompatible: Whether the renewing base plan is backward
+	// compatible. The backward compatible base plan is returned by the
+	// Google Play Billing Library deprecated method querySkuDetailsAsync().
+	// Only one renewing base plan can be marked as legacy compatible for a
+	// given subscription.
+	LegacyCompatible bool `json:"legacyCompatible,omitempty"`
+
+	// LegacyCompatibleSubscriptionOfferId: Subscription offer id which is
+	// legacy compatible. The backward compatible subscription offer is
+	// returned by the Google Play Billing Library deprecated method
+	// querySkuDetailsAsync(). Only one subscription offer can be marked as
+	// legacy compatible for a given renewing base plan. To have no
+	// Subscription offer as legacy compatible set this field as empty
+	// string.
+	LegacyCompatibleSubscriptionOfferId string `json:"legacyCompatibleSubscriptionOfferId,omitempty"`
+
+	// ProrationMode: The proration mode for the base plan determines what
+	// happens when a user switches to this plan from another base plan. If
+	// unspecified, defaults to CHARGE_ON_NEXT_BILLING_DATE.
+	//
+	// Possible values:
+	//   "SUBSCRIPTION_PRORATION_MODE_UNSPECIFIED" - Unspecified mode.
+	//   "SUBSCRIPTION_PRORATION_MODE_CHARGE_ON_NEXT_BILLING_DATE" - Users
+	// will be charged for their new base plan at the end of their current
+	// billing period.
+	//   "SUBSCRIPTION_PRORATION_MODE_CHARGE_FULL_PRICE_IMMEDIATELY" - Users
+	// will be charged for their new base plan immediately and in full. Any
+	// remaining period of their existing subscription will be used to
+	// extend the duration of the new billing plan.
+	ProrationMode string `json:"prorationMode,omitempty"`
+
+	// ResubscribeState: Whether users should be able to resubscribe to this
+	// base plan in Google Play surfaces. Defaults to
+	// RESUBSCRIBE_STATE_ACTIVE if not specified.
+	//
+	// Possible values:
+	//   "RESUBSCRIBE_STATE_UNSPECIFIED" - Unspecified state.
+	//   "RESUBSCRIBE_STATE_ACTIVE" - Resubscribe is active.
+	//   "RESUBSCRIBE_STATE_INACTIVE" - Resubscribe is inactive.
+	ResubscribeState string `json:"resubscribeState,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "BillingPeriodDuration") to unconditionally include in API requests.
+	// By default, fields with empty or default values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "BillingPeriodDuration") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *AutoRenewingBasePlanType) MarshalJSON() ([]byte, error) {
+	type NoMethod AutoRenewingBasePlanType
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// AutoRenewingPlan: Information related to an auto renewing plan.
+type AutoRenewingPlan struct {
+	// AutoRenewEnabled: If the subscription is currently set to auto-renew,
+	// e.g. the user has not canceled the subscription
+	AutoRenewEnabled bool `json:"autoRenewEnabled,omitempty"`
+
+	// PriceChangeDetails: The information of the last price change for the
+	// item since subscription signup.
+	PriceChangeDetails *SubscriptionItemPriceChangeDetails `json:"priceChangeDetails,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AutoRenewEnabled") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AutoRenewEnabled") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *AutoRenewingPlan) MarshalJSON() ([]byte, error) {
+	type NoMethod AutoRenewingPlan
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// BasePlan: A single base plan for a subscription.
+type BasePlan struct {
+	// AutoRenewingBasePlanType: Set when the base plan automatically renews
+	// at a regular interval.
+	AutoRenewingBasePlanType *AutoRenewingBasePlanType `json:"autoRenewingBasePlanType,omitempty"`
+
+	// BasePlanId: Required. Immutable. The unique identifier of this base
+	// plan. Must be unique within the subscription, and conform with
+	// RFC-1034. That is, this ID can only contain lower-case letters (a-z),
+	// numbers (0-9), and hyphens (-), and be at most 63 characters.
+	BasePlanId string `json:"basePlanId,omitempty"`
+
+	// OfferTags: List of up to 20 custom tags specified for this base plan,
+	// and returned to the app through the billing library. Subscription
+	// offers for this base plan will also receive these offer tags in the
+	// billing library.
+	OfferTags []*OfferTag `json:"offerTags,omitempty"`
+
+	// OtherRegionsConfig: Pricing information for any new locations Play
+	// may launch in the future. If omitted, the BasePlan will not be
+	// automatically available any new locations Play may launch in the
+	// future.
+	OtherRegionsConfig *OtherRegionsBasePlanConfig `json:"otherRegionsConfig,omitempty"`
+
+	// PrepaidBasePlanType: Set when the base plan does not automatically
+	// renew at the end of the billing period.
+	PrepaidBasePlanType *PrepaidBasePlanType `json:"prepaidBasePlanType,omitempty"`
+
+	// RegionalConfigs: Region-specific information for this base plan.
+	RegionalConfigs []*RegionalBasePlanConfig `json:"regionalConfigs,omitempty"`
+
+	// State: Output only. The state of the base plan, i.e. whether it's
+	// active. Draft and inactive base plans can be activated or deleted.
+	// Active base plans can be made inactive. Inactive base plans can be
+	// canceled. This field cannot be changed by updating the resource. Use
+	// the dedicated endpoints instead.
+	//
+	// Possible values:
+	//   "STATE_UNSPECIFIED" - Unspecified state.
+	//   "DRAFT" - The base plan is currently in a draft state, and hasn't
+	// been activated. It can be safely deleted at this point.
+	//   "ACTIVE" - The base plan is active and available for new
+	// subscribers.
+	//   "INACTIVE" - The base plan is inactive and only available for
+	// existing subscribers.
+	State string `json:"state,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "AutoRenewingBasePlanType") to unconditionally include in API
+	// requests. By default, fields with empty or default values are omitted
+	// from API requests. However, any non-pointer, non-interface field
+	// appearing in ForceSendFields will be sent to the server regardless of
+	// whether the field is empty or not. This may be used to include empty
+	// fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AutoRenewingBasePlanType")
+	// to include in API requests with the JSON null value. By default,
+	// fields with empty values are omitted from API requests. However, any
+	// field with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *BasePlan) MarshalJSON() ([]byte, error) {
+	type NoMethod BasePlan
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -644,10 +1297,10 @@ type Bundle struct {
 
 	// ForceSendFields is a list of field names (e.g. "Sha1") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Sha1") to include in API
@@ -680,10 +1333,10 @@ type BundlesListResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "Bundles") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Bundles") to include in
@@ -701,6 +1354,94 @@ func (s *BundlesListResponse) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// CancelSurveyResult: Result of the cancel survey when the subscription
+// was canceled by the user.
+type CancelSurveyResult struct {
+	// Reason: The reason the user selected in the cancel survey.
+	//
+	// Possible values:
+	//   "CANCEL_SURVEY_REASON_UNSPECIFIED" - Unspecified cancel survey
+	// reason.
+	//   "CANCEL_SURVEY_REASON_NOT_ENOUGH_USAGE" - Not enough usage of the
+	// subscription.
+	//   "CANCEL_SURVEY_REASON_TECHNICAL_ISSUES" - Technical issues while
+	// using the app.
+	//   "CANCEL_SURVEY_REASON_COST_RELATED" - Cost related issues.
+	//   "CANCEL_SURVEY_REASON_FOUND_BETTER_APP" - The user found a better
+	// app.
+	//   "CANCEL_SURVEY_REASON_OTHERS" - Other reasons.
+	Reason string `json:"reason,omitempty"`
+
+	// ReasonUserInput: Only set for CANCEL_SURVEY_REASON_OTHERS. This is
+	// the user's freeform response to the survey.
+	ReasonUserInput string `json:"reasonUserInput,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Reason") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Reason") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *CancelSurveyResult) MarshalJSON() ([]byte, error) {
+	type NoMethod CancelSurveyResult
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// CanceledStateContext: Information specific to a subscription in
+// canceled state.
+type CanceledStateContext struct {
+	// DeveloperInitiatedCancellation: Subscription was canceled by the
+	// developer.
+	DeveloperInitiatedCancellation *DeveloperInitiatedCancellation `json:"developerInitiatedCancellation,omitempty"`
+
+	// ReplacementCancellation: Subscription was replaced by a new
+	// subscription.
+	ReplacementCancellation *ReplacementCancellation `json:"replacementCancellation,omitempty"`
+
+	// SystemInitiatedCancellation: Subscription was canceled by the system,
+	// for example because of a billing problem.
+	SystemInitiatedCancellation *SystemInitiatedCancellation `json:"systemInitiatedCancellation,omitempty"`
+
+	// UserInitiatedCancellation: Subscription was canceled by user.
+	UserInitiatedCancellation *UserInitiatedCancellation `json:"userInitiatedCancellation,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "DeveloperInitiatedCancellation") to unconditionally include in API
+	// requests. By default, fields with empty or default values are omitted
+	// from API requests. However, any non-pointer, non-interface field
+	// appearing in ForceSendFields will be sent to the server regardless of
+	// whether the field is empty or not. This may be used to include empty
+	// fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g.
+	// "DeveloperInitiatedCancellation") to include in API requests with the
+	// JSON null value. By default, fields with empty values are omitted
+	// from API requests. However, any field with an empty value appearing
+	// in NullFields will be sent to the server as null. It is an error if a
+	// field in this list has a non-empty value. This may be used to include
+	// null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *CanceledStateContext) MarshalJSON() ([]byte, error) {
+	type NoMethod CanceledStateContext
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // Comment: An entry of conversation between user and developer.
 type Comment struct {
 	// DeveloperComment: A comment from a developer.
@@ -711,10 +1452,10 @@ type Comment struct {
 
 	// ForceSendFields is a list of field names (e.g. "DeveloperComment") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "DeveloperComment") to
@@ -733,6 +1474,143 @@ func (s *Comment) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// ConvertRegionPricesRequest: Request message for ConvertRegionPrices.
+type ConvertRegionPricesRequest struct {
+	// Price: The intital price to convert other regions from. Tax
+	// exclusive.
+	Price *Money `json:"price,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Price") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Price") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ConvertRegionPricesRequest) MarshalJSON() ([]byte, error) {
+	type NoMethod ConvertRegionPricesRequest
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ConvertRegionPricesResponse: Response message for
+// ConvertRegionPrices.
+type ConvertRegionPricesResponse struct {
+	// ConvertedOtherRegionsPrice: Converted other regions prices in USD and
+	// EUR, to use for countries where Play doesn't support a country's
+	// local currency.
+	ConvertedOtherRegionsPrice *ConvertedOtherRegionsPrice `json:"convertedOtherRegionsPrice,omitempty"`
+
+	// ConvertedRegionPrices: Map from region code to converted region
+	// price.
+	ConvertedRegionPrices map[string]ConvertedRegionPrice `json:"convertedRegionPrices,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "ConvertedOtherRegionsPrice") to unconditionally include in API
+	// requests. By default, fields with empty or default values are omitted
+	// from API requests. However, any non-pointer, non-interface field
+	// appearing in ForceSendFields will be sent to the server regardless of
+	// whether the field is empty or not. This may be used to include empty
+	// fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g.
+	// "ConvertedOtherRegionsPrice") to include in API requests with the
+	// JSON null value. By default, fields with empty values are omitted
+	// from API requests. However, any field with an empty value appearing
+	// in NullFields will be sent to the server as null. It is an error if a
+	// field in this list has a non-empty value. This may be used to include
+	// null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ConvertRegionPricesResponse) MarshalJSON() ([]byte, error) {
+	type NoMethod ConvertRegionPricesResponse
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ConvertedOtherRegionsPrice: Converted other regions prices.
+type ConvertedOtherRegionsPrice struct {
+	// EurPrice: Price in EUR to use for the "Other regions" location
+	// exclusive of taxes.
+	EurPrice *Money `json:"eurPrice,omitempty"`
+
+	// UsdPrice: Price in USD to use for the "Other regions" location
+	// exclusive of taxes.
+	UsdPrice *Money `json:"usdPrice,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "EurPrice") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "EurPrice") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ConvertedOtherRegionsPrice) MarshalJSON() ([]byte, error) {
+	type NoMethod ConvertedOtherRegionsPrice
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ConvertedRegionPrice: A converted region price.
+type ConvertedRegionPrice struct {
+	// Price: The converted price tax inclusive.
+	Price *Money `json:"price,omitempty"`
+
+	// RegionCode: The region code of the region.
+	RegionCode string `json:"regionCode,omitempty"`
+
+	// TaxAmount: The tax amount of the converted price.
+	TaxAmount *Money `json:"taxAmount,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Price") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Price") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ConvertedRegionPrice) MarshalJSON() ([]byte, error) {
+	type NoMethod ConvertedRegionPrice
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // CountryTargeting: Country targeting specification.
 type CountryTargeting struct {
 	// Countries: Countries to target, specified as two letter CLDR codes
@@ -745,10 +1623,10 @@ type CountryTargeting struct {
 
 	// ForceSendFields is a list of field names (e.g. "Countries") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Countries") to include in
@@ -766,6 +1644,44 @@ func (s *CountryTargeting) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// DeactivateBasePlanRequest: Request message for DeactivateBasePlan.
+type DeactivateBasePlanRequest struct {
+}
+
+// DeactivateSubscriptionOfferRequest: Request message for
+// DeactivateSubscriptionOffer.
+type DeactivateSubscriptionOfferRequest struct {
+}
+
+// DeferredItemReplacement: Information related to deferred item
+// replacement.
+type DeferredItemReplacement struct {
+	// ProductId: The product_id going to replace the existing product_id.
+	ProductId string `json:"productId,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ProductId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ProductId") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *DeferredItemReplacement) MarshalJSON() ([]byte, error) {
+	type NoMethod DeferredItemReplacement
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // DeobfuscationFile: Represents a deobfuscation file.
 type DeobfuscationFile struct {
 	// SymbolType: The type of the deobfuscation file.
@@ -779,10 +1695,10 @@ type DeobfuscationFile struct {
 
 	// ForceSendFields is a list of field names (e.g. "SymbolType") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "SymbolType") to include in
@@ -811,10 +1727,10 @@ type DeobfuscationFilesUploadResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "DeobfuscationFile")
 	// to unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "DeobfuscationFile") to
@@ -844,10 +1760,10 @@ type DeveloperComment struct {
 
 	// ForceSendFields is a list of field names (e.g. "LastModified") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "LastModified") to include
@@ -861,6 +1777,138 @@ type DeveloperComment struct {
 
 func (s *DeveloperComment) MarshalJSON() ([]byte, error) {
 	type NoMethod DeveloperComment
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// DeveloperInitiatedCancellation: Information specific to cancellations
+// initiated by developers.
+type DeveloperInitiatedCancellation struct {
+}
+
+// DeviceFeature: Represents a device feature.
+type DeviceFeature struct {
+	// FeatureName: Name of the feature.
+	FeatureName string `json:"featureName,omitempty"`
+
+	// FeatureVersion: The feature version specified by android:glEsVersion
+	// or android:version in in the AndroidManifest.
+	FeatureVersion int64 `json:"featureVersion,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "FeatureName") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "FeatureName") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *DeviceFeature) MarshalJSON() ([]byte, error) {
+	type NoMethod DeviceFeature
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// DeviceFeatureTargeting: Targeting for a device feature.
+type DeviceFeatureTargeting struct {
+	// RequiredFeature: Feature of the device.
+	RequiredFeature *DeviceFeature `json:"requiredFeature,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "RequiredFeature") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "RequiredFeature") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *DeviceFeatureTargeting) MarshalJSON() ([]byte, error) {
+	type NoMethod DeviceFeatureTargeting
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// DeviceGroup: A group of devices. A group is defined by a set of
+// device selectors. A device belongs to the group if it matches any
+// selector (logical OR).
+type DeviceGroup struct {
+	// DeviceSelectors: Device selectors for this group. A device matching
+	// any of the selectors is included in this group.
+	DeviceSelectors []*DeviceSelector `json:"deviceSelectors,omitempty"`
+
+	// Name: The name of the group.
+	Name string `json:"name,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DeviceSelectors") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DeviceSelectors") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *DeviceGroup) MarshalJSON() ([]byte, error) {
+	type NoMethod DeviceGroup
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// DeviceId: Identifier of a device.
+type DeviceId struct {
+	// BuildBrand: Value of Build.BRAND.
+	BuildBrand string `json:"buildBrand,omitempty"`
+
+	// BuildDevice: Value of Build.DEVICE.
+	BuildDevice string `json:"buildDevice,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "BuildBrand") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "BuildBrand") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *DeviceId) MarshalJSON() ([]byte, error) {
+	type NoMethod DeviceId
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -903,10 +1951,10 @@ type DeviceMetadata struct {
 
 	// ForceSendFields is a list of field names (e.g. "CpuMake") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "CpuMake") to include in
@@ -920,6 +1968,87 @@ type DeviceMetadata struct {
 
 func (s *DeviceMetadata) MarshalJSON() ([]byte, error) {
 	type NoMethod DeviceMetadata
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// DeviceRam: Conditions about a device's RAM capabilities.
+type DeviceRam struct {
+	// MaxBytes: Maximum RAM in bytes (bound excluded).
+	MaxBytes int64 `json:"maxBytes,omitempty,string"`
+
+	// MinBytes: Minimum RAM in bytes (bound included).
+	MinBytes int64 `json:"minBytes,omitempty,string"`
+
+	// ForceSendFields is a list of field names (e.g. "MaxBytes") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "MaxBytes") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *DeviceRam) MarshalJSON() ([]byte, error) {
+	type NoMethod DeviceRam
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// DeviceSelector: Selector for a device group. A selector consists of a
+// set of conditions on the device that should all match (logical AND)
+// to determine a device group eligibility. For instance, if a selector
+// specifies RAM conditions, device model inclusion and device model
+// exclusion, a device is considered to match if: device matches RAM
+// conditions AND device matches one of the included device models AND
+// device doesn't match excluded device models
+type DeviceSelector struct {
+	// DeviceRam: Conditions on the device's RAM.
+	DeviceRam *DeviceRam `json:"deviceRam,omitempty"`
+
+	// ExcludedDeviceIds: Device models excluded by this selector, even if
+	// they match all other conditions.
+	ExcludedDeviceIds []*DeviceId `json:"excludedDeviceIds,omitempty"`
+
+	// ForbiddenSystemFeatures: A device that has any of these system
+	// features is excluded by this selector, even if it matches all other
+	// conditions.
+	ForbiddenSystemFeatures []*SystemFeature `json:"forbiddenSystemFeatures,omitempty"`
+
+	// IncludedDeviceIds: Device models included by this selector.
+	IncludedDeviceIds []*DeviceId `json:"includedDeviceIds,omitempty"`
+
+	// RequiredSystemFeatures: A device needs to have all these system
+	// features to be included by the selector.
+	RequiredSystemFeatures []*SystemFeature `json:"requiredSystemFeatures,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DeviceRam") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DeviceRam") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *DeviceSelector) MarshalJSON() ([]byte, error) {
+	type NoMethod DeviceSelector
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -940,10 +2069,10 @@ type DeviceSpec struct {
 
 	// ForceSendFields is a list of field names (e.g. "ScreenDensity") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "ScreenDensity") to include
@@ -957,6 +2086,124 @@ type DeviceSpec struct {
 
 func (s *DeviceSpec) MarshalJSON() ([]byte, error) {
 	type NoMethod DeviceSpec
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// DeviceTier: A single device tier. Devices matching any of the device
+// groups in device_group_names are considered to match the tier.
+type DeviceTier struct {
+	// DeviceGroupNames: Groups of devices included in this tier. These
+	// groups must be defined explicitly under device_groups in this
+	// configuration.
+	DeviceGroupNames []string `json:"deviceGroupNames,omitempty"`
+
+	// Level: The priority level of the tier. Tiers are evaluated in
+	// descending order of level: the highest level tier has the highest
+	// priority. The highest tier matching a given device is selected for
+	// that device. You should use a contiguous range of levels for your
+	// tiers in a tier set; tier levels in a tier set must be unique. For
+	// instance, if your tier set has 4 tiers (including the global
+	// fallback), you should define tiers 1, 2 and 3 in this configuration.
+	// Note: tier 0 is implicitly defined as a global fallback and selected
+	// for devices that don't match any of the tiers explicitly defined
+	// here. You mustn't define level 0 explicitly in this configuration.
+	Level int64 `json:"level,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DeviceGroupNames") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DeviceGroupNames") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *DeviceTier) MarshalJSON() ([]byte, error) {
+	type NoMethod DeviceTier
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// DeviceTierConfig: Configuration describing device targeting criteria
+// for the content of an app.
+type DeviceTierConfig struct {
+	// DeviceGroups: Definition of device groups for the app.
+	DeviceGroups []*DeviceGroup `json:"deviceGroups,omitempty"`
+
+	// DeviceTierConfigId: Output only. The device tier config ID.
+	DeviceTierConfigId int64 `json:"deviceTierConfigId,omitempty,string"`
+
+	// DeviceTierSet: Definition of the set of device tiers for the app.
+	DeviceTierSet *DeviceTierSet `json:"deviceTierSet,omitempty"`
+
+	// UserCountrySets: Definition of user country sets for the app.
+	UserCountrySets []*UserCountrySet `json:"userCountrySets,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "DeviceGroups") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DeviceGroups") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *DeviceTierConfig) MarshalJSON() ([]byte, error) {
+	type NoMethod DeviceTierConfig
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// DeviceTierSet: A set of device tiers. A tier set determines what
+// variation of app content gets served to a specific device, for
+// device-targeted content. You should assign a priority level to each
+// tier, which determines the ordering by which they are evaluated by
+// Play. See the documentation of DeviceTier.level for more details.
+type DeviceTierSet struct {
+	// DeviceTiers: Device tiers belonging to the set.
+	DeviceTiers []*DeviceTier `json:"deviceTiers,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DeviceTiers") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DeviceTiers") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *DeviceTierSet) MarshalJSON() ([]byte, error) {
+	type NoMethod DeviceTierSet
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -980,10 +2227,10 @@ type ExpansionFile struct {
 
 	// ForceSendFields is a list of field names (e.g. "FileSize") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "FileSize") to include in
@@ -1013,10 +2260,10 @@ type ExpansionFilesUploadResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "ExpansionFile") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "ExpansionFile") to include
@@ -1032,6 +2279,217 @@ func (s *ExpansionFilesUploadResponse) MarshalJSON() ([]byte, error) {
 	type NoMethod ExpansionFilesUploadResponse
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ExternalAccountIdentifiers: User account identifier in the
+// third-party service.
+type ExternalAccountIdentifiers struct {
+	// ExternalAccountId: User account identifier in the third-party
+	// service. Only present if account linking happened as part of the
+	// subscription purchase flow.
+	ExternalAccountId string `json:"externalAccountId,omitempty"`
+
+	// ObfuscatedExternalAccountId: An obfuscated version of the id that is
+	// uniquely associated with the user's account in your app. Present for
+	// the following purchases: * If account linking happened as part of the
+	// subscription purchase flow. * It was specified using
+	// https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.Builder#setobfuscatedaccountid
+	// when the purchase was made.
+	ObfuscatedExternalAccountId string `json:"obfuscatedExternalAccountId,omitempty"`
+
+	// ObfuscatedExternalProfileId: An obfuscated version of the id that is
+	// uniquely associated with the user's profile in your app. Only present
+	// if specified using
+	// https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.Builder#setobfuscatedprofileid
+	// when the purchase was made.
+	ObfuscatedExternalProfileId string `json:"obfuscatedExternalProfileId,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ExternalAccountId")
+	// to unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ExternalAccountId") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ExternalAccountIdentifiers) MarshalJSON() ([]byte, error) {
+	type NoMethod ExternalAccountIdentifiers
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ExternalSubscription: Details of an external subscription.
+type ExternalSubscription struct {
+	// SubscriptionType: Required. The type of the external subscription.
+	//
+	// Possible values:
+	//   "SUBSCRIPTION_TYPE_UNSPECIFIED" - Unspecified, do not use.
+	//   "RECURRING" - This is a recurring subscription where the user is
+	// charged every billing cycle.
+	//   "PREPAID" - This is a prepaid subscription where the user pays up
+	// front.
+	SubscriptionType string `json:"subscriptionType,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "SubscriptionType") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "SubscriptionType") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ExternalSubscription) MarshalJSON() ([]byte, error) {
+	type NoMethod ExternalSubscription
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ExternalTransaction: The details of an external transaction.
+type ExternalTransaction struct {
+	// CreateTime: Output only. The time when this transaction was created.
+	// This is the time when Google was notified of the transaction.
+	CreateTime string `json:"createTime,omitempty"`
+
+	// CurrentPreTaxAmount: Output only. The current transaction amount
+	// before tax. This represents the current pre-tax amount including any
+	// refunds that may have been applied to this transaction.
+	CurrentPreTaxAmount *Price `json:"currentPreTaxAmount,omitempty"`
+
+	// CurrentTaxAmount: Output only. The current tax amount. This
+	// represents the current tax amount including any refunds that may have
+	// been applied to this transaction.
+	CurrentTaxAmount *Price `json:"currentTaxAmount,omitempty"`
+
+	// ExternalTransactionId: Output only. The id of this transaction. All
+	// transaction ids under the same package name must be unique. Set when
+	// creating the external transaction.
+	ExternalTransactionId string `json:"externalTransactionId,omitempty"`
+
+	// OneTimeTransaction: This is a one-time transaction and not part of a
+	// subscription.
+	OneTimeTransaction *OneTimeExternalTransaction `json:"oneTimeTransaction,omitempty"`
+
+	// OriginalPreTaxAmount: Required. The original transaction amount
+	// before taxes. This represents the pre-tax amount originally notified
+	// to Google before any refunds were applied.
+	OriginalPreTaxAmount *Price `json:"originalPreTaxAmount,omitempty"`
+
+	// OriginalTaxAmount: Required. The original tax amount. This represents
+	// the tax amount originally notified to Google before any refunds were
+	// applied.
+	OriginalTaxAmount *Price `json:"originalTaxAmount,omitempty"`
+
+	// PackageName: Output only. The resource name of the external
+	// transaction. The package name of the application the inapp products
+	// were sold (for example, 'com.some.app').
+	PackageName string `json:"packageName,omitempty"`
+
+	// RecurringTransaction: This transaction is part of a recurring series
+	// of transactions.
+	RecurringTransaction *RecurringExternalTransaction `json:"recurringTransaction,omitempty"`
+
+	// TestPurchase: Output only. If set, this transaction was a test
+	// purchase. Google will not charge for a test transaction.
+	TestPurchase *ExternalTransactionTestPurchase `json:"testPurchase,omitempty"`
+
+	// TransactionState: Output only. The current state of the transaction.
+	//
+	// Possible values:
+	//   "TRANSACTION_STATE_UNSPECIFIED" - Unspecified transaction state.
+	// Not used.
+	//   "TRANSACTION_REPORTED" - The transaction has been successfully
+	// reported to Google.
+	//   "TRANSACTION_CANCELED" - The transaction has been fully refunded.
+	TransactionState string `json:"transactionState,omitempty"`
+
+	// TransactionTime: Required. The time when the transaction was
+	// completed.
+	TransactionTime string `json:"transactionTime,omitempty"`
+
+	// UserTaxAddress: Required. User address for tax computation.
+	UserTaxAddress *ExternalTransactionAddress `json:"userTaxAddress,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "CreateTime") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CreateTime") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ExternalTransaction) MarshalJSON() ([]byte, error) {
+	type NoMethod ExternalTransaction
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ExternalTransactionAddress: User's address for the external
+// transaction.
+type ExternalTransactionAddress struct {
+	// RegionCode: Required. Two letter region code based on ISO-3166-1
+	// Alpha-2 (UN region codes).
+	RegionCode string `json:"regionCode,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "RegionCode") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "RegionCode") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ExternalTransactionAddress) MarshalJSON() ([]byte, error) {
+	type NoMethod ExternalTransactionAddress
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ExternalTransactionTestPurchase: Represents a transaction performed
+// using a test account. These transactions will not be charged by
+// Google.
+type ExternalTransactionTestPurchase struct {
 }
 
 // ExternallyHostedApk: Defines an APK available for this application
@@ -1094,10 +2552,10 @@ type ExternallyHostedApk struct {
 
 	// ForceSendFields is a list of field names (e.g. "ApplicationLabel") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "ApplicationLabel") to
@@ -1112,6 +2570,300 @@ type ExternallyHostedApk struct {
 
 func (s *ExternallyHostedApk) MarshalJSON() ([]byte, error) {
 	type NoMethod ExternallyHostedApk
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// FullRefund: A full refund of the remaining amount of a transaction.
+type FullRefund struct {
+}
+
+// GeneratedApksListResponse: Response to list generated APKs.
+type GeneratedApksListResponse struct {
+	// GeneratedApks: All generated APKs, grouped by the APK signing key.
+	GeneratedApks []*GeneratedApksPerSigningKey `json:"generatedApks,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "GeneratedApks") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "GeneratedApks") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *GeneratedApksListResponse) MarshalJSON() ([]byte, error) {
+	type NoMethod GeneratedApksListResponse
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// GeneratedApksPerSigningKey: Download metadata for split, standalone
+// and universal APKs, as well as asset pack slices, signed with a given
+// key.
+type GeneratedApksPerSigningKey struct {
+	// CertificateSha256Hash: SHA256 hash of the APK signing public key
+	// certificate.
+	CertificateSha256Hash string `json:"certificateSha256Hash,omitempty"`
+
+	// GeneratedAssetPackSlices: List of asset pack slices which will be
+	// served for this app bundle, signed with a key corresponding to
+	// certificate_sha256_hash.
+	GeneratedAssetPackSlices []*GeneratedAssetPackSlice `json:"generatedAssetPackSlices,omitempty"`
+
+	// GeneratedSplitApks: List of generated split APKs, signed with a key
+	// corresponding to certificate_sha256_hash.
+	GeneratedSplitApks []*GeneratedSplitApk `json:"generatedSplitApks,omitempty"`
+
+	// GeneratedStandaloneApks: List of generated standalone APKs, signed
+	// with a key corresponding to certificate_sha256_hash.
+	GeneratedStandaloneApks []*GeneratedStandaloneApk `json:"generatedStandaloneApks,omitempty"`
+
+	// GeneratedUniversalApk: Generated universal APK, signed with a key
+	// corresponding to certificate_sha256_hash. This field is not set if no
+	// universal APK was generated for this signing key.
+	GeneratedUniversalApk *GeneratedUniversalApk `json:"generatedUniversalApk,omitempty"`
+
+	// TargetingInfo: Contains targeting information about the generated
+	// apks.
+	TargetingInfo *TargetingInfo `json:"targetingInfo,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "CertificateSha256Hash") to unconditionally include in API requests.
+	// By default, fields with empty or default values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CertificateSha256Hash") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *GeneratedApksPerSigningKey) MarshalJSON() ([]byte, error) {
+	type NoMethod GeneratedApksPerSigningKey
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// GeneratedAssetPackSlice: Download metadata for an asset pack slice.
+type GeneratedAssetPackSlice struct {
+	// DownloadId: Download ID, which uniquely identifies the APK to
+	// download. Should be supplied to `generatedapks.download` method.
+	DownloadId string `json:"downloadId,omitempty"`
+
+	// ModuleName: Name of the module that this asset slice belongs to.
+	ModuleName string `json:"moduleName,omitempty"`
+
+	// SliceId: Asset slice ID.
+	SliceId string `json:"sliceId,omitempty"`
+
+	// Version: Asset module version.
+	Version int64 `json:"version,omitempty,string"`
+
+	// ForceSendFields is a list of field names (e.g. "DownloadId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DownloadId") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *GeneratedAssetPackSlice) MarshalJSON() ([]byte, error) {
+	type NoMethod GeneratedAssetPackSlice
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// GeneratedSplitApk: Download metadata for a split APK.
+type GeneratedSplitApk struct {
+	// DownloadId: Download ID, which uniquely identifies the APK to
+	// download. Should be supplied to `generatedapks.download` method.
+	DownloadId string `json:"downloadId,omitempty"`
+
+	// ModuleName: Name of the module that this APK belongs to.
+	ModuleName string `json:"moduleName,omitempty"`
+
+	// SplitId: Split ID. Empty for the main split of the base module.
+	SplitId string `json:"splitId,omitempty"`
+
+	// VariantId: ID of the generated variant.
+	VariantId int64 `json:"variantId,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DownloadId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DownloadId") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *GeneratedSplitApk) MarshalJSON() ([]byte, error) {
+	type NoMethod GeneratedSplitApk
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// GeneratedStandaloneApk: Download metadata for a standalone APK.
+type GeneratedStandaloneApk struct {
+	// DownloadId: Download ID, which uniquely identifies the APK to
+	// download. Should be supplied to `generatedapks.download` method.
+	DownloadId string `json:"downloadId,omitempty"`
+
+	// VariantId: ID of the generated variant.
+	VariantId int64 `json:"variantId,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DownloadId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DownloadId") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *GeneratedStandaloneApk) MarshalJSON() ([]byte, error) {
+	type NoMethod GeneratedStandaloneApk
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// GeneratedUniversalApk: Download metadata for a universal APK.
+type GeneratedUniversalApk struct {
+	// DownloadId: Download ID, which uniquely identifies the APK to
+	// download. Should be supplied to `generatedapks.download` method.
+	DownloadId string `json:"downloadId,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DownloadId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DownloadId") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *GeneratedUniversalApk) MarshalJSON() ([]byte, error) {
+	type NoMethod GeneratedUniversalApk
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// Grant: An access grant resource.
+type Grant struct {
+	// AppLevelPermissions: The permissions granted to the user for this
+	// app.
+	//
+	// Possible values:
+	//   "APP_LEVEL_PERMISSION_UNSPECIFIED" - Unknown or unspecified
+	// permission.
+	//   "CAN_ACCESS_APP" - View app information (read-only). Deprecated:
+	// Try defining a more granular capability. Otherwise, check
+	// AppLevelPermission.CAN_VIEW_NON_FINANCIAL_DATA.
+	//   "CAN_VIEW_FINANCIAL_DATA" - View financial data.
+	//   "CAN_MANAGE_PERMISSIONS" - Admin (all permissions).
+	//   "CAN_REPLY_TO_REVIEWS" - Reply to reviews.
+	//   "CAN_MANAGE_PUBLIC_APKS" - Release to production, exclude devices,
+	// and use app signing by Google Play.
+	//   "CAN_MANAGE_TRACK_APKS" - Release to testing tracks.
+	//   "CAN_MANAGE_TRACK_USERS" - Manage testing tracks and edit tester
+	// lists.
+	//   "CAN_MANAGE_PUBLIC_LISTING" - Manage store presence.
+	//   "CAN_MANAGE_DRAFT_APPS" - Edit and delete draft apps.
+	//   "CAN_MANAGE_ORDERS" - Manage orders and subscriptions.
+	//   "CAN_MANAGE_APP_CONTENT" - Manage policy related pages.
+	//   "CAN_VIEW_NON_FINANCIAL_DATA" - View app information (read-only).
+	//   "CAN_VIEW_APP_QUALITY" - View app quality data such as Vitals,
+	// Crashes etc.
+	AppLevelPermissions []string `json:"appLevelPermissions,omitempty"`
+
+	// Name: Required. Resource name for this grant, following the pattern
+	// "developers/{developer}/users/{email}/grants/{package_name}". If this
+	// grant is for a draft app, the app ID will be used in this resource
+	// name instead of the package name.
+	Name string `json:"name,omitempty"`
+
+	// PackageName: Immutable. The package name of the app. This will be
+	// empty for draft apps.
+	PackageName string `json:"packageName,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "AppLevelPermissions")
+	// to unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AppLevelPermissions") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *Grant) MarshalJSON() ([]byte, error) {
+	type NoMethod Grant
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -1132,10 +2884,10 @@ type Image struct {
 
 	// ForceSendFields is a list of field names (e.g. "Id") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Id") to include in API
@@ -1164,10 +2916,10 @@ type ImagesDeleteAllResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "Deleted") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Deleted") to include in
@@ -1196,10 +2948,10 @@ type ImagesListResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "Images") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Images") to include in API
@@ -1228,10 +2980,10 @@ type ImagesUploadResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "Image") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Image") to include in API
@@ -1272,6 +3024,10 @@ type InAppProduct struct {
 	// "en-US".
 	Listings map[string]InAppProductListing `json:"listings,omitempty"`
 
+	// ManagedProductTaxesAndComplianceSettings: Details about taxes and
+	// legal compliance. Only applicable to managed products.
+	ManagedProductTaxesAndComplianceSettings *ManagedProductTaxAndComplianceSettings `json:"managedProductTaxesAndComplianceSettings,omitempty"`
+
 	// PackageName: Package name of the parent app.
 	PackageName string `json:"packageName,omitempty"`
 
@@ -1305,6 +3061,10 @@ type InAppProduct struct {
 	// (three months), P6M (six months), and P1Y (one year).
 	SubscriptionPeriod string `json:"subscriptionPeriod,omitempty"`
 
+	// SubscriptionTaxesAndComplianceSettings: Details about taxes and legal
+	// compliance. Only applicable to subscription products.
+	SubscriptionTaxesAndComplianceSettings *SubscriptionTaxAndComplianceSettings `json:"subscriptionTaxesAndComplianceSettings,omitempty"`
+
 	// TrialPeriod: Trial period, specified in ISO 8601 format. Acceptable
 	// values are anything between P7D (seven days) and P999D (999 days).
 	TrialPeriod string `json:"trialPeriod,omitempty"`
@@ -1315,10 +3075,10 @@ type InAppProduct struct {
 
 	// ForceSendFields is a list of field names (e.g. "DefaultLanguage") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "DefaultLanguage") to
@@ -1350,10 +3110,10 @@ type InAppProductListing struct {
 
 	// ForceSendFields is a list of field names (e.g. "Benefits") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Benefits") to include in
@@ -1380,7 +3140,7 @@ type InappproductsListResponse struct {
 	// ("androidpublisher#inappproductsListResponse").
 	Kind string `json:"kind,omitempty"`
 
-	// PageInfo: Information about the current page.
+	// PageInfo: Deprecated and unset.
 	PageInfo *PageInfo `json:"pageInfo,omitempty"`
 
 	// TokenPagination: Pagination token, to handle a number of products
@@ -1393,10 +3153,10 @@ type InappproductsListResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "Inappproduct") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Inappproduct") to include
@@ -1437,8 +3197,8 @@ type InternalAppSharingArtifact struct {
 
 	// ForceSendFields is a list of field names (e.g.
 	// "CertificateFingerprint") to unconditionally include in API requests.
-	// By default, fields with empty values are omitted from API requests.
-	// However, any non-pointer, non-interface field appearing in
+	// By default, fields with empty or default values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
 	// ForceSendFields will be sent to the server regardless of whether the
 	// field is empty or not. This may be used to include empty fields in
 	// Patch requests.
@@ -1488,11 +3248,11 @@ type IntroductoryPriceInfo struct {
 
 	// ForceSendFields is a list of field names (e.g.
 	// "IntroductoryPriceAmountMicros") to unconditionally include in API
-	// requests. By default, fields with empty values are omitted from API
-	// requests. However, any non-pointer, non-interface field appearing in
-	// ForceSendFields will be sent to the server regardless of whether the
-	// field is empty or not. This may be used to include empty fields in
-	// Patch requests.
+	// requests. By default, fields with empty or default values are omitted
+	// from API requests. However, any non-pointer, non-interface field
+	// appearing in ForceSendFields will be sent to the server regardless of
+	// whether the field is empty or not. This may be used to include empty
+	// fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g.
@@ -1507,6 +3267,190 @@ type IntroductoryPriceInfo struct {
 
 func (s *IntroductoryPriceInfo) MarshalJSON() ([]byte, error) {
 	type NoMethod IntroductoryPriceInfo
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// LanguageTargeting: Targeting based on language.
+type LanguageTargeting struct {
+	// Alternatives: Alternative languages.
+	Alternatives []string `json:"alternatives,omitempty"`
+
+	// Value: ISO-639: 2 or 3 letter language code.
+	Value []string `json:"value,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Alternatives") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Alternatives") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *LanguageTargeting) MarshalJSON() ([]byte, error) {
+	type NoMethod LanguageTargeting
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ListDeviceTierConfigsResponse: Response listing existing device tier
+// configs.
+type ListDeviceTierConfigsResponse struct {
+	// DeviceTierConfigs: Device tier configs created by the developer.
+	DeviceTierConfigs []*DeviceTierConfig `json:"deviceTierConfigs,omitempty"`
+
+	// NextPageToken: A token, which can be sent as `page_token` to retrieve
+	// the next page. If this field is omitted, there are no subsequent
+	// pages.
+	NextPageToken string `json:"nextPageToken,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "DeviceTierConfigs")
+	// to unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DeviceTierConfigs") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ListDeviceTierConfigsResponse) MarshalJSON() ([]byte, error) {
+	type NoMethod ListDeviceTierConfigsResponse
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ListSubscriptionOffersResponse: Response message for
+// ListSubscriptionOffers.
+type ListSubscriptionOffersResponse struct {
+	// NextPageToken: A token, which can be sent as `page_token` to retrieve
+	// the next page. If this field is omitted, there are no subsequent
+	// pages.
+	NextPageToken string `json:"nextPageToken,omitempty"`
+
+	// SubscriptionOffers: The subscription offers from the specified
+	// subscription.
+	SubscriptionOffers []*SubscriptionOffer `json:"subscriptionOffers,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "NextPageToken") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "NextPageToken") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ListSubscriptionOffersResponse) MarshalJSON() ([]byte, error) {
+	type NoMethod ListSubscriptionOffersResponse
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ListSubscriptionsResponse: Response message for ListSubscriptions.
+type ListSubscriptionsResponse struct {
+	// NextPageToken: A token, which can be sent as `page_token` to retrieve
+	// the next page. If this field is omitted, there are no subsequent
+	// pages.
+	NextPageToken string `json:"nextPageToken,omitempty"`
+
+	// Subscriptions: The subscriptions from the specified app.
+	Subscriptions []*Subscription `json:"subscriptions,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "NextPageToken") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "NextPageToken") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ListSubscriptionsResponse) MarshalJSON() ([]byte, error) {
+	type NoMethod ListSubscriptionsResponse
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ListUsersResponse: A response containing one or more users with
+// access to an account.
+type ListUsersResponse struct {
+	// NextPageToken: A token to pass to subsequent calls in order to
+	// retrieve subsequent results. This will not be set if there are no
+	// more results to return.
+	NextPageToken string `json:"nextPageToken,omitempty"`
+
+	// Users: The resulting users.
+	Users []*User `json:"users,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "NextPageToken") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "NextPageToken") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ListUsersResponse) MarshalJSON() ([]byte, error) {
+	type NoMethod ListUsersResponse
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -1535,10 +3479,10 @@ type Listing struct {
 
 	// ForceSendFields is a list of field names (e.g. "FullDescription") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "FullDescription") to
@@ -1572,10 +3516,10 @@ type ListingsListResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "Kind") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Kind") to include in API
@@ -1593,7 +3537,7 @@ func (s *ListingsListResponse) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
-// LocalizedText: Release notes specification, i.e. language and text.
+// LocalizedText: Localized text in given language.
 type LocalizedText struct {
 	// Language: Language localization code (a BCP-47 language tag; for
 	// example, "de-AT" for Austrian German).
@@ -1604,10 +3548,10 @@ type LocalizedText struct {
 
 	// ForceSendFields is a list of field names (e.g. "Language") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Language") to include in
@@ -1621,6 +3565,564 @@ type LocalizedText struct {
 
 func (s *LocalizedText) MarshalJSON() ([]byte, error) {
 	type NoMethod LocalizedText
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ManagedProductTaxAndComplianceSettings: Details about taxation and
+// legal compliance for managed products.
+type ManagedProductTaxAndComplianceSettings struct {
+	// EeaWithdrawalRightType: Digital content or service classification for
+	// products distributed to users in the European Economic Area (EEA).
+	// The withdrawal regime under EEA consumer laws depends on this
+	// classification. Refer to the Help Center article
+	// (https://support.google.com/googleplay/android-developer/answer/10463498)
+	// for more information.
+	//
+	// Possible values:
+	//   "WITHDRAWAL_RIGHT_TYPE_UNSPECIFIED"
+	//   "WITHDRAWAL_RIGHT_DIGITAL_CONTENT"
+	//   "WITHDRAWAL_RIGHT_SERVICE"
+	EeaWithdrawalRightType string `json:"eeaWithdrawalRightType,omitempty"`
+
+	// IsTokenizedDigitalAsset: Whether this in-app product is declared as a
+	// product representing a tokenized digital asset.
+	IsTokenizedDigitalAsset bool `json:"isTokenizedDigitalAsset,omitempty"`
+
+	// TaxRateInfoByRegionCode: A mapping from region code to tax rate
+	// details. The keys are region codes as defined by Unicode's "CLDR".
+	TaxRateInfoByRegionCode map[string]RegionalTaxRateInfo `json:"taxRateInfoByRegionCode,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "EeaWithdrawalRightType") to unconditionally include in API requests.
+	// By default, fields with empty or default values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "EeaWithdrawalRightType")
+	// to include in API requests with the JSON null value. By default,
+	// fields with empty values are omitted from API requests. However, any
+	// field with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ManagedProductTaxAndComplianceSettings) MarshalJSON() ([]byte, error) {
+	type NoMethod ManagedProductTaxAndComplianceSettings
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// MigrateBasePlanPricesRequest: Request message for
+// MigrateBasePlanPrices.
+type MigrateBasePlanPricesRequest struct {
+	// RegionalPriceMigrations: Required. The regional prices to update.
+	RegionalPriceMigrations []*RegionalPriceMigrationConfig `json:"regionalPriceMigrations,omitempty"`
+
+	// RegionsVersion: Required. The version of the available regions being
+	// used for the regional_price_migrations.
+	RegionsVersion *RegionsVersion `json:"regionsVersion,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "RegionalPriceMigrations") to unconditionally include in API
+	// requests. By default, fields with empty or default values are omitted
+	// from API requests. However, any non-pointer, non-interface field
+	// appearing in ForceSendFields will be sent to the server regardless of
+	// whether the field is empty or not. This may be used to include empty
+	// fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "RegionalPriceMigrations")
+	// to include in API requests with the JSON null value. By default,
+	// fields with empty values are omitted from API requests. However, any
+	// field with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *MigrateBasePlanPricesRequest) MarshalJSON() ([]byte, error) {
+	type NoMethod MigrateBasePlanPricesRequest
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// MigrateBasePlanPricesResponse: Response message for
+// MigrateBasePlanPrices.
+type MigrateBasePlanPricesResponse struct {
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+}
+
+// ModuleMetadata: Metadata of a module.
+type ModuleMetadata struct {
+	// DeliveryType: Indicates the delivery type (e.g. on-demand) of the
+	// module.
+	//
+	// Possible values:
+	//   "UNKNOWN_DELIVERY_TYPE" - Unspecified delivery type.
+	//   "INSTALL_TIME" - This module will always be downloaded as part of
+	// the initial install of the app.
+	//   "ON_DEMAND" - This module is requested on-demand, which means it
+	// will not be part of the initial install, and will only be sent when
+	// requested by the client.
+	//   "FAST_FOLLOW" - This module will be downloaded immediately after
+	// initial install finishes. The app can be opened before these modules
+	// are downloaded.
+	DeliveryType string `json:"deliveryType,omitempty"`
+
+	// Dependencies: Names of the modules that this module directly depends
+	// on. Each module implicitly depends on the base module.
+	Dependencies []string `json:"dependencies,omitempty"`
+
+	// ModuleType: Indicates the type of this feature module.
+	//
+	// Possible values:
+	//   "UNKNOWN_MODULE_TYPE" - Unknown feature module.
+	//   "FEATURE_MODULE" - Regular feature module.
+	ModuleType string `json:"moduleType,omitempty"`
+
+	// Name: Module name.
+	Name string `json:"name,omitempty"`
+
+	// Targeting: The targeting that makes a conditional module installed.
+	// Relevant only for Split APKs.
+	Targeting *ModuleTargeting `json:"targeting,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DeliveryType") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DeliveryType") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ModuleMetadata) MarshalJSON() ([]byte, error) {
+	type NoMethod ModuleMetadata
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ModuleTargeting: Targeting on the module level.
+type ModuleTargeting struct {
+	// DeviceFeatureTargeting: Targeting for device features.
+	DeviceFeatureTargeting []*DeviceFeatureTargeting `json:"deviceFeatureTargeting,omitempty"`
+
+	// SdkVersionTargeting: The sdk version that the variant targets
+	SdkVersionTargeting *SdkVersionTargeting `json:"sdkVersionTargeting,omitempty"`
+
+	// UserCountriesTargeting: Countries-level targeting
+	UserCountriesTargeting *UserCountriesTargeting `json:"userCountriesTargeting,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "DeviceFeatureTargeting") to unconditionally include in API requests.
+	// By default, fields with empty or default values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DeviceFeatureTargeting")
+	// to include in API requests with the JSON null value. By default,
+	// fields with empty values are omitted from API requests. However, any
+	// field with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ModuleTargeting) MarshalJSON() ([]byte, error) {
+	type NoMethod ModuleTargeting
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// Money: Represents an amount of money with its currency type.
+type Money struct {
+	// CurrencyCode: The three-letter currency code defined in ISO 4217.
+	CurrencyCode string `json:"currencyCode,omitempty"`
+
+	// Nanos: Number of nano (10^-9) units of the amount. The value must be
+	// between -999,999,999 and +999,999,999 inclusive. If `units` is
+	// positive, `nanos` must be positive or zero. If `units` is zero,
+	// `nanos` can be positive, zero, or negative. If `units` is negative,
+	// `nanos` must be negative or zero. For example $-1.75 is represented
+	// as `units`=-1 and `nanos`=-750,000,000.
+	Nanos int64 `json:"nanos,omitempty"`
+
+	// Units: The whole units of the amount. For example if `currencyCode`
+	// is "USD", then 1 unit is one US dollar.
+	Units int64 `json:"units,omitempty,string"`
+
+	// ForceSendFields is a list of field names (e.g. "CurrencyCode") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CurrencyCode") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *Money) MarshalJSON() ([]byte, error) {
+	type NoMethod Money
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// MultiAbi: Represents a list of apis.
+type MultiAbi struct {
+	// Abi: A list of targeted ABIs, as represented by the Android Platform
+	Abi []*Abi `json:"abi,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Abi") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Abi") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *MultiAbi) MarshalJSON() ([]byte, error) {
+	type NoMethod MultiAbi
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// MultiAbiTargeting: Targeting based on multiple abis.
+type MultiAbiTargeting struct {
+	// Alternatives: Targeting of other sibling directories that were in the
+	// Bundle. For main splits this is targeting of other main splits.
+	Alternatives []*MultiAbi `json:"alternatives,omitempty"`
+
+	// Value: Value of a multi abi.
+	Value []*MultiAbi `json:"value,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Alternatives") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Alternatives") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *MultiAbiTargeting) MarshalJSON() ([]byte, error) {
+	type NoMethod MultiAbiTargeting
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// OfferDetails: Offer details information related to a purchase line
+// item.
+type OfferDetails struct {
+	// BasePlanId: The base plan ID. Present for all base plan and offers.
+	BasePlanId string `json:"basePlanId,omitempty"`
+
+	// OfferId: The offer ID. Only present for discounted offers.
+	OfferId string `json:"offerId,omitempty"`
+
+	// OfferTags: The latest offer tags associated with the offer. It
+	// includes tags inherited from the base plan.
+	OfferTags []string `json:"offerTags,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "BasePlanId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "BasePlanId") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *OfferDetails) MarshalJSON() ([]byte, error) {
+	type NoMethod OfferDetails
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// OfferTag: Represents a custom tag specified for base plans and
+// subscription offers.
+type OfferTag struct {
+	// Tag: Must conform with RFC-1034. That is, this string can only
+	// contain lower-case letters (a-z), numbers (0-9), and hyphens (-), and
+	// be at most 20 characters.
+	Tag string `json:"tag,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Tag") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Tag") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *OfferTag) MarshalJSON() ([]byte, error) {
+	type NoMethod OfferTag
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// OneTimeExternalTransaction: Represents a one-time transaction.
+type OneTimeExternalTransaction struct {
+	// ExternalTransactionToken: Input only. Provided during the call to
+	// Create. Retrieved from the client when the alternative billing flow
+	// is launched.
+	ExternalTransactionToken string `json:"externalTransactionToken,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "ExternalTransactionToken") to unconditionally include in API
+	// requests. By default, fields with empty or default values are omitted
+	// from API requests. However, any non-pointer, non-interface field
+	// appearing in ForceSendFields will be sent to the server regardless of
+	// whether the field is empty or not. This may be used to include empty
+	// fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ExternalTransactionToken")
+	// to include in API requests with the JSON null value. By default,
+	// fields with empty values are omitted from API requests. However, any
+	// field with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *OneTimeExternalTransaction) MarshalJSON() ([]byte, error) {
+	type NoMethod OneTimeExternalTransaction
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// OtherRegionsBasePlanConfig: Pricing information for any new locations
+// Play may launch in.
+type OtherRegionsBasePlanConfig struct {
+	// EurPrice: Required. Price in EUR to use for any new locations Play
+	// may launch in.
+	EurPrice *Money `json:"eurPrice,omitempty"`
+
+	// NewSubscriberAvailability: Whether the base plan is available for new
+	// subscribers in any new locations Play may launch in. If not
+	// specified, this will default to false.
+	NewSubscriberAvailability bool `json:"newSubscriberAvailability,omitempty"`
+
+	// UsdPrice: Required. Price in USD to use for any new locations Play
+	// may launch in.
+	UsdPrice *Money `json:"usdPrice,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "EurPrice") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "EurPrice") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *OtherRegionsBasePlanConfig) MarshalJSON() ([]byte, error) {
+	type NoMethod OtherRegionsBasePlanConfig
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// OtherRegionsSubscriptionOfferConfig: Configuration for any new
+// locations Play may launch in specified on a subscription offer.
+type OtherRegionsSubscriptionOfferConfig struct {
+	// OtherRegionsNewSubscriberAvailability: Whether the subscription offer
+	// in any new locations Play may launch in the future. If not specified,
+	// this will default to false.
+	OtherRegionsNewSubscriberAvailability bool `json:"otherRegionsNewSubscriberAvailability,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "OtherRegionsNewSubscriberAvailability") to unconditionally include
+	// in API requests. By default, fields with empty or default values are
+	// omitted from API requests. However, any non-pointer, non-interface
+	// field appearing in ForceSendFields will be sent to the server
+	// regardless of whether the field is empty or not. This may be used to
+	// include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g.
+	// "OtherRegionsNewSubscriberAvailability") to include in API requests
+	// with the JSON null value. By default, fields with empty values are
+	// omitted from API requests. However, any field with an empty value
+	// appearing in NullFields will be sent to the server as null. It is an
+	// error if a field in this list has a non-empty value. This may be used
+	// to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *OtherRegionsSubscriptionOfferConfig) MarshalJSON() ([]byte, error) {
+	type NoMethod OtherRegionsSubscriptionOfferConfig
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// OtherRegionsSubscriptionOfferPhaseConfig: Configuration for any new
+// locations Play may launch in for a single offer phase.
+type OtherRegionsSubscriptionOfferPhaseConfig struct {
+	// AbsoluteDiscounts: The absolute amount of money subtracted from the
+	// base plan price prorated over the phase duration that the user pays
+	// for this offer phase. For example, if the base plan price for this
+	// region is $12 for a period of 1 year, then a $1 absolute discount for
+	// a phase of a duration of 3 months would correspond to a price of $2.
+	// The resulting price may not be smaller than the minimum price allowed
+	// for any new locations Play may launch in.
+	AbsoluteDiscounts *OtherRegionsSubscriptionOfferPhasePrices `json:"absoluteDiscounts,omitempty"`
+
+	// OtherRegionsPrices: The absolute price the user pays for this offer
+	// phase. The price must not be smaller than the minimum price allowed
+	// for any new locations Play may launch in.
+	OtherRegionsPrices *OtherRegionsSubscriptionOfferPhasePrices `json:"otherRegionsPrices,omitempty"`
+
+	// RelativeDiscount: The fraction of the base plan price prorated over
+	// the phase duration that the user pays for this offer phase. For
+	// example, if the base plan price for this region is $12 for a period
+	// of 1 year, then a 50% discount for a phase of a duration of 3 months
+	// would correspond to a price of $1.50. The discount must be specified
+	// as a fraction strictly larger than 0 and strictly smaller than 1. The
+	// resulting price will be rounded to the nearest billable unit (e.g.
+	// cents for USD). The relative discount is considered invalid if the
+	// discounted price ends up being smaller than the minimum price allowed
+	// in any new locations Play may launch in.
+	RelativeDiscount float64 `json:"relativeDiscount,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AbsoluteDiscounts")
+	// to unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AbsoluteDiscounts") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *OtherRegionsSubscriptionOfferPhaseConfig) MarshalJSON() ([]byte, error) {
+	type NoMethod OtherRegionsSubscriptionOfferPhaseConfig
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *OtherRegionsSubscriptionOfferPhaseConfig) UnmarshalJSON(data []byte) error {
+	type NoMethod OtherRegionsSubscriptionOfferPhaseConfig
+	var s1 struct {
+		RelativeDiscount gensupport.JSONFloat64 `json:"relativeDiscount"`
+		*NoMethod
+	}
+	s1.NoMethod = (*NoMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.RelativeDiscount = float64(s1.RelativeDiscount)
+	return nil
+}
+
+// OtherRegionsSubscriptionOfferPhasePrices: Pricing information for any
+// new locations Play may launch in.
+type OtherRegionsSubscriptionOfferPhasePrices struct {
+	// EurPrice: Required. Price in EUR to use for any new locations Play
+	// may launch in.
+	EurPrice *Money `json:"eurPrice,omitempty"`
+
+	// UsdPrice: Required. Price in USD to use for any new locations Play
+	// may launch in.
+	UsdPrice *Money `json:"usdPrice,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "EurPrice") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "EurPrice") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *OtherRegionsSubscriptionOfferPhasePrices) MarshalJSON() ([]byte, error) {
+	type NoMethod OtherRegionsSubscriptionOfferPhasePrices
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -1642,10 +4144,10 @@ type PageInfo struct {
 
 	// ForceSendFields is a list of field names (e.g. "ResultPerPage") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "ResultPerPage") to include
@@ -1663,6 +4165,150 @@ func (s *PageInfo) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// PartialRefund: A partial refund of a transaction.
+type PartialRefund struct {
+	// RefundId: Required. A unique id distinguishing this partial refund.
+	// If the refund is successful, subsequent refunds with the same id will
+	// fail. Must be unique across refunds for one individual transaction.
+	RefundId string `json:"refundId,omitempty"`
+
+	// RefundPreTaxAmount: Required. The pre-tax amount of the partial
+	// refund. Should be less than the remaining pre-tax amount of the
+	// transaction.
+	RefundPreTaxAmount *Price `json:"refundPreTaxAmount,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "RefundId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "RefundId") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *PartialRefund) MarshalJSON() ([]byte, error) {
+	type NoMethod PartialRefund
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// PausedStateContext: Information specific to a subscription in paused
+// state.
+type PausedStateContext struct {
+	// AutoResumeTime: Time at which the subscription will be automatically
+	// resumed.
+	AutoResumeTime string `json:"autoResumeTime,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AutoResumeTime") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AutoResumeTime") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *PausedStateContext) MarshalJSON() ([]byte, error) {
+	type NoMethod PausedStateContext
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// PrepaidBasePlanType: Represents a base plan that does not
+// automatically renew at the end of the base plan, and must be manually
+// renewed by the user.
+type PrepaidBasePlanType struct {
+	// BillingPeriodDuration: Required. Subscription period, specified in
+	// ISO 8601 format. For a list of acceptable billing periods, refer to
+	// the help center.
+	BillingPeriodDuration string `json:"billingPeriodDuration,omitempty"`
+
+	// TimeExtension: Whether users should be able to extend this prepaid
+	// base plan in Google Play surfaces. Defaults to TIME_EXTENSION_ACTIVE
+	// if not specified.
+	//
+	// Possible values:
+	//   "TIME_EXTENSION_UNSPECIFIED" - Unspecified state.
+	//   "TIME_EXTENSION_ACTIVE" - Time extension is active. Users are
+	// allowed to top-up or extend their prepaid plan.
+	//   "TIME_EXTENSION_INACTIVE" - Time extension is inactive. Users
+	// cannot top-up or extend their prepaid plan.
+	TimeExtension string `json:"timeExtension,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "BillingPeriodDuration") to unconditionally include in API requests.
+	// By default, fields with empty or default values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "BillingPeriodDuration") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *PrepaidBasePlanType) MarshalJSON() ([]byte, error) {
+	type NoMethod PrepaidBasePlanType
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// PrepaidPlan: Information related to a prepaid plan.
+type PrepaidPlan struct {
+	// AllowExtendAfterTime: If present, this is the time after which top up
+	// purchases are allowed for the prepaid plan. Will not be present for
+	// expired prepaid plans.
+	AllowExtendAfterTime string `json:"allowExtendAfterTime,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "AllowExtendAfterTime") to unconditionally include in API requests.
+	// By default, fields with empty or default values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AllowExtendAfterTime") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *PrepaidPlan) MarshalJSON() ([]byte, error) {
+	type NoMethod PrepaidPlan
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // Price: Definition of a price, i.e. currency and units.
 type Price struct {
 	// Currency: 3 letter Currency code, as defined by ISO 4217. See
@@ -1675,10 +4321,10 @@ type Price struct {
 
 	// ForceSendFields is a list of field names (e.g. "Currency") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Currency") to include in
@@ -1733,7 +4379,7 @@ type ProductPurchase struct {
 	// product.
 	OrderId string `json:"orderId,omitempty"`
 
-	// ProductId: The inapp product SKU.
+	// ProductId: The inapp product SKU. May not be present.
 	ProductId string `json:"productId,omitempty"`
 
 	// PurchaseState: The purchase state of the order. Possible values are:
@@ -1745,7 +4391,7 @@ type ProductPurchase struct {
 	PurchaseTimeMillis int64 `json:"purchaseTimeMillis,omitempty,string"`
 
 	// PurchaseToken: The purchase token generated to identify this
-	// purchase.
+	// purchase. May not be present.
 	PurchaseToken string `json:"purchaseToken,omitempty"`
 
 	// PurchaseType: The type of purchase of the inapp product. This field
@@ -1756,7 +4402,7 @@ type ProductPurchase struct {
 	PurchaseType *int64 `json:"purchaseType,omitempty"`
 
 	// Quantity: The quantity associated with the purchase of the inapp
-	// product.
+	// product. If not present, the quantity is 1.
 	Quantity int64 `json:"quantity,omitempty"`
 
 	// RegionCode: ISO 3166-1 alpha-2 billing region code of the user at the
@@ -1769,8 +4415,8 @@ type ProductPurchase struct {
 
 	// ForceSendFields is a list of field names (e.g.
 	// "AcknowledgementState") to unconditionally include in API requests.
-	// By default, fields with empty values are omitted from API requests.
-	// However, any non-pointer, non-interface field appearing in
+	// By default, fields with empty or default values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
 	// ForceSendFields will be sent to the server regardless of whether the
 	// field is empty or not. This may be used to include empty fields in
 	// Patch requests.
@@ -1800,10 +4446,10 @@ type ProductPurchasesAcknowledgeRequest struct {
 
 	// ForceSendFields is a list of field names (e.g. "DeveloperPayload") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "DeveloperPayload") to
@@ -1820,6 +4466,403 @@ func (s *ProductPurchasesAcknowledgeRequest) MarshalJSON() ([]byte, error) {
 	type NoMethod ProductPurchasesAcknowledgeRequest
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// RecurringExternalTransaction: Represents a transaction that is part
+// of a recurring series of payments. This can be a subscription or a
+// one-time product with multiple payments (such as preorder).
+type RecurringExternalTransaction struct {
+	// ExternalSubscription: Details of an external subscription.
+	ExternalSubscription *ExternalSubscription `json:"externalSubscription,omitempty"`
+
+	// ExternalTransactionToken: Input only. Provided during the call to
+	// Create. Retrieved from the client when the alternative billing flow
+	// is launched. Required only for the initial purchase.
+	ExternalTransactionToken string `json:"externalTransactionToken,omitempty"`
+
+	// InitialExternalTransactionId: The external transaction id of the
+	// first transaction of this recurring series of transactions. For
+	// example, for a subscription this would be the transaction id of the
+	// first payment. Required when creating recurring external
+	// transactions.
+	InitialExternalTransactionId string `json:"initialExternalTransactionId,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "ExternalSubscription") to unconditionally include in API requests.
+	// By default, fields with empty or default values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ExternalSubscription") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *RecurringExternalTransaction) MarshalJSON() ([]byte, error) {
+	type NoMethod RecurringExternalTransaction
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// RefundExternalTransactionRequest: A request to refund an existing
+// external transaction.
+type RefundExternalTransactionRequest struct {
+	// FullRefund: A full-amount refund.
+	FullRefund *FullRefund `json:"fullRefund,omitempty"`
+
+	// PartialRefund: A partial refund.
+	PartialRefund *PartialRefund `json:"partialRefund,omitempty"`
+
+	// RefundTime: Required. The time that the transaction was refunded.
+	RefundTime string `json:"refundTime,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "FullRefund") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "FullRefund") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *RefundExternalTransactionRequest) MarshalJSON() ([]byte, error) {
+	type NoMethod RefundExternalTransactionRequest
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// RegionalBasePlanConfig: Configuration for a base plan specific to a
+// region.
+type RegionalBasePlanConfig struct {
+	// NewSubscriberAvailability: Whether the base plan in the specified
+	// region is available for new subscribers. Existing subscribers will
+	// not have their subscription canceled if this value is set to false.
+	// If not specified, this will default to false.
+	NewSubscriberAvailability bool `json:"newSubscriberAvailability,omitempty"`
+
+	// Price: The price of the base plan in the specified region. Must be
+	// set if the base plan is available to new subscribers. Must be set in
+	// the currency that is linked to the specified region.
+	Price *Money `json:"price,omitempty"`
+
+	// RegionCode: Required. Region code this configuration applies to, as
+	// defined by ISO 3166-2, e.g. "US".
+	RegionCode string `json:"regionCode,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "NewSubscriberAvailability") to unconditionally include in API
+	// requests. By default, fields with empty or default values are omitted
+	// from API requests. However, any non-pointer, non-interface field
+	// appearing in ForceSendFields will be sent to the server regardless of
+	// whether the field is empty or not. This may be used to include empty
+	// fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g.
+	// "NewSubscriberAvailability") to include in API requests with the JSON
+	// null value. By default, fields with empty values are omitted from API
+	// requests. However, any field with an empty value appearing in
+	// NullFields will be sent to the server as null. It is an error if a
+	// field in this list has a non-empty value. This may be used to include
+	// null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *RegionalBasePlanConfig) MarshalJSON() ([]byte, error) {
+	type NoMethod RegionalBasePlanConfig
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// RegionalPriceMigrationConfig: Configuration for a price migration.
+type RegionalPriceMigrationConfig struct {
+	// OldestAllowedPriceVersionTime: Required. The cutoff time for
+	// historical prices that subscribers can remain paying. Subscribers who
+	// are on a price that was created before this cutoff time will be
+	// migrated to the currently-offered price. These subscribers will
+	// receive a notification that they will be paying a different price.
+	// Subscribers who do not agree to the new price will have their
+	// subscription ended at the next renewal.
+	OldestAllowedPriceVersionTime string `json:"oldestAllowedPriceVersionTime,omitempty"`
+
+	// PriceIncreaseType: Optional. The behavior the caller wants users to
+	// see when there is a price increase during migration. If left unset,
+	// the behavior defaults to PRICE_INCREASE_TYPE_OPT_IN. Note that the
+	// first opt-out price increase migration for each app must be initiated
+	// in Play Console.
+	//
+	// Possible values:
+	//   "PRICE_INCREASE_TYPE_UNSPECIFIED" - Unspecified state.
+	//   "PRICE_INCREASE_TYPE_OPT_IN" - Price increase will be presented to
+	// users on an opt-in basis.
+	//   "PRICE_INCREASE_TYPE_OPT_OUT" - Price increase will be presented to
+	// users on an opt-out basis.
+	PriceIncreaseType string `json:"priceIncreaseType,omitempty"`
+
+	// RegionCode: Required. Region code this configuration applies to, as
+	// defined by ISO 3166-2, e.g. "US".
+	RegionCode string `json:"regionCode,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "OldestAllowedPriceVersionTime") to unconditionally include in API
+	// requests. By default, fields with empty or default values are omitted
+	// from API requests. However, any non-pointer, non-interface field
+	// appearing in ForceSendFields will be sent to the server regardless of
+	// whether the field is empty or not. This may be used to include empty
+	// fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g.
+	// "OldestAllowedPriceVersionTime") to include in API requests with the
+	// JSON null value. By default, fields with empty values are omitted
+	// from API requests. However, any field with an empty value appearing
+	// in NullFields will be sent to the server as null. It is an error if a
+	// field in this list has a non-empty value. This may be used to include
+	// null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *RegionalPriceMigrationConfig) MarshalJSON() ([]byte, error) {
+	type NoMethod RegionalPriceMigrationConfig
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// RegionalSubscriptionOfferConfig: Configuration for a subscription
+// offer in a single region.
+type RegionalSubscriptionOfferConfig struct {
+	// NewSubscriberAvailability: Whether the subscription offer in the
+	// specified region is available for new subscribers. Existing
+	// subscribers will not have their subscription cancelled if this value
+	// is set to false. If not specified, this will default to false.
+	NewSubscriberAvailability bool `json:"newSubscriberAvailability,omitempty"`
+
+	// RegionCode: Required. Immutable. Region code this configuration
+	// applies to, as defined by ISO 3166-2, e.g. "US".
+	RegionCode string `json:"regionCode,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "NewSubscriberAvailability") to unconditionally include in API
+	// requests. By default, fields with empty or default values are omitted
+	// from API requests. However, any non-pointer, non-interface field
+	// appearing in ForceSendFields will be sent to the server regardless of
+	// whether the field is empty or not. This may be used to include empty
+	// fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g.
+	// "NewSubscriberAvailability") to include in API requests with the JSON
+	// null value. By default, fields with empty values are omitted from API
+	// requests. However, any field with an empty value appearing in
+	// NullFields will be sent to the server as null. It is an error if a
+	// field in this list has a non-empty value. This may be used to include
+	// null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *RegionalSubscriptionOfferConfig) MarshalJSON() ([]byte, error) {
+	type NoMethod RegionalSubscriptionOfferConfig
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// RegionalSubscriptionOfferPhaseConfig: Configuration for a single
+// phase of a subscription offer in a single region.
+type RegionalSubscriptionOfferPhaseConfig struct {
+	// AbsoluteDiscount: The absolute amount of money subtracted from the
+	// base plan price prorated over the phase duration that the user pays
+	// for this offer phase. For example, if the base plan price for this
+	// region is $12 for a period of 1 year, then a $1 absolute discount for
+	// a phase of a duration of 3 months would correspond to a price of $2.
+	// The resulting price may not be smaller than the minimum price allowed
+	// for this region.
+	AbsoluteDiscount *Money `json:"absoluteDiscount,omitempty"`
+
+	// Price: The absolute price the user pays for this offer phase. The
+	// price must not be smaller than the minimum price allowed for this
+	// region.
+	Price *Money `json:"price,omitempty"`
+
+	// RegionCode: Required. Immutable. The region to which this config
+	// applies.
+	RegionCode string `json:"regionCode,omitempty"`
+
+	// RelativeDiscount: The fraction of the base plan price prorated over
+	// the phase duration that the user pays for this offer phase. For
+	// example, if the base plan price for this region is $12 for a period
+	// of 1 year, then a 50% discount for a phase of a duration of 3 months
+	// would correspond to a price of $1.50. The discount must be specified
+	// as a fraction strictly larger than 0 and strictly smaller than 1. The
+	// resulting price will be rounded to the nearest billable unit (e.g.
+	// cents for USD). The relative discount is considered invalid if the
+	// discounted price ends up being smaller than the minimum price allowed
+	// in this region.
+	RelativeDiscount float64 `json:"relativeDiscount,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AbsoluteDiscount") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AbsoluteDiscount") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *RegionalSubscriptionOfferPhaseConfig) MarshalJSON() ([]byte, error) {
+	type NoMethod RegionalSubscriptionOfferPhaseConfig
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+func (s *RegionalSubscriptionOfferPhaseConfig) UnmarshalJSON(data []byte) error {
+	type NoMethod RegionalSubscriptionOfferPhaseConfig
+	var s1 struct {
+		RelativeDiscount gensupport.JSONFloat64 `json:"relativeDiscount"`
+		*NoMethod
+	}
+	s1.NoMethod = (*NoMethod)(s)
+	if err := json.Unmarshal(data, &s1); err != nil {
+		return err
+	}
+	s.RelativeDiscount = float64(s1.RelativeDiscount)
+	return nil
+}
+
+// RegionalTaxRateInfo: Specified details about taxation in a given
+// geographical region.
+type RegionalTaxRateInfo struct {
+	// EligibleForStreamingServiceTaxRate: You must tell us if your app
+	// contains streaming products to correctly charge US state and local
+	// sales tax. Field only supported in United States.
+	EligibleForStreamingServiceTaxRate bool `json:"eligibleForStreamingServiceTaxRate,omitempty"`
+
+	// StreamingTaxType: To collect communications or amusement taxes in the
+	// United States, choose the appropriate tax category. Learn more
+	// (https://support.google.com/googleplay/android-developer/answer/10463498#streaming_tax).
+	//
+	// Possible values:
+	//   "STREAMING_TAX_TYPE_UNSPECIFIED" - No telecommunications tax
+	// collected.
+	//   "STREAMING_TAX_TYPE_TELCO_VIDEO_RENTAL" - US-specific
+	// telecommunications tax tier for video streaming, on demand, rentals /
+	// subscriptions / pay-per-view.
+	//   "STREAMING_TAX_TYPE_TELCO_VIDEO_SALES" - US-specific
+	// telecommunications tax tier for video streaming of pre-recorded
+	// content like movies, tv shows.
+	//   "STREAMING_TAX_TYPE_TELCO_VIDEO_MULTI_CHANNEL" - US-specific
+	// telecommunications tax tier for video streaming of multi-channel
+	// programming.
+	//   "STREAMING_TAX_TYPE_TELCO_AUDIO_RENTAL" - US-specific
+	// telecommunications tax tier for audio streaming, rental /
+	// subscription.
+	//   "STREAMING_TAX_TYPE_TELCO_AUDIO_SALES" - US-specific
+	// telecommunications tax tier for audio streaming, sale / permanent
+	// download.
+	//   "STREAMING_TAX_TYPE_TELCO_AUDIO_MULTI_CHANNEL" - US-specific
+	// telecommunications tax tier for multi channel audio streaming like
+	// radio.
+	StreamingTaxType string `json:"streamingTaxType,omitempty"`
+
+	// TaxTier: Tax tier to specify reduced tax rate. Developers who sell
+	// digital news, magazines, newspapers, books, or audiobooks in various
+	// regions may be eligible for reduced tax rates. Learn more
+	// (https://support.google.com/googleplay/android-developer/answer/10463498).
+	//
+	// Possible values:
+	//   "TAX_TIER_UNSPECIFIED"
+	//   "TAX_TIER_BOOKS_1"
+	//   "TAX_TIER_NEWS_1"
+	//   "TAX_TIER_NEWS_2"
+	//   "TAX_TIER_MUSIC_OR_AUDIO_1"
+	//   "TAX_TIER_LIVE_OR_BROADCAST_1"
+	TaxTier string `json:"taxTier,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "EligibleForStreamingServiceTaxRate") to unconditionally include in
+	// API requests. By default, fields with empty or default values are
+	// omitted from API requests. However, any non-pointer, non-interface
+	// field appearing in ForceSendFields will be sent to the server
+	// regardless of whether the field is empty or not. This may be used to
+	// include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g.
+	// "EligibleForStreamingServiceTaxRate") to include in API requests with
+	// the JSON null value. By default, fields with empty values are omitted
+	// from API requests. However, any field with an empty value appearing
+	// in NullFields will be sent to the server as null. It is an error if a
+	// field in this list has a non-empty value. This may be used to include
+	// null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *RegionalTaxRateInfo) MarshalJSON() ([]byte, error) {
+	type NoMethod RegionalTaxRateInfo
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// RegionsVersion: The version of the available regions being used for
+// the specified resource. A string representing the version of
+// available regions being used for the specified resource. Regional
+// prices for the resource have to be specified according to the
+// information published in this article
+// (https://support.google.com/googleplay/android-developer/answer/10532353).
+type RegionsVersion struct {
+	// Version: Required. The latest version is 2022/02.
+	Version string `json:"version,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Version") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Version") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *RegionsVersion) MarshalJSON() ([]byte, error) {
+	type NoMethod RegionsVersion
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ReplacementCancellation: Information specific to cancellations caused
+// by subscription replacement.
+type ReplacementCancellation struct {
 }
 
 // Review: An Android app review.
@@ -1839,10 +4882,10 @@ type Review struct {
 
 	// ForceSendFields is a list of field names (e.g. "AuthorName") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "AuthorName") to include in
@@ -1870,10 +4913,10 @@ type ReviewReplyResult struct {
 
 	// ForceSendFields is a list of field names (e.g. "LastEdited") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "LastEdited") to include in
@@ -1909,10 +4952,10 @@ type ReviewsListResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "PageInfo") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "PageInfo") to include in
@@ -1940,10 +4983,10 @@ type ReviewsReplyRequest struct {
 
 	// ForceSendFields is a list of field names (e.g. "ReplyText") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "ReplyText") to include in
@@ -1972,10 +5015,10 @@ type ReviewsReplyResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "Result") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Result") to include in API
@@ -1989,6 +5032,343 @@ type ReviewsReplyResponse struct {
 
 func (s *ReviewsReplyResponse) MarshalJSON() ([]byte, error) {
 	type NoMethod ReviewsReplyResponse
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ScreenDensity: Represents a screen density.
+type ScreenDensity struct {
+	// DensityAlias: Alias for a screen density.
+	//
+	// Possible values:
+	//   "DENSITY_UNSPECIFIED" - Unspecified screen density.
+	//   "NODPI" - NODPI screen density.
+	//   "LDPI" - LDPI screen density.
+	//   "MDPI" - MDPI screen density.
+	//   "TVDPI" - TVDPI screen density.
+	//   "HDPI" - HDPI screen density.
+	//   "XHDPI" - XHDPI screen density.
+	//   "XXHDPI" - XXHDPI screen density.
+	//   "XXXHDPI" - XXXHDPI screen density.
+	DensityAlias string `json:"densityAlias,omitempty"`
+
+	// DensityDpi: Value for density dpi.
+	DensityDpi int64 `json:"densityDpi,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "DensityAlias") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "DensityAlias") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ScreenDensity) MarshalJSON() ([]byte, error) {
+	type NoMethod ScreenDensity
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// ScreenDensityTargeting: Targeting based on screen density.
+type ScreenDensityTargeting struct {
+	// Alternatives: Targeting of other sibling directories that were in the
+	// Bundle. For main splits this is targeting of other main splits.
+	Alternatives []*ScreenDensity `json:"alternatives,omitempty"`
+
+	// Value: Value of a screen density.
+	Value []*ScreenDensity `json:"value,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Alternatives") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Alternatives") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *ScreenDensityTargeting) MarshalJSON() ([]byte, error) {
+	type NoMethod ScreenDensityTargeting
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SdkVersion: Represents an sdk version.
+type SdkVersion struct {
+	// Min: Inclusive minimum value of an sdk version.
+	Min int64 `json:"min,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Min") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Min") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SdkVersion) MarshalJSON() ([]byte, error) {
+	type NoMethod SdkVersion
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SdkVersionTargeting: Targeting based on sdk version.
+type SdkVersionTargeting struct {
+	// Alternatives: Targeting of other sibling directories that were in the
+	// Bundle. For main splits this is targeting of other main splits.
+	Alternatives []*SdkVersion `json:"alternatives,omitempty"`
+
+	// Value: Value of an sdk version.
+	Value []*SdkVersion `json:"value,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Alternatives") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Alternatives") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SdkVersionTargeting) MarshalJSON() ([]byte, error) {
+	type NoMethod SdkVersionTargeting
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SplitApkMetadata: Holds data specific to Split APKs.
+type SplitApkMetadata struct {
+	// IsMasterSplit: Indicates whether this APK is the main split of the
+	// module.
+	IsMasterSplit bool `json:"isMasterSplit,omitempty"`
+
+	// SplitId: Id of the split.
+	SplitId string `json:"splitId,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "IsMasterSplit") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "IsMasterSplit") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SplitApkMetadata) MarshalJSON() ([]byte, error) {
+	type NoMethod SplitApkMetadata
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SplitApkVariant: Variant is a group of APKs that covers a part of the
+// device configuration space. APKs from multiple variants are never
+// combined on one device.
+type SplitApkVariant struct {
+	// ApkSet: Set of APKs, one set per module.
+	ApkSet []*ApkSet `json:"apkSet,omitempty"`
+
+	// Targeting: Variant-level targeting.
+	Targeting *VariantTargeting `json:"targeting,omitempty"`
+
+	// VariantNumber: Number of the variant, starting at 0 (unless
+	// overridden). A device will receive APKs from the first variant that
+	// matches the device configuration, with higher variant numbers having
+	// priority over lower variant numbers.
+	VariantNumber int64 `json:"variantNumber,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "ApkSet") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "ApkSet") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SplitApkVariant) MarshalJSON() ([]byte, error) {
+	type NoMethod SplitApkVariant
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// StandaloneApkMetadata: Holds data specific to Standalone APKs.
+type StandaloneApkMetadata struct {
+	// FusedModuleName: Names of the modules fused in this standalone APK.
+	FusedModuleName []string `json:"fusedModuleName,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "FusedModuleName") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "FusedModuleName") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *StandaloneApkMetadata) MarshalJSON() ([]byte, error) {
+	type NoMethod StandaloneApkMetadata
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SubscribeWithGoogleInfo: Information associated with purchases made
+// with 'Subscribe with Google'.
+type SubscribeWithGoogleInfo struct {
+	// EmailAddress: The email address of the user when the subscription was
+	// purchased.
+	EmailAddress string `json:"emailAddress,omitempty"`
+
+	// FamilyName: The family name of the user when the subscription was
+	// purchased.
+	FamilyName string `json:"familyName,omitempty"`
+
+	// GivenName: The given name of the user when the subscription was
+	// purchased.
+	GivenName string `json:"givenName,omitempty"`
+
+	// ProfileId: The Google profile id of the user when the subscription
+	// was purchased.
+	ProfileId string `json:"profileId,omitempty"`
+
+	// ProfileName: The profile name of the user when the subscription was
+	// purchased.
+	ProfileName string `json:"profileName,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "EmailAddress") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "EmailAddress") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SubscribeWithGoogleInfo) MarshalJSON() ([]byte, error) {
+	type NoMethod SubscribeWithGoogleInfo
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// Subscription: A single subscription for an app.
+type Subscription struct {
+	// Archived: Output only. Whether this subscription is archived.
+	// Archived subscriptions are not available to any subscriber any
+	// longer, cannot be updated, and are not returned in list requests
+	// unless the show archived flag is passed in.
+	Archived bool `json:"archived,omitempty"`
+
+	// BasePlans: The set of base plans for this subscription. Represents
+	// the prices and duration of the subscription if no other offers apply.
+	BasePlans []*BasePlan `json:"basePlans,omitempty"`
+
+	// Listings: Required. List of localized listings for this subscription.
+	// Must contain at least an entry for the default language of the parent
+	// app.
+	Listings []*SubscriptionListing `json:"listings,omitempty"`
+
+	// PackageName: Immutable. Package name of the parent app.
+	PackageName string `json:"packageName,omitempty"`
+
+	// ProductId: Immutable. Unique product ID of the product. Unique within
+	// the parent app. Product IDs must be composed of lower-case letters
+	// (a-z), numbers (0-9), underscores (_) and dots (.). It must start
+	// with a lower-case letter or number, and be between 1 and 40
+	// (inclusive) characters in length.
+	ProductId string `json:"productId,omitempty"`
+
+	// TaxAndComplianceSettings: Details about taxes and legal compliance.
+	TaxAndComplianceSettings *SubscriptionTaxAndComplianceSettings `json:"taxAndComplianceSettings,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "Archived") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Archived") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *Subscription) MarshalJSON() ([]byte, error) {
+	type NoMethod Subscription
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -2009,10 +5389,10 @@ type SubscriptionCancelSurveyResult struct {
 
 	// ForceSendFields is a list of field names (e.g. "CancelSurveyReason")
 	// to unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "CancelSurveyReason") to
@@ -2047,11 +5427,11 @@ type SubscriptionDeferralInfo struct {
 
 	// ForceSendFields is a list of field names (e.g.
 	// "DesiredExpiryTimeMillis") to unconditionally include in API
-	// requests. By default, fields with empty values are omitted from API
-	// requests. However, any non-pointer, non-interface field appearing in
-	// ForceSendFields will be sent to the server regardless of whether the
-	// field is empty or not. This may be used to include empty fields in
-	// Patch requests.
+	// requests. By default, fields with empty or default values are omitted
+	// from API requests. However, any non-pointer, non-interface field
+	// appearing in ForceSendFields will be sent to the server regardless of
+	// whether the field is empty or not. This may be used to include empty
+	// fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "DesiredExpiryTimeMillis")
@@ -2066,6 +5446,270 @@ type SubscriptionDeferralInfo struct {
 
 func (s *SubscriptionDeferralInfo) MarshalJSON() ([]byte, error) {
 	type NoMethod SubscriptionDeferralInfo
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SubscriptionItemPriceChangeDetails: Price change related information
+// of a subscription item.
+type SubscriptionItemPriceChangeDetails struct {
+	// ExpectedNewPriceChargeTime: The renewal time at which the price
+	// change will become effective for the user. This is subject to
+	// change(to a future time) due to cases where the renewal time shifts
+	// like pause.
+	ExpectedNewPriceChargeTime string `json:"expectedNewPriceChargeTime,omitempty"`
+
+	// NewPrice: New recurring price for the subscription item.
+	NewPrice *Money `json:"newPrice,omitempty"`
+
+	// PriceChangeMode: Price change mode specifies how the subscription
+	// item price is changing.
+	//
+	// Possible values:
+	//   "PRICE_CHANGE_MODE_UNSPECIFIED" - Price change mode unspecified.
+	// This value should never be set.
+	//   "PRICE_DECREASE" - If the subscription price is decreasing.
+	//   "PRICE_INCREASE" - If the subscription price is increasing and the
+	// user needs to accept it.
+	//   "OPT_OUT_PRICE_INCREASE" - If the subscription price is increasing
+	// with opt out mode.
+	PriceChangeMode string `json:"priceChangeMode,omitempty"`
+
+	// PriceChangeState: State the price change is currently in.
+	//
+	// Possible values:
+	//   "PRICE_CHANGE_STATE_UNSPECIFIED" - Price change state unspecified.
+	// This value should not be used.
+	//   "OUTSTANDING" - Waiting for the user to agree for the price change.
+	//   "CONFIRMED" - The price change is confirmed to happen for the user.
+	//   "APPLIED" - The price change is applied, i.e. the user has started
+	// being charged the new price.
+	PriceChangeState string `json:"priceChangeState,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "ExpectedNewPriceChargeTime") to unconditionally include in API
+	// requests. By default, fields with empty or default values are omitted
+	// from API requests. However, any non-pointer, non-interface field
+	// appearing in ForceSendFields will be sent to the server regardless of
+	// whether the field is empty or not. This may be used to include empty
+	// fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g.
+	// "ExpectedNewPriceChargeTime") to include in API requests with the
+	// JSON null value. By default, fields with empty values are omitted
+	// from API requests. However, any field with an empty value appearing
+	// in NullFields will be sent to the server as null. It is an error if a
+	// field in this list has a non-empty value. This may be used to include
+	// null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SubscriptionItemPriceChangeDetails) MarshalJSON() ([]byte, error) {
+	type NoMethod SubscriptionItemPriceChangeDetails
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SubscriptionListing: The consumer-visible metadata of a subscription.
+type SubscriptionListing struct {
+	// Benefits: A list of benefits shown to the user on platforms such as
+	// the Play Store and in restoration flows in the language of this
+	// listing. Plain text. Ordered list of at most four benefits.
+	Benefits []string `json:"benefits,omitempty"`
+
+	// Description: The description of this subscription in the language of
+	// this listing. Maximum length - 80 characters. Plain text.
+	Description string `json:"description,omitempty"`
+
+	// LanguageCode: Required. The language of this listing, as defined by
+	// BCP-47, e.g. "en-US".
+	LanguageCode string `json:"languageCode,omitempty"`
+
+	// Title: Required. The title of this subscription in the language of
+	// this listing. Plain text.
+	Title string `json:"title,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Benefits") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Benefits") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SubscriptionListing) MarshalJSON() ([]byte, error) {
+	type NoMethod SubscriptionListing
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SubscriptionOffer: A single, temporary offer
+type SubscriptionOffer struct {
+	// BasePlanId: Required. Immutable. The ID of the base plan to which
+	// this offer is an extension.
+	BasePlanId string `json:"basePlanId,omitempty"`
+
+	// OfferId: Required. Immutable. Unique ID of this subscription offer.
+	// Must be unique within the base plan.
+	OfferId string `json:"offerId,omitempty"`
+
+	// OfferTags: List of up to 20 custom tags specified for this offer, and
+	// returned to the app through the billing library.
+	OfferTags []*OfferTag `json:"offerTags,omitempty"`
+
+	// OtherRegionsConfig: The configuration for any new locations Play may
+	// launch in the future.
+	OtherRegionsConfig *OtherRegionsSubscriptionOfferConfig `json:"otherRegionsConfig,omitempty"`
+
+	// PackageName: Required. Immutable. The package name of the app the
+	// parent subscription belongs to.
+	PackageName string `json:"packageName,omitempty"`
+
+	// Phases: Required. The phases of this subscription offer. Must contain
+	// at least one entry, and may contain at most five. Users will always
+	// receive all these phases in the specified order. Phases may not be
+	// added, removed, or reordered after initial creation.
+	Phases []*SubscriptionOfferPhase `json:"phases,omitempty"`
+
+	// ProductId: Required. Immutable. The ID of the parent subscription
+	// this offer belongs to.
+	ProductId string `json:"productId,omitempty"`
+
+	// RegionalConfigs: Required. The region-specific configuration of this
+	// offer. Must contain at least one entry.
+	RegionalConfigs []*RegionalSubscriptionOfferConfig `json:"regionalConfigs,omitempty"`
+
+	// State: Output only. The current state of this offer. Can be changed
+	// using Activate and Deactivate actions. NB: the base plan state
+	// supersedes this state, so an active offer may not be available if the
+	// base plan is not active.
+	//
+	// Possible values:
+	//   "STATE_UNSPECIFIED" - Default value, should never be used.
+	//   "DRAFT" - The subscription offer is not and has never been
+	// available to users.
+	//   "ACTIVE" - The subscription offer is available to new and existing
+	// users.
+	//   "INACTIVE" - The subscription offer is not available to new users.
+	// Existing users retain access.
+	State string `json:"state,omitempty"`
+
+	// Targeting: The requirements that users need to fulfil to be eligible
+	// for this offer. Represents the requirements that Play will evaluate
+	// to decide whether an offer should be returned. Developers may further
+	// filter these offers themselves.
+	Targeting *SubscriptionOfferTargeting `json:"targeting,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "BasePlanId") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "BasePlanId") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SubscriptionOffer) MarshalJSON() ([]byte, error) {
+	type NoMethod SubscriptionOffer
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SubscriptionOfferPhase: A single phase of a subscription offer.
+type SubscriptionOfferPhase struct {
+	// Duration: Required. The duration of a single recurrence of this
+	// phase. Specified in ISO 8601 format.
+	Duration string `json:"duration,omitempty"`
+
+	// OtherRegionsConfig: Pricing information for any new locations Play
+	// may launch in.
+	OtherRegionsConfig *OtherRegionsSubscriptionOfferPhaseConfig `json:"otherRegionsConfig,omitempty"`
+
+	// RecurrenceCount: Required. The number of times this phase repeats. If
+	// this offer phase is not free, each recurrence charges the user the
+	// price of this offer phase.
+	RecurrenceCount int64 `json:"recurrenceCount,omitempty"`
+
+	// RegionalConfigs: Required. The region-specific configuration of this
+	// offer phase. This list must contain exactly one entry for each region
+	// for which the subscription offer has a regional config.
+	RegionalConfigs []*RegionalSubscriptionOfferPhaseConfig `json:"regionalConfigs,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Duration") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Duration") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SubscriptionOfferPhase) MarshalJSON() ([]byte, error) {
+	type NoMethod SubscriptionOfferPhase
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SubscriptionOfferTargeting: Defines the rule a user needs to satisfy
+// to receive this offer.
+type SubscriptionOfferTargeting struct {
+	// AcquisitionRule: Offer targeting rule for new user acquisition.
+	AcquisitionRule *AcquisitionTargetingRule `json:"acquisitionRule,omitempty"`
+
+	// UpgradeRule: Offer targeting rule for upgrading users' existing
+	// plans.
+	UpgradeRule *UpgradeTargetingRule `json:"upgradeRule,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AcquisitionRule") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AcquisitionRule") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SubscriptionOfferTargeting) MarshalJSON() ([]byte, error) {
+	type NoMethod SubscriptionOfferTargeting
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -2092,10 +5736,10 @@ type SubscriptionPriceChange struct {
 
 	// ForceSendFields is a list of field names (e.g. "NewPrice") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "NewPrice") to include in
@@ -2222,7 +5866,7 @@ type SubscriptionPurchase struct {
 	// are: 0. Payment pending 1. Payment received 2. Free trial 3. Pending
 	// deferred upgrade/downgrade Not present for canceled, expired
 	// subscriptions.
-	PaymentState int64 `json:"paymentState,omitempty"`
+	PaymentState *int64 `json:"paymentState,omitempty"`
 
 	// PriceAmountMicros: Price of the subscription, For tax exclusive
 	// countries, the price doesn't include tax. For tax inclusive
@@ -2285,8 +5929,8 @@ type SubscriptionPurchase struct {
 
 	// ForceSendFields is a list of field names (e.g.
 	// "AcknowledgementState") to unconditionally include in API requests.
-	// By default, fields with empty values are omitted from API requests.
-	// However, any non-pointer, non-interface field appearing in
+	// By default, fields with empty or default values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
 	// ForceSendFields will be sent to the server regardless of whether the
 	// field is empty or not. This may be used to include empty fields in
 	// Patch requests.
@@ -2308,6 +5952,178 @@ func (s *SubscriptionPurchase) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// SubscriptionPurchaseLineItem: Item-level info for a subscription
+// purchase.
+type SubscriptionPurchaseLineItem struct {
+	// AutoRenewingPlan: The item is auto renewing.
+	AutoRenewingPlan *AutoRenewingPlan `json:"autoRenewingPlan,omitempty"`
+
+	// DeferredItemReplacement: Information for deferred item replacement.
+	DeferredItemReplacement *DeferredItemReplacement `json:"deferredItemReplacement,omitempty"`
+
+	// ExpiryTime: Time at which the subscription expired or will expire
+	// unless the access is extended (ex. renews).
+	ExpiryTime string `json:"expiryTime,omitempty"`
+
+	// OfferDetails: The offer details for this item.
+	OfferDetails *OfferDetails `json:"offerDetails,omitempty"`
+
+	// PrepaidPlan: The item is prepaid.
+	PrepaidPlan *PrepaidPlan `json:"prepaidPlan,omitempty"`
+
+	// ProductId: The purchased product ID (for example, 'monthly001').
+	ProductId string `json:"productId,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AutoRenewingPlan") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AutoRenewingPlan") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SubscriptionPurchaseLineItem) MarshalJSON() ([]byte, error) {
+	type NoMethod SubscriptionPurchaseLineItem
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SubscriptionPurchaseV2: Indicates the status of a user's subscription
+// purchase.
+type SubscriptionPurchaseV2 struct {
+	// AcknowledgementState: The acknowledgement state of the subscription.
+	//
+	// Possible values:
+	//   "ACKNOWLEDGEMENT_STATE_UNSPECIFIED" - Unspecified acknowledgement
+	// state.
+	//   "ACKNOWLEDGEMENT_STATE_PENDING" - The subscription is not
+	// acknowledged yet.
+	//   "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED" - The subscription is
+	// acknowledged.
+	AcknowledgementState string `json:"acknowledgementState,omitempty"`
+
+	// CanceledStateContext: Additional context around canceled
+	// subscriptions. Only present if the subscription currently has
+	// subscription_state SUBSCRIPTION_STATE_CANCELED.
+	CanceledStateContext *CanceledStateContext `json:"canceledStateContext,omitempty"`
+
+	// ExternalAccountIdentifiers: User account identifier in the
+	// third-party service.
+	ExternalAccountIdentifiers *ExternalAccountIdentifiers `json:"externalAccountIdentifiers,omitempty"`
+
+	// Kind: This kind represents a SubscriptionPurchaseV2 object in the
+	// androidpublisher service.
+	Kind string `json:"kind,omitempty"`
+
+	// LatestOrderId: The order id of the latest order associated with the
+	// purchase of the subscription. For autoRenewing subscription, this is
+	// the order id of signup order if it is not renewed yet, or the last
+	// recurring order id (success, pending, or declined order). For prepaid
+	// subscription, this is the order id associated with the queried
+	// purchase token.
+	LatestOrderId string `json:"latestOrderId,omitempty"`
+
+	// LineItems: Item-level info for a subscription purchase. The items in
+	// the same purchase should be either all with AutoRenewingPlan or all
+	// with PrepaidPlan.
+	LineItems []*SubscriptionPurchaseLineItem `json:"lineItems,omitempty"`
+
+	// LinkedPurchaseToken: The purchase token of the old subscription if
+	// this subscription is one of the following: * Re-signup of a canceled
+	// but non-lapsed subscription * Upgrade/downgrade from a previous
+	// subscription. * Convert from prepaid to auto renewing subscription. *
+	// Convert from an auto renewing subscription to prepaid. * Topup a
+	// prepaid subscription.
+	LinkedPurchaseToken string `json:"linkedPurchaseToken,omitempty"`
+
+	// PausedStateContext: Additional context around paused subscriptions.
+	// Only present if the subscription currently has subscription_state
+	// SUBSCRIPTION_STATE_PAUSED.
+	PausedStateContext *PausedStateContext `json:"pausedStateContext,omitempty"`
+
+	// RegionCode: ISO 3166-1 alpha-2 billing country/region code of the
+	// user at the time the subscription was granted.
+	RegionCode string `json:"regionCode,omitempty"`
+
+	// StartTime: Time at which the subscription was granted. Not set for
+	// pending subscriptions (subscription was created but awaiting payment
+	// during signup).
+	StartTime string `json:"startTime,omitempty"`
+
+	// SubscribeWithGoogleInfo: User profile associated with purchases made
+	// with 'Subscribe with Google'.
+	SubscribeWithGoogleInfo *SubscribeWithGoogleInfo `json:"subscribeWithGoogleInfo,omitempty"`
+
+	// SubscriptionState: The current state of the subscription.
+	//
+	// Possible values:
+	//   "SUBSCRIPTION_STATE_UNSPECIFIED" - Unspecified subscription state.
+	//   "SUBSCRIPTION_STATE_PENDING" - Subscription was created but
+	// awaiting payment during signup. In this state, all items are awaiting
+	// payment.
+	//   "SUBSCRIPTION_STATE_ACTIVE" - Subscription is active. - (1) If the
+	// subscription is an auto renewing plan, at least one item is
+	// auto_renew_enabled and not expired. - (2) If the subscription is a
+	// prepaid plan, at least one item is not expired.
+	//   "SUBSCRIPTION_STATE_PAUSED" - Subscription is paused. The state is
+	// only available when the subscription is an auto renewing plan. In
+	// this state, all items are in paused state.
+	//   "SUBSCRIPTION_STATE_IN_GRACE_PERIOD" - Subscription is in grace
+	// period. The state is only available when the subscription is an auto
+	// renewing plan. In this state, all items are in grace period.
+	//   "SUBSCRIPTION_STATE_ON_HOLD" - Subscription is on hold (suspended).
+	// The state is only available when the subscription is an auto renewing
+	// plan. In this state, all items are on hold.
+	//   "SUBSCRIPTION_STATE_CANCELED" - Subscription is canceled but not
+	// expired yet. The state is only available when the subscription is an
+	// auto renewing plan. All items have auto_renew_enabled set to false.
+	//   "SUBSCRIPTION_STATE_EXPIRED" - Subscription is expired. All items
+	// have expiry_time in the past.
+	SubscriptionState string `json:"subscriptionState,omitempty"`
+
+	// TestPurchase: Only present if this subscription purchase is a test
+	// purchase.
+	TestPurchase *TestPurchase `json:"testPurchase,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "AcknowledgementState") to unconditionally include in API requests.
+	// By default, fields with empty or default values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AcknowledgementState") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SubscriptionPurchaseV2) MarshalJSON() ([]byte, error) {
+	type NoMethod SubscriptionPurchaseV2
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // SubscriptionPurchasesAcknowledgeRequest: Request for the
 // purchases.subscriptions.acknowledge API.
 type SubscriptionPurchasesAcknowledgeRequest struct {
@@ -2316,10 +6132,10 @@ type SubscriptionPurchasesAcknowledgeRequest struct {
 
 	// ForceSendFields is a list of field names (e.g. "DeveloperPayload") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "DeveloperPayload") to
@@ -2347,10 +6163,10 @@ type SubscriptionPurchasesDeferRequest struct {
 
 	// ForceSendFields is a list of field names (e.g. "DeferralInfo") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "DeferralInfo") to include
@@ -2381,10 +6197,10 @@ type SubscriptionPurchasesDeferResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "NewExpiryTimeMillis")
 	// to unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "NewExpiryTimeMillis") to
@@ -2403,6 +6219,91 @@ func (s *SubscriptionPurchasesDeferResponse) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// SubscriptionTaxAndComplianceSettings: Details about taxation, Google
+// Play policy and legal compliance for subscription products.
+type SubscriptionTaxAndComplianceSettings struct {
+	// EeaWithdrawalRightType: Digital content or service classification for
+	// products distributed to users in the European Economic Area (EEA).
+	// The withdrawal regime under EEA consumer laws depends on this
+	// classification. Refer to the Help Center article
+	// (https://support.google.com/googleplay/android-developer/answer/10463498)
+	// for more information.
+	//
+	// Possible values:
+	//   "WITHDRAWAL_RIGHT_TYPE_UNSPECIFIED"
+	//   "WITHDRAWAL_RIGHT_DIGITAL_CONTENT"
+	//   "WITHDRAWAL_RIGHT_SERVICE"
+	EeaWithdrawalRightType string `json:"eeaWithdrawalRightType,omitempty"`
+
+	// IsTokenizedDigitalAsset: Whether this subscription is declared as a
+	// product representing a tokenized digital asset.
+	IsTokenizedDigitalAsset bool `json:"isTokenizedDigitalAsset,omitempty"`
+
+	// TaxRateInfoByRegionCode: A mapping from region code to tax rate
+	// details. The keys are region codes as defined by Unicode's "CLDR".
+	TaxRateInfoByRegionCode map[string]RegionalTaxRateInfo `json:"taxRateInfoByRegionCode,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "EeaWithdrawalRightType") to unconditionally include in API requests.
+	// By default, fields with empty or default values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "EeaWithdrawalRightType")
+	// to include in API requests with the JSON null value. By default,
+	// fields with empty values are omitted from API requests. However, any
+	// field with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SubscriptionTaxAndComplianceSettings) MarshalJSON() ([]byte, error) {
+	type NoMethod SubscriptionTaxAndComplianceSettings
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SystemApkOptions: Options for system APKs.
+type SystemApkOptions struct {
+	// Rotated: Whether to use the rotated key for signing the system APK.
+	Rotated bool `json:"rotated,omitempty"`
+
+	// UncompressedDexFiles: Whether system APK was generated with
+	// uncompressed dex files.
+	UncompressedDexFiles bool `json:"uncompressedDexFiles,omitempty"`
+
+	// UncompressedNativeLibraries: Whether system APK was generated with
+	// uncompressed native libraries.
+	UncompressedNativeLibraries bool `json:"uncompressedNativeLibraries,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Rotated") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Rotated") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SystemApkOptions) MarshalJSON() ([]byte, error) {
+	type NoMethod SystemApkOptions
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // SystemApksListResponse: Response to list previously created system
 // APK variants.
 type SystemApksListResponse struct {
@@ -2415,10 +6316,10 @@ type SystemApksListResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "Variants") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Variants") to include in
@@ -2436,7 +6337,114 @@ func (s *SystemApksListResponse) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// SystemFeature: Representation of a system feature.
+type SystemFeature struct {
+	// Name: The name of the feature.
+	Name string `json:"name,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Name") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Name") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *SystemFeature) MarshalJSON() ([]byte, error) {
+	type NoMethod SystemFeature
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// SystemInitiatedCancellation: Information specific to cancellations
+// initiated by Google system.
+type SystemInitiatedCancellation struct {
+}
+
+// TargetingInfo: Targeting information about the generated apks.
+type TargetingInfo struct {
+	// AssetSliceSet: List of created asset slices.
+	AssetSliceSet []*AssetSliceSet `json:"assetSliceSet,omitempty"`
+
+	// PackageName: The package name of this app.
+	PackageName string `json:"packageName,omitempty"`
+
+	// Variant: List of the created variants.
+	Variant []*SplitApkVariant `json:"variant,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AssetSliceSet") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AssetSliceSet") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *TargetingInfo) MarshalJSON() ([]byte, error) {
+	type NoMethod TargetingInfo
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// TargetingRuleScope: Defines the scope of subscriptions which a
+// targeting rule can match to target offers to users based on past or
+// current entitlement.
+type TargetingRuleScope struct {
+	// SpecificSubscriptionInApp: The scope of the current targeting rule is
+	// the subscription with the specified subscription ID. Must be a
+	// subscription within the same parent app.
+	SpecificSubscriptionInApp string `json:"specificSubscriptionInApp,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "SpecificSubscriptionInApp") to unconditionally include in API
+	// requests. By default, fields with empty or default values are omitted
+	// from API requests. However, any non-pointer, non-interface field
+	// appearing in ForceSendFields will be sent to the server regardless of
+	// whether the field is empty or not. This may be used to include empty
+	// fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g.
+	// "SpecificSubscriptionInApp") to include in API requests with the JSON
+	// null value. By default, fields with empty values are omitted from API
+	// requests. However, any field with an empty value appearing in
+	// NullFields will be sent to the server as null. It is an error if a
+	// field in this list has a non-empty value. This may be used to include
+	// null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *TargetingRuleScope) MarshalJSON() ([]byte, error) {
+	type NoMethod TargetingRuleScope
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// TestPurchase: Whether this subscription purchase is a test purchase.
+type TestPurchase struct {
+}
+
 // Testers: The testers of an app. The resource for TestersService.
+// Note: while it is possible in the Play Console UI to add testers via
+// email lists, email lists are not supported by this resource.
 type Testers struct {
 	// GoogleGroups: All testing Google Groups, as email addresses.
 	GoogleGroups []string `json:"googleGroups,omitempty"`
@@ -2447,10 +6455,10 @@ type Testers struct {
 
 	// ForceSendFields is a list of field names (e.g. "GoogleGroups") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "GoogleGroups") to include
@@ -2464,6 +6472,80 @@ type Testers struct {
 
 func (s *Testers) MarshalJSON() ([]byte, error) {
 	type NoMethod Testers
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// TextureCompressionFormat: Represents texture compression format.
+type TextureCompressionFormat struct {
+	// Alias: Alias for texture compression format.
+	//
+	// Possible values:
+	//   "UNSPECIFIED_TEXTURE_COMPRESSION_FORMAT" - Unspecified format.
+	//   "ETC1_RGB8" - ETC1_RGB8 format.
+	//   "PALETTED" - PALETTED format.
+	//   "THREE_DC" - THREE_DC format.
+	//   "ATC" - ATC format.
+	//   "LATC" - LATC format.
+	//   "DXT1" - DXT1 format.
+	//   "S3TC" - S3TC format.
+	//   "PVRTC" - PVRTC format.
+	//   "ASTC" - ASTC format.
+	//   "ETC2" - ETC2 format.
+	Alias string `json:"alias,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Alias") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Alias") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *TextureCompressionFormat) MarshalJSON() ([]byte, error) {
+	type NoMethod TextureCompressionFormat
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// TextureCompressionFormatTargeting: Targeting by a texture compression
+// format.
+type TextureCompressionFormatTargeting struct {
+	// Alternatives: List of alternative TCFs (TCFs targeted by the sibling
+	// splits).
+	Alternatives []*TextureCompressionFormat `json:"alternatives,omitempty"`
+
+	// Value: The list of targeted TCFs. Should not be empty.
+	Value []*TextureCompressionFormat `json:"value,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Alternatives") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Alternatives") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *TextureCompressionFormatTargeting) MarshalJSON() ([]byte, error) {
+	type NoMethod TextureCompressionFormatTargeting
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -2482,10 +6564,10 @@ type Timestamp struct {
 
 	// ForceSendFields is a list of field names (e.g. "Nanos") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Nanos") to include in API
@@ -2522,10 +6604,10 @@ type TokenPagination struct {
 
 	// ForceSendFields is a list of field names (e.g. "NextPageToken") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "NextPageToken") to include
@@ -2549,7 +6631,10 @@ type Track struct {
 	// track. In an update request, represents desired changes.
 	Releases []*TrackRelease `json:"releases,omitempty"`
 
-	// Track: Identifier of the track.
+	// Track: Identifier of the track. Form factor tracks have a special
+	// prefix as an identifier, for example `wear:production`,
+	// `automotive:production`. More on track name
+	// (https://developers.google.com/android-publisher/tracks#ff-track-name)
 	Track string `json:"track,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
@@ -2558,10 +6643,10 @@ type Track struct {
 
 	// ForceSendFields is a list of field names (e.g. "Releases") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Releases") to include in
@@ -2575,6 +6660,55 @@ type Track struct {
 
 func (s *Track) MarshalJSON() ([]byte, error) {
 	type NoMethod Track
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// TrackCountryAvailability: Resource for per-track country availability
+// information.
+type TrackCountryAvailability struct {
+	// Countries: A list of one or more countries where artifacts in this
+	// track are available. This list includes all countries that are
+	// targeted by the track, even if only specific carriers are targeted in
+	// that country.
+	Countries []*TrackTargetedCountry `json:"countries,omitempty"`
+
+	// RestOfWorld: Whether artifacts in this track are available to "rest
+	// of the world" countries.
+	RestOfWorld bool `json:"restOfWorld,omitempty"`
+
+	// SyncWithProduction: Whether this track's availability is synced with
+	// the default production track. See
+	// https://support.google.com/googleplay/android-developer/answer/7550024
+	// for more information on syncing country availability with production.
+	// Note that if this is true, the returned "countries" and
+	// "rest_of_world" fields will reflect the values for the default
+	// production track.
+	SyncWithProduction bool `json:"syncWithProduction,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "Countries") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Countries") to include in
+	// API requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *TrackCountryAvailability) MarshalJSON() ([]byte, error) {
+	type NoMethod TrackCountryAvailability
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -2625,10 +6759,10 @@ type TrackRelease struct {
 
 	// ForceSendFields is a list of field names (e.g. "CountryTargeting") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "CountryTargeting") to
@@ -2661,6 +6795,35 @@ func (s *TrackRelease) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// TrackTargetedCountry: Representation of a single country where the
+// contents of a track are available.
+type TrackTargetedCountry struct {
+	// CountryCode: The country to target, as a two-letter CLDR code.
+	CountryCode string `json:"countryCode,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "CountryCode") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CountryCode") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *TrackTargetedCountry) MarshalJSON() ([]byte, error) {
+	type NoMethod TrackTargetedCountry
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // TracksListResponse: Response listing all tracks.
 type TracksListResponse struct {
 	// Kind: The kind of this response
@@ -2676,10 +6839,10 @@ type TracksListResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "Kind") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Kind") to include in API
@@ -2693,6 +6856,150 @@ type TracksListResponse struct {
 
 func (s *TracksListResponse) MarshalJSON() ([]byte, error) {
 	type NoMethod TracksListResponse
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// UpgradeTargetingRule: Represents a targeting rule of the form: User
+// currently has {scope} [with billing period {billing_period}].
+type UpgradeTargetingRule struct {
+	// BillingPeriodDuration: The specific billing period duration,
+	// specified in ISO 8601 format, that a user must be currently
+	// subscribed to to be eligible for this rule. If not specified, users
+	// subscribed to any billing period are matched.
+	BillingPeriodDuration string `json:"billingPeriodDuration,omitempty"`
+
+	// OncePerUser: Limit this offer to only once per user. If set to true,
+	// a user can never be eligible for this offer again if they ever
+	// subscribed to this offer.
+	OncePerUser bool `json:"oncePerUser,omitempty"`
+
+	// Scope: Required. The scope of subscriptions this rule considers. Only
+	// allows "this subscription" and "specific subscription in app".
+	Scope *TargetingRuleScope `json:"scope,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g.
+	// "BillingPeriodDuration") to unconditionally include in API requests.
+	// By default, fields with empty or default values are omitted from API
+	// requests. However, any non-pointer, non-interface field appearing in
+	// ForceSendFields will be sent to the server regardless of whether the
+	// field is empty or not. This may be used to include empty fields in
+	// Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "BillingPeriodDuration") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *UpgradeTargetingRule) MarshalJSON() ([]byte, error) {
+	type NoMethod UpgradeTargetingRule
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// User: A user resource.
+type User struct {
+	// AccessState: Output only. The state of the user's access to the Play
+	// Console.
+	//
+	// Possible values:
+	//   "ACCESS_STATE_UNSPECIFIED" - Unknown or unspecified access state.
+	//   "INVITED" - User is invited but has not yet accepted the
+	// invitation.
+	//   "INVITATION_EXPIRED" - Invitation has expired.
+	//   "ACCESS_GRANTED" - User has accepted an invitation and has access
+	// to the Play Console.
+	//   "ACCESS_EXPIRED" - Account access has expired.
+	AccessState string `json:"accessState,omitempty"`
+
+	// DeveloperAccountPermissions: Permissions for the user which apply
+	// across the developer account.
+	//
+	// Possible values:
+	//   "DEVELOPER_LEVEL_PERMISSION_UNSPECIFIED" - Unknown or unspecified
+	// permission.
+	//   "CAN_SEE_ALL_APPS" - View app information and download bulk reports
+	// (read-only).
+	//   "CAN_VIEW_FINANCIAL_DATA_GLOBAL" - View financial data, orders, and
+	// cancellation survey responses.
+	//   "CAN_MANAGE_PERMISSIONS_GLOBAL" - Admin (all permissions).
+	//   "CAN_EDIT_GAMES_GLOBAL" - Edit Play Games Services projects.
+	//   "CAN_PUBLISH_GAMES_GLOBAL" - Publish Play Games Services projects.
+	//   "CAN_REPLY_TO_REVIEWS_GLOBAL" - Reply to reviews.
+	//   "CAN_MANAGE_PUBLIC_APKS_GLOBAL" - Release to production, exclude
+	// devices, and use app signing by Google Play.
+	//   "CAN_MANAGE_TRACK_APKS_GLOBAL" - Release to testing tracks.
+	//   "CAN_MANAGE_TRACK_USERS_GLOBAL" - Manage testing tracks and edit
+	// tester lists.
+	//   "CAN_MANAGE_PUBLIC_LISTING_GLOBAL" - Manage store presence.
+	//   "CAN_MANAGE_DRAFT_APPS_GLOBAL" - Create, edit, and delete draft
+	// apps.
+	//   "CAN_CREATE_MANAGED_PLAY_APPS_GLOBAL" - Create and publish private
+	// apps to your organization.
+	//   "CAN_CHANGE_MANAGED_PLAY_SETTING_GLOBAL" - Choose whether apps are
+	// public, or only available to your organization.
+	//   "CAN_MANAGE_ORDERS_GLOBAL" - Manage orders and subscriptions.
+	//   "CAN_MANAGE_APP_CONTENT_GLOBAL" - Manage policy related pages on
+	// all apps for the developer.
+	//   "CAN_VIEW_NON_FINANCIAL_DATA_GLOBAL" - View app information and
+	// download bulk reports (read-only).
+	//   "CAN_VIEW_APP_QUALITY_GLOBAL" - View app quality information for
+	// all apps for the developer.
+	DeveloperAccountPermissions []string `json:"developerAccountPermissions,omitempty"`
+
+	// Email: Immutable. The user's email address.
+	Email string `json:"email,omitempty"`
+
+	// ExpirationTime: The time at which the user's access expires, if set.
+	// When setting this value, it must always be in the future.
+	ExpirationTime string `json:"expirationTime,omitempty"`
+
+	// Grants: Output only. Per-app permissions for the user.
+	Grants []*Grant `json:"grants,omitempty"`
+
+	// Name: Required. Resource name for this user, following the pattern
+	// "developers/{developer}/users/{email}".
+	Name string `json:"name,omitempty"`
+
+	// Partial: Output only. Whether there are more permissions for the user
+	// that are not represented here. This can happen if the caller does not
+	// have permission to manage all apps in the account. This is also
+	// `true` if this user is the account owner. If this field is `true`, it
+	// should be taken as a signal that this user cannot be fully managed
+	// via the API. That is, the API caller is not be able to manage all of
+	// the permissions this user holds, either because it doesn't know about
+	// them or because the user is the account owner.
+	Partial bool `json:"partial,omitempty"`
+
+	// ServerResponse contains the HTTP response code and headers from the
+	// server.
+	googleapi.ServerResponse `json:"-"`
+
+	// ForceSendFields is a list of field names (e.g. "AccessState") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AccessState") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *User) MarshalJSON() ([]byte, error) {
+	type NoMethod User
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -2751,10 +7058,10 @@ type UserComment struct {
 
 	// ForceSendFields is a list of field names (e.g. "AndroidOsVersion") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "AndroidOsVersion") to
@@ -2773,6 +7080,111 @@ func (s *UserComment) MarshalJSON() ([]byte, error) {
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
 
+// UserCountriesTargeting: Describes an inclusive/exclusive list of
+// country codes that module targets.
+type UserCountriesTargeting struct {
+	// CountryCodes: List of country codes in the two-letter CLDR territory
+	// format.
+	CountryCodes []string `json:"countryCodes,omitempty"`
+
+	// Exclude: Indicates if the list above is exclusive.
+	Exclude bool `json:"exclude,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "CountryCodes") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CountryCodes") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *UserCountriesTargeting) MarshalJSON() ([]byte, error) {
+	type NoMethod UserCountriesTargeting
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// UserCountrySet: A set of user countries. A country set determines
+// what variation of app content gets served to a specific location.
+type UserCountrySet struct {
+	// CountryCodes: List of country codes representing countries. A Country
+	// code is represented in ISO 3166 alpha-2 format. For Example:- "IT"
+	// for Italy, "GE" for Georgia.
+	CountryCodes []string `json:"countryCodes,omitempty"`
+
+	// Name: Country set name.
+	Name string `json:"name,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "CountryCodes") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CountryCodes") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *UserCountrySet) MarshalJSON() ([]byte, error) {
+	type NoMethod UserCountrySet
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// UserInitiatedCancellation: Information specific to cancellations
+// initiated by users.
+type UserInitiatedCancellation struct {
+	// CancelSurveyResult: Information provided by the user when they
+	// complete the subscription cancellation flow (cancellation reason
+	// survey).
+	CancelSurveyResult *CancelSurveyResult `json:"cancelSurveyResult,omitempty"`
+
+	// CancelTime: The time at which the subscription was canceled by the
+	// user. The user might still have access to the subscription after this
+	// time. Use line_items.expiry_time to determine if a user still has
+	// access.
+	CancelTime string `json:"cancelTime,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "CancelSurveyResult")
+	// to unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "CancelSurveyResult") to
+	// include in API requests with the JSON null value. By default, fields
+	// with empty values are omitted from API requests. However, any field
+	// with an empty value appearing in NullFields will be sent to the
+	// server as null. It is an error if a field in this list has a
+	// non-empty value. This may be used to include null fields in Patch
+	// requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *UserInitiatedCancellation) MarshalJSON() ([]byte, error) {
+	type NoMethod UserInitiatedCancellation
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
 // UsesPermission: A permission used by this APK.
 type UsesPermission struct {
 	// MaxSdkVersion: Optionally, the maximum SDK version for which the
@@ -2784,10 +7196,10 @@ type UsesPermission struct {
 
 	// ForceSendFields is a list of field names (e.g. "MaxSdkVersion") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "MaxSdkVersion") to include
@@ -2811,6 +7223,9 @@ type Variant struct {
 	// DeviceSpec: The device spec used to generate the APK.
 	DeviceSpec *DeviceSpec `json:"deviceSpec,omitempty"`
 
+	// Options: Optional. Options applied to the generated APK.
+	Options *SystemApkOptions `json:"options,omitempty"`
+
 	// VariantId: Output only. The ID of a previously created system APK
 	// variant.
 	VariantId int64 `json:"variantId,omitempty"`
@@ -2821,10 +7236,10 @@ type Variant struct {
 
 	// ForceSendFields is a list of field names (e.g. "DeviceSpec") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "DeviceSpec") to include in
@@ -2838,6 +7253,48 @@ type Variant struct {
 
 func (s *Variant) MarshalJSON() ([]byte, error) {
 	type NoMethod Variant
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// VariantTargeting: Targeting on the level of variants.
+type VariantTargeting struct {
+	// AbiTargeting: The abi that the variant targets
+	AbiTargeting *AbiTargeting `json:"abiTargeting,omitempty"`
+
+	// MultiAbiTargeting: Multi-api-level targeting
+	MultiAbiTargeting *MultiAbiTargeting `json:"multiAbiTargeting,omitempty"`
+
+	// ScreenDensityTargeting: The screen densities that this variant
+	// supports
+	ScreenDensityTargeting *ScreenDensityTargeting `json:"screenDensityTargeting,omitempty"`
+
+	// SdkVersionTargeting: The sdk version that the variant targets
+	SdkVersionTargeting *SdkVersionTargeting `json:"sdkVersionTargeting,omitempty"`
+
+	// TextureCompressionFormatTargeting: Texture-compression-format-level
+	// targeting
+	TextureCompressionFormatTargeting *TextureCompressionFormatTargeting `json:"textureCompressionFormatTargeting,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "AbiTargeting") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "AbiTargeting") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *VariantTargeting) MarshalJSON() ([]byte, error) {
+	type NoMethod VariantTargeting
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -2878,10 +7335,10 @@ type VoidedPurchase struct {
 
 	// ForceSendFields is a list of field names (e.g. "Kind") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "Kind") to include in API
@@ -2916,10 +7373,10 @@ type VoidedPurchasesListResponse struct {
 
 	// ForceSendFields is a list of field names (e.g. "PageInfo") to
 	// unconditionally include in API requests. By default, fields with
-	// empty values are omitted from API requests. However, any non-pointer,
-	// non-interface field appearing in ForceSendFields will be sent to the
-	// server regardless of whether the field is empty or not. This may be
-	// used to include empty fields in Patch requests.
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
 	// NullFields is a list of field names (e.g. "PageInfo") to include in
@@ -2935,6 +7392,514 @@ func (s *VoidedPurchasesListResponse) MarshalJSON() ([]byte, error) {
 	type NoMethod VoidedPurchasesListResponse
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// method id "androidpublisher.applications.deviceTierConfigs.create":
+
+type ApplicationsDeviceTierConfigsCreateCall struct {
+	s                *Service
+	packageName      string
+	devicetierconfig *DeviceTierConfig
+	urlParams_       gensupport.URLParams
+	ctx_             context.Context
+	header_          http.Header
+}
+
+// Create: Creates a new device tier config for an app.
+//
+// - packageName: Package name of the app.
+func (r *ApplicationsDeviceTierConfigsService) Create(packageName string, devicetierconfig *DeviceTierConfig) *ApplicationsDeviceTierConfigsCreateCall {
+	c := &ApplicationsDeviceTierConfigsCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.devicetierconfig = devicetierconfig
+	return c
+}
+
+// AllowUnknownDevices sets the optional parameter
+// "allowUnknownDevices": Whether the service should accept device IDs
+// that are unknown to Play's device catalog.
+func (c *ApplicationsDeviceTierConfigsCreateCall) AllowUnknownDevices(allowUnknownDevices bool) *ApplicationsDeviceTierConfigsCreateCall {
+	c.urlParams_.Set("allowUnknownDevices", fmt.Sprint(allowUnknownDevices))
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ApplicationsDeviceTierConfigsCreateCall) Fields(s ...googleapi.Field) *ApplicationsDeviceTierConfigsCreateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ApplicationsDeviceTierConfigsCreateCall) Context(ctx context.Context) *ApplicationsDeviceTierConfigsCreateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ApplicationsDeviceTierConfigsCreateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ApplicationsDeviceTierConfigsCreateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.devicetierconfig)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/deviceTierConfigs")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.applications.deviceTierConfigs.create" call.
+// Exactly one of *DeviceTierConfig or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *DeviceTierConfig.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *ApplicationsDeviceTierConfigsCreateCall) Do(opts ...googleapi.CallOption) (*DeviceTierConfig, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &DeviceTierConfig{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Creates a new device tier config for an app.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/deviceTierConfigs",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.applications.deviceTierConfigs.create",
+	//   "parameterOrder": [
+	//     "packageName"
+	//   ],
+	//   "parameters": {
+	//     "allowUnknownDevices": {
+	//       "description": "Whether the service should accept device IDs that are unknown to Play's device catalog.",
+	//       "location": "query",
+	//       "type": "boolean"
+	//     },
+	//     "packageName": {
+	//       "description": "Package name of the app.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/deviceTierConfigs",
+	//   "request": {
+	//     "$ref": "DeviceTierConfig"
+	//   },
+	//   "response": {
+	//     "$ref": "DeviceTierConfig"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.applications.deviceTierConfigs.get":
+
+type ApplicationsDeviceTierConfigsGetCall struct {
+	s                  *Service
+	packageName        string
+	deviceTierConfigId int64
+	urlParams_         gensupport.URLParams
+	ifNoneMatch_       string
+	ctx_               context.Context
+	header_            http.Header
+}
+
+// Get: Returns a particular device tier config.
+//
+// - deviceTierConfigId: Id of an existing device tier config.
+// - packageName: Package name of the app.
+func (r *ApplicationsDeviceTierConfigsService) Get(packageName string, deviceTierConfigId int64) *ApplicationsDeviceTierConfigsGetCall {
+	c := &ApplicationsDeviceTierConfigsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.deviceTierConfigId = deviceTierConfigId
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ApplicationsDeviceTierConfigsGetCall) Fields(s ...googleapi.Field) *ApplicationsDeviceTierConfigsGetCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *ApplicationsDeviceTierConfigsGetCall) IfNoneMatch(entityTag string) *ApplicationsDeviceTierConfigsGetCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ApplicationsDeviceTierConfigsGetCall) Context(ctx context.Context) *ApplicationsDeviceTierConfigsGetCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ApplicationsDeviceTierConfigsGetCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ApplicationsDeviceTierConfigsGetCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/deviceTierConfigs/{deviceTierConfigId}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("GET", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName":        c.packageName,
+		"deviceTierConfigId": strconv.FormatInt(c.deviceTierConfigId, 10),
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.applications.deviceTierConfigs.get" call.
+// Exactly one of *DeviceTierConfig or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *DeviceTierConfig.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *ApplicationsDeviceTierConfigsGetCall) Do(opts ...googleapi.CallOption) (*DeviceTierConfig, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &DeviceTierConfig{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Returns a particular device tier config.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/deviceTierConfigs/{deviceTierConfigId}",
+	//   "httpMethod": "GET",
+	//   "id": "androidpublisher.applications.deviceTierConfigs.get",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "deviceTierConfigId"
+	//   ],
+	//   "parameters": {
+	//     "deviceTierConfigId": {
+	//       "description": "Required. Id of an existing device tier config.",
+	//       "format": "int64",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Package name of the app.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/deviceTierConfigs/{deviceTierConfigId}",
+	//   "response": {
+	//     "$ref": "DeviceTierConfig"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.applications.deviceTierConfigs.list":
+
+type ApplicationsDeviceTierConfigsListCall struct {
+	s            *Service
+	packageName  string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// List: Returns created device tier configs, ordered by descending
+// creation time.
+//
+// - packageName: Package name of the app.
+func (r *ApplicationsDeviceTierConfigsService) List(packageName string) *ApplicationsDeviceTierConfigsListCall {
+	c := &ApplicationsDeviceTierConfigsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	return c
+}
+
+// PageSize sets the optional parameter "pageSize": The maximum number
+// of device tier configs to return. The service may return fewer than
+// this value. If unspecified, at most 10 device tier configs will be
+// returned. The maximum value for this field is 100; values above 100
+// will be coerced to 100. Device tier configs will be ordered by
+// descending creation time.
+func (c *ApplicationsDeviceTierConfigsListCall) PageSize(pageSize int64) *ApplicationsDeviceTierConfigsListCall {
+	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
+	return c
+}
+
+// PageToken sets the optional parameter "pageToken": A page token,
+// received from a previous `ListDeviceTierConfigs` call. Provide this
+// to retrieve the subsequent page.
+func (c *ApplicationsDeviceTierConfigsListCall) PageToken(pageToken string) *ApplicationsDeviceTierConfigsListCall {
+	c.urlParams_.Set("pageToken", pageToken)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ApplicationsDeviceTierConfigsListCall) Fields(s ...googleapi.Field) *ApplicationsDeviceTierConfigsListCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *ApplicationsDeviceTierConfigsListCall) IfNoneMatch(entityTag string) *ApplicationsDeviceTierConfigsListCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ApplicationsDeviceTierConfigsListCall) Context(ctx context.Context) *ApplicationsDeviceTierConfigsListCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ApplicationsDeviceTierConfigsListCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ApplicationsDeviceTierConfigsListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/deviceTierConfigs")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("GET", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.applications.deviceTierConfigs.list" call.
+// Exactly one of *ListDeviceTierConfigsResponse or error will be
+// non-nil. Any non-2xx status code is an error. Response headers are in
+// either *ListDeviceTierConfigsResponse.ServerResponse.Header or (if a
+// response was returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *ApplicationsDeviceTierConfigsListCall) Do(opts ...googleapi.CallOption) (*ListDeviceTierConfigsResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &ListDeviceTierConfigsResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Returns created device tier configs, ordered by descending creation time.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/deviceTierConfigs",
+	//   "httpMethod": "GET",
+	//   "id": "androidpublisher.applications.deviceTierConfigs.list",
+	//   "parameterOrder": [
+	//     "packageName"
+	//   ],
+	//   "parameters": {
+	//     "packageName": {
+	//       "description": "Package name of the app.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "pageSize": {
+	//       "description": "The maximum number of device tier configs to return. The service may return fewer than this value. If unspecified, at most 10 device tier configs will be returned. The maximum value for this field is 100; values above 100 will be coerced to 100. Device tier configs will be ordered by descending creation time.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "type": "integer"
+	//     },
+	//     "pageToken": {
+	//       "description": "A page token, received from a previous `ListDeviceTierConfigs` call. Provide this to retrieve the subsequent page.",
+	//       "location": "query",
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/deviceTierConfigs",
+	//   "response": {
+	//     "$ref": "ListDeviceTierConfigsResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *ApplicationsDeviceTierConfigsListCall) Pages(ctx context.Context, f func(*ListDeviceTierConfigsResponse) error) error {
+	c.ctx_ = ctx
+	defer c.PageToken(c.urlParams_.Get("pageToken")) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.PageToken(x.NextPageToken)
+	}
 }
 
 // method id "androidpublisher.edits.commit":
@@ -2996,7 +7961,7 @@ func (c *EditsCommitCall) Header() http.Header {
 
 func (c *EditsCommitCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3032,17 +7997,17 @@ func (c *EditsCommitCall) Do(opts ...googleapi.CallOption) (*AppEdit, error) {
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &AppEdit{
 		ServerResponse: googleapi.ServerResponse{
@@ -3143,7 +8108,7 @@ func (c *EditsDeleteCall) Header() http.Header {
 
 func (c *EditsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3174,7 +8139,7 @@ func (c *EditsDeleteCall) Do(opts ...googleapi.CallOption) error {
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return err
+		return gensupport.WrapError(err)
 	}
 	return nil
 	// {
@@ -3268,7 +8233,7 @@ func (c *EditsGetCall) Header() http.Header {
 
 func (c *EditsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3307,17 +8272,17 @@ func (c *EditsGetCall) Do(opts ...googleapi.CallOption) (*AppEdit, error) {
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &AppEdit{
 		ServerResponse: googleapi.ServerResponse{
@@ -3412,7 +8377,7 @@ func (c *EditsInsertCall) Header() http.Header {
 
 func (c *EditsInsertCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3452,17 +8417,17 @@ func (c *EditsInsertCall) Do(opts ...googleapi.CallOption) (*AppEdit, error) {
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &AppEdit{
 		ServerResponse: googleapi.ServerResponse{
@@ -3554,7 +8519,7 @@ func (c *EditsValidateCall) Header() http.Header {
 
 func (c *EditsValidateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3590,17 +8555,17 @@ func (c *EditsValidateCall) Do(opts ...googleapi.CallOption) (*AppEdit, error) {
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &AppEdit{
 		ServerResponse: googleapi.ServerResponse{
@@ -3702,7 +8667,7 @@ func (c *EditsApksAddexternallyhostedCall) Header() http.Header {
 
 func (c *EditsApksAddexternallyhostedCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3743,17 +8708,17 @@ func (c *EditsApksAddexternallyhostedCall) Do(opts ...googleapi.CallOption) (*Ap
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &ApksAddExternallyHostedResponse{
 		ServerResponse: googleapi.ServerResponse{
@@ -3863,7 +8828,7 @@ func (c *EditsApksListCall) Header() http.Header {
 
 func (c *EditsApksListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -3902,17 +8867,17 @@ func (c *EditsApksListCall) Do(opts ...googleapi.CallOption) (*ApksListResponse,
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &ApksListResponse{
 		ServerResponse: googleapi.ServerResponse{
@@ -4048,7 +9013,7 @@ func (c *EditsApksUploadCall) Header() http.Header {
 
 func (c *EditsApksUploadCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4095,17 +9060,17 @@ func (c *EditsApksUploadCall) Do(opts ...googleapi.CallOption) (*Apk, error) {
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	rx := c.mediaInfo_.ResumableUpload(res.Header.Get("Location"))
 	if rx != nil {
@@ -4121,7 +9086,7 @@ func (c *EditsApksUploadCall) Do(opts ...googleapi.CallOption) (*Apk, error) {
 		}
 		defer res.Body.Close()
 		if err := googleapi.CheckResponse(res); err != nil {
-			return nil, err
+			return nil, gensupport.WrapError(err)
 		}
 	}
 	ret := &Apk{
@@ -4247,7 +9212,7 @@ func (c *EditsBundlesListCall) Header() http.Header {
 
 func (c *EditsBundlesListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4286,17 +9251,17 @@ func (c *EditsBundlesListCall) Do(opts ...googleapi.CallOption) (*BundlesListRes
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &BundlesListResponse{
 		ServerResponse: googleapi.ServerResponse{
@@ -4380,6 +9345,14 @@ func (c *EditsBundlesUploadCall) AckBundleInstallationWarning(ackBundleInstallat
 	return c
 }
 
+// DeviceTierConfigId sets the optional parameter "deviceTierConfigId":
+// Device tier config (DTC) to be used for generating deliverables
+// (APKs). Contains id of the DTC or "LATEST" for last uploaded DTC.
+func (c *EditsBundlesUploadCall) DeviceTierConfigId(deviceTierConfigId string) *EditsBundlesUploadCall {
+	c.urlParams_.Set("deviceTierConfigId", deviceTierConfigId)
+	return c
+}
+
 // Media specifies the media to upload in one or more chunks. The chunk
 // size may be controlled by supplying a MediaOption generated by
 // googleapi.ChunkSize. The chunk size defaults to
@@ -4446,7 +9419,7 @@ func (c *EditsBundlesUploadCall) Header() http.Header {
 
 func (c *EditsBundlesUploadCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4493,17 +9466,17 @@ func (c *EditsBundlesUploadCall) Do(opts ...googleapi.CallOption) (*Bundle, erro
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	rx := c.mediaInfo_.ResumableUpload(res.Header.Get("Location"))
 	if rx != nil {
@@ -4519,7 +9492,7 @@ func (c *EditsBundlesUploadCall) Do(opts ...googleapi.CallOption) (*Bundle, erro
 		}
 		defer res.Body.Close()
 		if err := googleapi.CheckResponse(res); err != nil {
-			return nil, err
+			return nil, gensupport.WrapError(err)
 		}
 	}
 	ret := &Bundle{
@@ -4564,6 +9537,11 @@ func (c *EditsBundlesUploadCall) Do(opts ...googleapi.CallOption) (*Bundle, erro
 	//       "location": "query",
 	//       "type": "boolean"
 	//     },
+	//     "deviceTierConfigId": {
+	//       "description": "Device tier config (DTC) to be used for generating deliverables (APKs). Contains id of the DTC or \"LATEST\" for last uploaded DTC.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
 	//     "editId": {
 	//       "description": "Identifier of the edit.",
 	//       "location": "path",
@@ -4589,6 +9567,173 @@ func (c *EditsBundlesUploadCall) Do(opts ...googleapi.CallOption) (*Bundle, erro
 
 }
 
+// method id "androidpublisher.edits.countryavailability.get":
+
+type EditsCountryavailabilityGetCall struct {
+	s            *Service
+	packageName  string
+	editId       string
+	track        string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Get: Gets country availability.
+//
+// - editId: Identifier of the edit.
+// - packageName: Package name of the app.
+// - track: The track to read from.
+func (r *EditsCountryavailabilityService) Get(packageName string, editId string, track string) *EditsCountryavailabilityGetCall {
+	c := &EditsCountryavailabilityGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.editId = editId
+	c.track = track
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *EditsCountryavailabilityGetCall) Fields(s ...googleapi.Field) *EditsCountryavailabilityGetCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *EditsCountryavailabilityGetCall) IfNoneMatch(entityTag string) *EditsCountryavailabilityGetCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *EditsCountryavailabilityGetCall) Context(ctx context.Context) *EditsCountryavailabilityGetCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *EditsCountryavailabilityGetCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *EditsCountryavailabilityGetCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/edits/{editId}/countryAvailability/{track}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("GET", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"editId":      c.editId,
+		"track":       c.track,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.edits.countryavailability.get" call.
+// Exactly one of *TrackCountryAvailability or error will be non-nil.
+// Any non-2xx status code is an error. Response headers are in either
+// *TrackCountryAvailability.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *EditsCountryavailabilityGetCall) Do(opts ...googleapi.CallOption) (*TrackCountryAvailability, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &TrackCountryAvailability{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Gets country availability.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/edits/{editId}/countryAvailability/{track}",
+	//   "httpMethod": "GET",
+	//   "id": "androidpublisher.edits.countryavailability.get",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "editId",
+	//     "track"
+	//   ],
+	//   "parameters": {
+	//     "editId": {
+	//       "description": "Identifier of the edit.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Package name of the app.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "track": {
+	//       "description": "The track to read from.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/edits/{editId}/countryAvailability/{track}",
+	//   "response": {
+	//     "$ref": "TrackCountryAvailability"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
 // method id "androidpublisher.edits.deobfuscationfiles.upload":
 
 type EditsDeobfuscationfilesUploadCall struct {
@@ -4606,11 +9751,11 @@ type EditsDeobfuscationfilesUploadCall struct {
 // Upload: Uploads a new deobfuscation file and attaches to the
 // specified APK.
 //
-// - apkVersionCode: The version code of the APK whose Deobfuscation
-//   File is being uploaded.
-// - deobfuscationFileType: The type of the deobfuscation file.
-// - editId: Unique identifier for this edit.
-// - packageName: Unique identifier for the Android app.
+//   - apkVersionCode: The version code of the APK whose Deobfuscation
+//     File is being uploaded.
+//   - deobfuscationFileType: The type of the deobfuscation file.
+//   - editId: Unique identifier for this edit.
+//   - packageName: Unique identifier for the Android app.
 func (r *EditsDeobfuscationfilesService) Upload(packageNameid string, editId string, apkVersionCode int64, deobfuscationFileType string) *EditsDeobfuscationfilesUploadCall {
 	c := &EditsDeobfuscationfilesUploadCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageNameid = packageNameid
@@ -4686,7 +9831,7 @@ func (c *EditsDeobfuscationfilesUploadCall) Header() http.Header {
 
 func (c *EditsDeobfuscationfilesUploadCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4735,17 +9880,17 @@ func (c *EditsDeobfuscationfilesUploadCall) Do(opts ...googleapi.CallOption) (*D
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	rx := c.mediaInfo_.ResumableUpload(res.Header.Get("Location"))
 	if rx != nil {
@@ -4761,7 +9906,7 @@ func (c *EditsDeobfuscationfilesUploadCall) Do(opts ...googleapi.CallOption) (*D
 		}
 		defer res.Body.Close()
 		if err := googleapi.CheckResponse(res); err != nil {
-			return nil, err
+			return nil, gensupport.WrapError(err)
 		}
 	}
 	ret := &DeobfuscationFilesUploadResponse{
@@ -4784,7 +9929,7 @@ func (c *EditsDeobfuscationfilesUploadCall) Do(opts ...googleapi.CallOption) (*D
 	//     "accept": [
 	//       "application/octet-stream"
 	//     ],
-	//     "maxSize": "314572800",
+	//     "maxSize": "1258291200",
 	//     "protocols": {
 	//       "resumable": {
 	//         "multipart": true,
@@ -4911,7 +10056,7 @@ func (c *EditsDetailsGetCall) Header() http.Header {
 
 func (c *EditsDetailsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -4950,17 +10095,17 @@ func (c *EditsDetailsGetCall) Do(opts ...googleapi.CallOption) (*AppDetails, err
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &AppDetails{
 		ServerResponse: googleapi.ServerResponse{
@@ -5058,7 +10203,7 @@ func (c *EditsDetailsPatchCall) Header() http.Header {
 
 func (c *EditsDetailsPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5099,17 +10244,17 @@ func (c *EditsDetailsPatchCall) Do(opts ...googleapi.CallOption) (*AppDetails, e
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &AppDetails{
 		ServerResponse: googleapi.ServerResponse{
@@ -5210,7 +10355,7 @@ func (c *EditsDetailsUpdateCall) Header() http.Header {
 
 func (c *EditsDetailsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5251,17 +10396,17 @@ func (c *EditsDetailsUpdateCall) Do(opts ...googleapi.CallOption) (*AppDetails, 
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &AppDetails{
 		ServerResponse: googleapi.ServerResponse{
@@ -5327,12 +10472,12 @@ type EditsExpansionfilesGetCall struct {
 
 // Get: Fetches the expansion file configuration for the specified APK.
 //
-// - apkVersionCode: The version code of the APK whose expansion file
-//   configuration is being read or modified.
-// - editId: Identifier of the edit.
-// - expansionFileType: The file type of the file configuration which is
-//   being read or modified.
-// - packageName: Package name of the app.
+//   - apkVersionCode: The version code of the APK whose expansion file
+//     configuration is being read or modified.
+//   - editId: Identifier of the edit.
+//   - expansionFileType: The file type of the file configuration which is
+//     being read or modified.
+//   - packageName: Package name of the app.
 func (r *EditsExpansionfilesService) Get(packageName string, editId string, apkVersionCode int64, expansionFileType string) *EditsExpansionfilesGetCall {
 	c := &EditsExpansionfilesGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -5379,7 +10524,7 @@ func (c *EditsExpansionfilesGetCall) Header() http.Header {
 
 func (c *EditsExpansionfilesGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5420,17 +10565,17 @@ func (c *EditsExpansionfilesGetCall) Do(opts ...googleapi.CallOption) (*Expansio
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &ExpansionFile{
 		ServerResponse: googleapi.ServerResponse{
@@ -5520,12 +10665,12 @@ type EditsExpansionfilesPatchCall struct {
 // another APK's expansion file. To add a new expansion file use the
 // Upload method.
 //
-// - apkVersionCode: The version code of the APK whose expansion file
-//   configuration is being read or modified.
-// - editId: Identifier of the edit.
-// - expansionFileType: The file type of the expansion file
-//   configuration which is being updated.
-// - packageName: Package name of the app.
+//   - apkVersionCode: The version code of the APK whose expansion file
+//     configuration is being read or modified.
+//   - editId: Identifier of the edit.
+//   - expansionFileType: The file type of the expansion file
+//     configuration which is being updated.
+//   - packageName: Package name of the app.
 func (r *EditsExpansionfilesService) Patch(packageName string, editId string, apkVersionCode int64, expansionFileType string, expansionfile *ExpansionFile) *EditsExpansionfilesPatchCall {
 	c := &EditsExpansionfilesPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -5563,7 +10708,7 @@ func (c *EditsExpansionfilesPatchCall) Header() http.Header {
 
 func (c *EditsExpansionfilesPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5606,17 +10751,17 @@ func (c *EditsExpansionfilesPatchCall) Do(opts ...googleapi.CallOption) (*Expans
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &ExpansionFile{
 		ServerResponse: googleapi.ServerResponse{
@@ -5709,12 +10854,12 @@ type EditsExpansionfilesUpdateCall struct {
 // another APK's expansion file. To add a new expansion file use the
 // Upload method.
 //
-// - apkVersionCode: The version code of the APK whose expansion file
-//   configuration is being read or modified.
-// - editId: Identifier of the edit.
-// - expansionFileType: The file type of the file configuration which is
-//   being read or modified.
-// - packageName: Package name of the app.
+//   - apkVersionCode: The version code of the APK whose expansion file
+//     configuration is being read or modified.
+//   - editId: Identifier of the edit.
+//   - expansionFileType: The file type of the file configuration which is
+//     being read or modified.
+//   - packageName: Package name of the app.
 func (r *EditsExpansionfilesService) Update(packageName string, editId string, apkVersionCode int64, expansionFileType string, expansionfile *ExpansionFile) *EditsExpansionfilesUpdateCall {
 	c := &EditsExpansionfilesUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -5752,7 +10897,7 @@ func (c *EditsExpansionfilesUpdateCall) Header() http.Header {
 
 func (c *EditsExpansionfilesUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -5795,17 +10940,17 @@ func (c *EditsExpansionfilesUpdateCall) Do(opts ...googleapi.CallOption) (*Expan
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &ExpansionFile{
 		ServerResponse: googleapi.ServerResponse{
@@ -5897,12 +11042,12 @@ type EditsExpansionfilesUploadCall struct {
 // Upload: Uploads a new expansion file and attaches to the specified
 // APK.
 //
-// - apkVersionCode: The version code of the APK whose expansion file
-//   configuration is being read or modified.
-// - editId: Identifier of the edit.
-// - expansionFileType: The file type of the expansion file
-//   configuration which is being updated.
-// - packageName: Package name of the app.
+//   - apkVersionCode: The version code of the APK whose expansion file
+//     configuration is being read or modified.
+//   - editId: Identifier of the edit.
+//   - expansionFileType: The file type of the expansion file
+//     configuration which is being updated.
+//   - packageName: Package name of the app.
 func (r *EditsExpansionfilesService) Upload(packageName string, editId string, apkVersionCode int64, expansionFileType string) *EditsExpansionfilesUploadCall {
 	c := &EditsExpansionfilesUploadCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -5978,7 +11123,7 @@ func (c *EditsExpansionfilesUploadCall) Header() http.Header {
 
 func (c *EditsExpansionfilesUploadCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6027,17 +11172,17 @@ func (c *EditsExpansionfilesUploadCall) Do(opts ...googleapi.CallOption) (*Expan
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	rx := c.mediaInfo_.ResumableUpload(res.Header.Get("Location"))
 	if rx != nil {
@@ -6053,7 +11198,7 @@ func (c *EditsExpansionfilesUploadCall) Do(opts ...googleapi.CallOption) (*Expan
 		}
 		defer res.Body.Close()
 		if err := googleapi.CheckResponse(res); err != nil {
-			return nil, err
+			return nil, gensupport.WrapError(err)
 		}
 	}
 	ret := &ExpansionFilesUploadResponse{
@@ -6159,13 +11304,13 @@ type EditsImagesDeleteCall struct {
 
 // Delete: Deletes the image (specified by id) from the edit.
 //
-// - editId: Identifier of the edit.
-// - imageId: Unique identifier an image within the set of images
-//   attached to this edit.
-// - imageType: Type of the Image.
-// - language: Language localization code (a BCP-47 language tag; for
-//   example, "de-AT" for Austrian German).
-// - packageName: Package name of the app.
+//   - editId: Identifier of the edit.
+//   - imageId: Unique identifier an image within the set of images
+//     attached to this edit.
+//   - imageType: Type of the Image.
+//   - language: Language localization code (a BCP-47 language tag; for
+//     example, "de-AT" for Austrian German).
+//   - packageName: Package name of the app.
 func (r *EditsImagesService) Delete(packageName string, editId string, language string, imageType string, imageId string) *EditsImagesDeleteCall {
 	c := &EditsImagesDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -6203,7 +11348,7 @@ func (c *EditsImagesDeleteCall) Header() http.Header {
 
 func (c *EditsImagesDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6237,7 +11382,7 @@ func (c *EditsImagesDeleteCall) Do(opts ...googleapi.CallOption) error {
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return err
+		return gensupport.WrapError(err)
 	}
 	return nil
 	// {
@@ -6330,13 +11475,13 @@ type EditsImagesDeleteallCall struct {
 // Deleteall: Deletes all images for the specified language and image
 // type. Returns an empty response if no images are found.
 //
-// - editId: Identifier of the edit.
-// - imageType: Type of the Image. Providing an image type that refers
-//   to no images is a no-op.
-// - language: Language localization code (a BCP-47 language tag; for
-//   example, "de-AT" for Austrian German). Providing a language that is
-//   not supported by the App is a no-op.
-// - packageName: Package name of the app.
+//   - editId: Identifier of the edit.
+//   - imageType: Type of the Image. Providing an image type that refers
+//     to no images is a no-op.
+//   - language: Language localization code (a BCP-47 language tag; for
+//     example, "de-AT" for Austrian German). Providing a language that is
+//     not supported by the App is a no-op.
+//   - packageName: Package name of the app.
 func (r *EditsImagesService) Deleteall(packageName string, editId string, language string, imageType string) *EditsImagesDeleteallCall {
 	c := &EditsImagesDeleteallCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -6373,7 +11518,7 @@ func (c *EditsImagesDeleteallCall) Header() http.Header {
 
 func (c *EditsImagesDeleteallCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6411,17 +11556,17 @@ func (c *EditsImagesDeleteallCall) Do(opts ...googleapi.CallOption) (*ImagesDele
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &ImagesDeleteAllResponse{
 		ServerResponse: googleapi.ServerResponse{
@@ -6520,13 +11665,13 @@ type EditsImagesListCall struct {
 
 // List: Lists all images. The response may be empty.
 //
-// - editId: Identifier of the edit.
-// - imageType: Type of the Image. Providing an image type that refers
-//   to no images will return an empty response.
-// - language: Language localization code (a BCP-47 language tag; for
-//   example, "de-AT" for Austrian German). There must be a store
-//   listing for the specified language.
-// - packageName: Package name of the app.
+//   - editId: Identifier of the edit.
+//   - imageType: Type of the Image. Providing an image type that refers
+//     to no images will return an empty response.
+//   - language: Language localization code (a BCP-47 language tag; for
+//     example, "de-AT" for Austrian German). There must be a store
+//     listing for the specified language.
+//   - packageName: Package name of the app.
 func (r *EditsImagesService) List(packageName string, editId string, language string, imageType string) *EditsImagesListCall {
 	c := &EditsImagesListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -6573,7 +11718,7 @@ func (c *EditsImagesListCall) Header() http.Header {
 
 func (c *EditsImagesListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6614,17 +11759,17 @@ func (c *EditsImagesListCall) Do(opts ...googleapi.CallOption) (*ImagesListRespo
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &ImagesListResponse{
 		ServerResponse: googleapi.ServerResponse{
@@ -6724,12 +11869,12 @@ type EditsImagesUploadCall struct {
 // Upload: Uploads an image of the specified language and image type,
 // and adds to the edit.
 //
-// - editId: Identifier of the edit.
-// - imageType: Type of the Image.
-// - language: Language localization code (a BCP-47 language tag; for
-//   example, "de-AT" for Austrian German). Providing a language that is
-//   not supported by the App is a no-op.
-// - packageName: Package name of the app.
+//   - editId: Identifier of the edit.
+//   - imageType: Type of the Image.
+//   - language: Language localization code (a BCP-47 language tag; for
+//     example, "de-AT" for Austrian German). Providing a language that is
+//     not supported by the App is a no-op.
+//   - packageName: Package name of the app.
 func (r *EditsImagesService) Upload(packageName string, editId string, language string, imageType string) *EditsImagesUploadCall {
 	c := &EditsImagesUploadCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -6805,7 +11950,7 @@ func (c *EditsImagesUploadCall) Header() http.Header {
 
 func (c *EditsImagesUploadCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -6854,17 +11999,17 @@ func (c *EditsImagesUploadCall) Do(opts ...googleapi.CallOption) (*ImagesUploadR
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	rx := c.mediaInfo_.ResumableUpload(res.Header.Get("Location"))
 	if rx != nil {
@@ -6880,7 +12025,7 @@ func (c *EditsImagesUploadCall) Do(opts ...googleapi.CallOption) (*ImagesUploadR
 		}
 		defer res.Body.Close()
 		if err := googleapi.CheckResponse(res); err != nil {
-			return nil, err
+			return nil, gensupport.WrapError(err)
 		}
 	}
 	ret := &ImagesUploadResponse{
@@ -6995,10 +12140,10 @@ type EditsListingsDeleteCall struct {
 
 // Delete: Deletes a localized store listing.
 //
-// - editId: Identifier of the edit.
-// - language: Language localization code (a BCP-47 language tag; for
-//   example, "de-AT" for Austrian German).
-// - packageName: Package name of the app.
+//   - editId: Identifier of the edit.
+//   - language: Language localization code (a BCP-47 language tag; for
+//     example, "de-AT" for Austrian German).
+//   - packageName: Package name of the app.
 func (r *EditsListingsService) Delete(packageName string, editId string, language string) *EditsListingsDeleteCall {
 	c := &EditsListingsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -7034,7 +12179,7 @@ func (c *EditsListingsDeleteCall) Header() http.Header {
 
 func (c *EditsListingsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7066,7 +12211,7 @@ func (c *EditsListingsDeleteCall) Do(opts ...googleapi.CallOption) error {
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return err
+		return gensupport.WrapError(err)
 	}
 	return nil
 	// {
@@ -7156,7 +12301,7 @@ func (c *EditsListingsDeleteallCall) Header() http.Header {
 
 func (c *EditsListingsDeleteallCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7187,7 +12332,7 @@ func (c *EditsListingsDeleteallCall) Do(opts ...googleapi.CallOption) error {
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return err
+		return gensupport.WrapError(err)
 	}
 	return nil
 	// {
@@ -7236,10 +12381,10 @@ type EditsListingsGetCall struct {
 
 // Get: Gets a localized store listing.
 //
-// - editId: Identifier of the edit.
-// - language: Language localization code (a BCP-47 language tag; for
-//   example, "de-AT" for Austrian German).
-// - packageName: Package name of the app.
+//   - editId: Identifier of the edit.
+//   - language: Language localization code (a BCP-47 language tag; for
+//     example, "de-AT" for Austrian German).
+//   - packageName: Package name of the app.
 func (r *EditsListingsService) Get(packageName string, editId string, language string) *EditsListingsGetCall {
 	c := &EditsListingsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -7285,7 +12430,7 @@ func (c *EditsListingsGetCall) Header() http.Header {
 
 func (c *EditsListingsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7325,17 +12470,17 @@ func (c *EditsListingsGetCall) Do(opts ...googleapi.CallOption) (*Listing, error
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &Listing{
 		ServerResponse: googleapi.ServerResponse{
@@ -7449,7 +12594,7 @@ func (c *EditsListingsListCall) Header() http.Header {
 
 func (c *EditsListingsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7488,17 +12633,17 @@ func (c *EditsListingsListCall) Do(opts ...googleapi.CallOption) (*ListingsListR
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &ListingsListResponse{
 		ServerResponse: googleapi.ServerResponse{
@@ -7560,10 +12705,10 @@ type EditsListingsPatchCall struct {
 
 // Patch: Patches a localized store listing.
 //
-// - editId: Identifier of the edit.
-// - language: Language localization code (a BCP-47 language tag; for
-//   example, "de-AT" for Austrian German).
-// - packageName: Package name of the app.
+//   - editId: Identifier of the edit.
+//   - language: Language localization code (a BCP-47 language tag; for
+//     example, "de-AT" for Austrian German).
+//   - packageName: Package name of the app.
 func (r *EditsListingsService) Patch(packageName string, editId string, language string, listing *Listing) *EditsListingsPatchCall {
 	c := &EditsListingsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -7600,7 +12745,7 @@ func (c *EditsListingsPatchCall) Header() http.Header {
 
 func (c *EditsListingsPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7642,17 +12787,17 @@ func (c *EditsListingsPatchCall) Do(opts ...googleapi.CallOption) (*Listing, err
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &Listing{
 		ServerResponse: googleapi.ServerResponse{
@@ -7724,10 +12869,10 @@ type EditsListingsUpdateCall struct {
 
 // Update: Creates or updates a localized store listing.
 //
-// - editId: Identifier of the edit.
-// - language: Language localization code (a BCP-47 language tag; for
-//   example, "de-AT" for Austrian German).
-// - packageName: Package name of the app.
+//   - editId: Identifier of the edit.
+//   - language: Language localization code (a BCP-47 language tag; for
+//     example, "de-AT" for Austrian German).
+//   - packageName: Package name of the app.
 func (r *EditsListingsService) Update(packageName string, editId string, language string, listing *Listing) *EditsListingsUpdateCall {
 	c := &EditsListingsUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -7764,7 +12909,7 @@ func (c *EditsListingsUpdateCall) Header() http.Header {
 
 func (c *EditsListingsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7806,17 +12951,17 @@ func (c *EditsListingsUpdateCall) Do(opts ...googleapi.CallOption) (*Listing, er
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &Listing{
 		ServerResponse: googleapi.ServerResponse{
@@ -7886,7 +13031,8 @@ type EditsTestersGetCall struct {
 	header_      http.Header
 }
 
-// Get: Gets testers.
+// Get: Gets testers. Note: Testers resource does not support email
+// lists.
 //
 // - editId: Identifier of the edit.
 // - packageName: Package name of the app.
@@ -7936,7 +13082,7 @@ func (c *EditsTestersGetCall) Header() http.Header {
 
 func (c *EditsTestersGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -7976,17 +13122,17 @@ func (c *EditsTestersGetCall) Do(opts ...googleapi.CallOption) (*Testers, error)
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &Testers{
 		ServerResponse: googleapi.ServerResponse{
@@ -8000,7 +13146,7 @@ func (c *EditsTestersGetCall) Do(opts ...googleapi.CallOption) (*Testers, error)
 	}
 	return ret, nil
 	// {
-	//   "description": "Gets testers.",
+	//   "description": "Gets testers. Note: Testers resource does not support email lists.",
 	//   "flatPath": "androidpublisher/v3/applications/{packageName}/edits/{editId}/testers/{track}",
 	//   "httpMethod": "GET",
 	//   "id": "androidpublisher.edits.testers.get",
@@ -8053,7 +13199,8 @@ type EditsTestersPatchCall struct {
 	header_     http.Header
 }
 
-// Patch: Patches testers.
+// Patch: Patches testers. Note: Testers resource does not support email
+// lists.
 //
 // - editId: Identifier of the edit.
 // - packageName: Package name of the app.
@@ -8094,7 +13241,7 @@ func (c *EditsTestersPatchCall) Header() http.Header {
 
 func (c *EditsTestersPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8136,17 +13283,17 @@ func (c *EditsTestersPatchCall) Do(opts ...googleapi.CallOption) (*Testers, erro
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &Testers{
 		ServerResponse: googleapi.ServerResponse{
@@ -8160,7 +13307,7 @@ func (c *EditsTestersPatchCall) Do(opts ...googleapi.CallOption) (*Testers, erro
 	}
 	return ret, nil
 	// {
-	//   "description": "Patches testers.",
+	//   "description": "Patches testers. Note: Testers resource does not support email lists.",
 	//   "flatPath": "androidpublisher/v3/applications/{packageName}/edits/{editId}/testers/{track}",
 	//   "httpMethod": "PATCH",
 	//   "id": "androidpublisher.edits.testers.patch",
@@ -8216,7 +13363,8 @@ type EditsTestersUpdateCall struct {
 	header_     http.Header
 }
 
-// Update: Updates testers.
+// Update: Updates testers. Note: Testers resource does not support
+// email lists.
 //
 // - editId: Identifier of the edit.
 // - packageName: Package name of the app.
@@ -8257,7 +13405,7 @@ func (c *EditsTestersUpdateCall) Header() http.Header {
 
 func (c *EditsTestersUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8299,17 +13447,17 @@ func (c *EditsTestersUpdateCall) Do(opts ...googleapi.CallOption) (*Testers, err
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &Testers{
 		ServerResponse: googleapi.ServerResponse{
@@ -8323,7 +13471,7 @@ func (c *EditsTestersUpdateCall) Do(opts ...googleapi.CallOption) (*Testers, err
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates testers.",
+	//   "description": "Updates testers. Note: Testers resource does not support email lists.",
 	//   "flatPath": "androidpublisher/v3/applications/{packageName}/edits/{editId}/testers/{track}",
 	//   "httpMethod": "PUT",
 	//   "id": "androidpublisher.edits.testers.update",
@@ -8381,9 +13529,10 @@ type EditsTracksGetCall struct {
 
 // Get: Gets a track.
 //
-// - editId: Identifier of the edit.
-// - packageName: Package name of the app.
-// - track: Identifier of the track.
+//   - editId: Identifier of the edit.
+//   - packageName: Package name of the app.
+//   - track: Identifier of the track. More on track name
+//     (https://developers.google.com/android-publisher/tracks#ff-track-name).
 func (r *EditsTracksService) Get(packageName string, editId string, track string) *EditsTracksGetCall {
 	c := &EditsTracksGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -8429,7 +13578,7 @@ func (c *EditsTracksGetCall) Header() http.Header {
 
 func (c *EditsTracksGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8469,17 +13618,17 @@ func (c *EditsTracksGetCall) Do(opts ...googleapi.CallOption) (*Track, error) {
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &Track{
 		ServerResponse: googleapi.ServerResponse{
@@ -8516,7 +13665,7 @@ func (c *EditsTracksGetCall) Do(opts ...googleapi.CallOption) (*Track, error) {
 	//       "type": "string"
 	//     },
 	//     "track": {
-	//       "description": "Identifier of the track.",
+	//       "description": "Identifier of the track. [More on track name](https://developers.google.com/android-publisher/tracks#ff-track-name)",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -8593,7 +13742,7 @@ func (c *EditsTracksListCall) Header() http.Header {
 
 func (c *EditsTracksListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8632,17 +13781,17 @@ func (c *EditsTracksListCall) Do(opts ...googleapi.CallOption) (*TracksListRespo
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &TracksListResponse{
 		ServerResponse: googleapi.ServerResponse{
@@ -8704,9 +13853,10 @@ type EditsTracksPatchCall struct {
 
 // Patch: Patches a track.
 //
-// - editId: Identifier of the edit.
-// - packageName: Package name of the app.
-// - track: Identifier of the track.
+//   - editId: Identifier of the edit.
+//   - packageName: Package name of the app.
+//   - track: Identifier of the track. More on track name
+//     (https://developers.google.com/android-publisher/tracks#ff-track-name).
 func (r *EditsTracksService) Patch(packageName string, editId string, track string, track2 *Track) *EditsTracksPatchCall {
 	c := &EditsTracksPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -8743,7 +13893,7 @@ func (c *EditsTracksPatchCall) Header() http.Header {
 
 func (c *EditsTracksPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8785,17 +13935,17 @@ func (c *EditsTracksPatchCall) Do(opts ...googleapi.CallOption) (*Track, error) 
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &Track{
 		ServerResponse: googleapi.ServerResponse{
@@ -8832,7 +13982,7 @@ func (c *EditsTracksPatchCall) Do(opts ...googleapi.CallOption) (*Track, error) 
 	//       "type": "string"
 	//     },
 	//     "track": {
-	//       "description": "Identifier of the track.",
+	//       "description": "Identifier of the track. [More on track name](https://developers.google.com/android-publisher/tracks#ff-track-name)",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -8867,9 +14017,10 @@ type EditsTracksUpdateCall struct {
 
 // Update: Updates a track.
 //
-// - editId: Identifier of the edit.
-// - packageName: Package name of the app.
-// - track: Identifier of the track.
+//   - editId: Identifier of the edit.
+//   - packageName: Package name of the app.
+//   - track: Identifier of the track. More on track name
+//     (https://developers.google.com/android-publisher/tracks#ff-track-name).
 func (r *EditsTracksService) Update(packageName string, editId string, track string, track2 *Track) *EditsTracksUpdateCall {
 	c := &EditsTracksUpdateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -8906,7 +14057,7 @@ func (c *EditsTracksUpdateCall) Header() http.Header {
 
 func (c *EditsTracksUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -8948,17 +14099,17 @@ func (c *EditsTracksUpdateCall) Do(opts ...googleapi.CallOption) (*Track, error)
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &Track{
 		ServerResponse: googleapi.ServerResponse{
@@ -8995,7 +14146,7 @@ func (c *EditsTracksUpdateCall) Do(opts ...googleapi.CallOption) (*Track, error)
 	//       "type": "string"
 	//     },
 	//     "track": {
-	//       "description": "Identifier of the track.",
+	//       "description": "Identifier of the track. [More on track name](https://developers.google.com/android-publisher/tracks#ff-track-name)",
 	//       "location": "path",
 	//       "required": true,
 	//       "type": "string"
@@ -9015,6 +14166,1185 @@ func (c *EditsTracksUpdateCall) Do(opts ...googleapi.CallOption) (*Track, error)
 
 }
 
+// method id "androidpublisher.externaltransactions.createexternaltransaction":
+
+type ExternaltransactionsCreateexternaltransactionCall struct {
+	s                   *Service
+	parent              string
+	externaltransaction *ExternalTransaction
+	urlParams_          gensupport.URLParams
+	ctx_                context.Context
+	header_             http.Header
+}
+
+// Createexternaltransaction: Creates a new external transaction.
+//
+//   - parent: The parent resource where this external transaction will be
+//     created. Format: applications/{package_name}.
+func (r *ExternaltransactionsService) Createexternaltransaction(parent string, externaltransaction *ExternalTransaction) *ExternaltransactionsCreateexternaltransactionCall {
+	c := &ExternaltransactionsCreateexternaltransactionCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	c.externaltransaction = externaltransaction
+	return c
+}
+
+// ExternalTransactionId sets the optional parameter
+// "externalTransactionId": Required. The id to use for the external
+// transaction. Must be unique across all other transactions for the
+// app. This value should be 1-63 characters and valid characters are
+// /a-z0-9_-/. Do not use this field to store any Personally
+// Identifiable Information (PII) such as emails. Attempting to store
+// PII in this field may result in requests being blocked.
+func (c *ExternaltransactionsCreateexternaltransactionCall) ExternalTransactionId(externalTransactionId string) *ExternaltransactionsCreateexternaltransactionCall {
+	c.urlParams_.Set("externalTransactionId", externalTransactionId)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ExternaltransactionsCreateexternaltransactionCall) Fields(s ...googleapi.Field) *ExternaltransactionsCreateexternaltransactionCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ExternaltransactionsCreateexternaltransactionCall) Context(ctx context.Context) *ExternaltransactionsCreateexternaltransactionCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ExternaltransactionsCreateexternaltransactionCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ExternaltransactionsCreateexternaltransactionCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.externaltransaction)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/{+parent}/externalTransactions")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.externaltransactions.createexternaltransaction" call.
+// Exactly one of *ExternalTransaction or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *ExternalTransaction.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *ExternaltransactionsCreateexternaltransactionCall) Do(opts ...googleapi.CallOption) (*ExternalTransaction, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &ExternalTransaction{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Creates a new external transaction.",
+	//   "flatPath": "androidpublisher/v3/applications/{applicationsId}/externalTransactions",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.externaltransactions.createexternaltransaction",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "externalTransactionId": {
+	//       "description": "Required. The id to use for the external transaction. Must be unique across all other transactions for the app. This value should be 1-63 characters and valid characters are /a-z0-9_-/. Do not use this field to store any Personally Identifiable Information (PII) such as emails. Attempting to store PII in this field may result in requests being blocked.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "parent": {
+	//       "description": "Required. The parent resource where this external transaction will be created. Format: applications/{package_name}",
+	//       "location": "path",
+	//       "pattern": "^applications/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/{+parent}/externalTransactions",
+	//   "request": {
+	//     "$ref": "ExternalTransaction"
+	//   },
+	//   "response": {
+	//     "$ref": "ExternalTransaction"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.externaltransactions.getexternaltransaction":
+
+type ExternaltransactionsGetexternaltransactionCall struct {
+	s            *Service
+	name         string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Getexternaltransaction: Gets an existing external transaction.
+//
+//   - name: The name of the external transaction to retrieve. Format:
+//     applications/{package_name}/externalTransactions/{external_transacti
+//     on}.
+func (r *ExternaltransactionsService) Getexternaltransaction(name string) *ExternaltransactionsGetexternaltransactionCall {
+	c := &ExternaltransactionsGetexternaltransactionCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ExternaltransactionsGetexternaltransactionCall) Fields(s ...googleapi.Field) *ExternaltransactionsGetexternaltransactionCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *ExternaltransactionsGetexternaltransactionCall) IfNoneMatch(entityTag string) *ExternaltransactionsGetexternaltransactionCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ExternaltransactionsGetexternaltransactionCall) Context(ctx context.Context) *ExternaltransactionsGetexternaltransactionCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ExternaltransactionsGetexternaltransactionCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ExternaltransactionsGetexternaltransactionCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("GET", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.externaltransactions.getexternaltransaction" call.
+// Exactly one of *ExternalTransaction or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *ExternalTransaction.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *ExternaltransactionsGetexternaltransactionCall) Do(opts ...googleapi.CallOption) (*ExternalTransaction, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &ExternalTransaction{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Gets an existing external transaction.",
+	//   "flatPath": "androidpublisher/v3/applications/{applicationsId}/externalTransactions/{externalTransactionsId}",
+	//   "httpMethod": "GET",
+	//   "id": "androidpublisher.externaltransactions.getexternaltransaction",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The name of the external transaction to retrieve. Format: applications/{package_name}/externalTransactions/{external_transaction}",
+	//       "location": "path",
+	//       "pattern": "^applications/[^/]+/externalTransactions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/{+name}",
+	//   "response": {
+	//     "$ref": "ExternalTransaction"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.externaltransactions.refundexternaltransaction":
+
+type ExternaltransactionsRefundexternaltransactionCall struct {
+	s                                *Service
+	name                             string
+	refundexternaltransactionrequest *RefundExternalTransactionRequest
+	urlParams_                       gensupport.URLParams
+	ctx_                             context.Context
+	header_                          http.Header
+}
+
+// Refundexternaltransaction: Refunds or partially refunds an existing
+// external transaction.
+//
+//   - name: The name of the external transaction that will be refunded.
+//     Format:
+//     applications/{package_name}/externalTransactions/{external_transacti
+//     on}.
+func (r *ExternaltransactionsService) Refundexternaltransaction(name string, refundexternaltransactionrequest *RefundExternalTransactionRequest) *ExternaltransactionsRefundexternaltransactionCall {
+	c := &ExternaltransactionsRefundexternaltransactionCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	c.refundexternaltransactionrequest = refundexternaltransactionrequest
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *ExternaltransactionsRefundexternaltransactionCall) Fields(s ...googleapi.Field) *ExternaltransactionsRefundexternaltransactionCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *ExternaltransactionsRefundexternaltransactionCall) Context(ctx context.Context) *ExternaltransactionsRefundexternaltransactionCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *ExternaltransactionsRefundexternaltransactionCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *ExternaltransactionsRefundexternaltransactionCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.refundexternaltransactionrequest)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/{+name}:refund")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.externaltransactions.refundexternaltransaction" call.
+// Exactly one of *ExternalTransaction or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *ExternalTransaction.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *ExternaltransactionsRefundexternaltransactionCall) Do(opts ...googleapi.CallOption) (*ExternalTransaction, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &ExternalTransaction{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Refunds or partially refunds an existing external transaction.",
+	//   "flatPath": "androidpublisher/v3/applications/{applicationsId}/externalTransactions/{externalTransactionsId}:refund",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.externaltransactions.refundexternaltransaction",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The name of the external transaction that will be refunded. Format: applications/{package_name}/externalTransactions/{external_transaction}",
+	//       "location": "path",
+	//       "pattern": "^applications/[^/]+/externalTransactions/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/{+name}:refund",
+	//   "request": {
+	//     "$ref": "RefundExternalTransactionRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "ExternalTransaction"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.generatedapks.download":
+
+type GeneratedapksDownloadCall struct {
+	s            *Service
+	packageName  string
+	versionCode  int64
+	downloadId   string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Download: Downloads a single signed APK generated from an app bundle.
+//
+//   - downloadId: Download ID, which uniquely identifies the APK to
+//     download. Can be obtained from the response of `generatedapks.list`
+//     method.
+//   - packageName: Package name of the app.
+//   - versionCode: Version code of the app bundle.
+func (r *GeneratedapksService) Download(packageName string, versionCode int64, downloadId string) *GeneratedapksDownloadCall {
+	c := &GeneratedapksDownloadCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.versionCode = versionCode
+	c.downloadId = downloadId
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *GeneratedapksDownloadCall) Fields(s ...googleapi.Field) *GeneratedapksDownloadCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *GeneratedapksDownloadCall) IfNoneMatch(entityTag string) *GeneratedapksDownloadCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do and Download
+// methods. Any pending HTTP request will be aborted if the provided
+// context is canceled.
+func (c *GeneratedapksDownloadCall) Context(ctx context.Context) *GeneratedapksDownloadCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *GeneratedapksDownloadCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *GeneratedapksDownloadCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/generatedApks/{versionCode}/downloads/{downloadId}:download")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("GET", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"versionCode": strconv.FormatInt(c.versionCode, 10),
+		"downloadId":  c.downloadId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Download fetches the API endpoint's "media" value, instead of the normal
+// API response value. If the returned error is nil, the Response is guaranteed to
+// have a 2xx status code. Callers must close the Response.Body as usual.
+func (c *GeneratedapksDownloadCall) Download(opts ...googleapi.CallOption) (*http.Response, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("media")
+	if err != nil {
+		return nil, err
+	}
+	if err := googleapi.CheckResponse(res); err != nil {
+		res.Body.Close()
+		return nil, gensupport.WrapError(err)
+	}
+	return res, nil
+}
+
+// Do executes the "androidpublisher.generatedapks.download" call.
+func (c *GeneratedapksDownloadCall) Do(opts ...googleapi.CallOption) error {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if err != nil {
+		return err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return gensupport.WrapError(err)
+	}
+	return nil
+	// {
+	//   "description": "Downloads a single signed APK generated from an app bundle.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/generatedApks/{versionCode}/downloads/{downloadId}:download",
+	//   "httpMethod": "GET",
+	//   "id": "androidpublisher.generatedapks.download",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "versionCode",
+	//     "downloadId"
+	//   ],
+	//   "parameters": {
+	//     "downloadId": {
+	//       "description": "Download ID, which uniquely identifies the APK to download. Can be obtained from the response of `generatedapks.list` method.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Package name of the app.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "versionCode": {
+	//       "description": "Version code of the app bundle.",
+	//       "format": "int32",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "integer"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/generatedApks/{versionCode}/downloads/{downloadId}:download",
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ],
+	//   "supportsMediaDownload": true,
+	//   "useMediaDownloadService": true
+	// }
+
+}
+
+// method id "androidpublisher.generatedapks.list":
+
+type GeneratedapksListCall struct {
+	s            *Service
+	packageName  string
+	versionCode  int64
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// List: Returns download metadata for all APKs that were generated from
+// a given app bundle.
+//
+// - packageName: Package name of the app.
+// - versionCode: Version code of the app bundle.
+func (r *GeneratedapksService) List(packageName string, versionCode int64) *GeneratedapksListCall {
+	c := &GeneratedapksListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.versionCode = versionCode
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *GeneratedapksListCall) Fields(s ...googleapi.Field) *GeneratedapksListCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *GeneratedapksListCall) IfNoneMatch(entityTag string) *GeneratedapksListCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *GeneratedapksListCall) Context(ctx context.Context) *GeneratedapksListCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *GeneratedapksListCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *GeneratedapksListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/generatedApks/{versionCode}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("GET", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"versionCode": strconv.FormatInt(c.versionCode, 10),
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.generatedapks.list" call.
+// Exactly one of *GeneratedApksListResponse or error will be non-nil.
+// Any non-2xx status code is an error. Response headers are in either
+// *GeneratedApksListResponse.ServerResponse.Header or (if a response
+// was returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *GeneratedapksListCall) Do(opts ...googleapi.CallOption) (*GeneratedApksListResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &GeneratedApksListResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Returns download metadata for all APKs that were generated from a given app bundle.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/generatedApks/{versionCode}",
+	//   "httpMethod": "GET",
+	//   "id": "androidpublisher.generatedapks.list",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "versionCode"
+	//   ],
+	//   "parameters": {
+	//     "packageName": {
+	//       "description": "Package name of the app.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "versionCode": {
+	//       "description": "Version code of the app bundle.",
+	//       "format": "int32",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "integer"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/generatedApks/{versionCode}",
+	//   "response": {
+	//     "$ref": "GeneratedApksListResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.grants.create":
+
+type GrantsCreateCall struct {
+	s          *Service
+	parent     string
+	grant      *Grant
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Create: Grant access for a user to the given package.
+//
+//   - parent: The user which needs permission. Format:
+//     developers/{developer}/users/{user}.
+func (r *GrantsService) Create(parent string, grant *Grant) *GrantsCreateCall {
+	c := &GrantsCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	c.grant = grant
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *GrantsCreateCall) Fields(s ...googleapi.Field) *GrantsCreateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *GrantsCreateCall) Context(ctx context.Context) *GrantsCreateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *GrantsCreateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *GrantsCreateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.grant)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/{+parent}/grants")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.grants.create" call.
+// Exactly one of *Grant or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *Grant.ServerResponse.Header or (if a response was returned at all)
+// in error.(*googleapi.Error).Header. Use googleapi.IsNotModified to
+// check whether the returned error was because http.StatusNotModified
+// was returned.
+func (c *GrantsCreateCall) Do(opts ...googleapi.CallOption) (*Grant, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &Grant{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Grant access for a user to the given package.",
+	//   "flatPath": "androidpublisher/v3/developers/{developersId}/users/{usersId}/grants",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.grants.create",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "parent": {
+	//       "description": "Required. The user which needs permission. Format: developers/{developer}/users/{user}",
+	//       "location": "path",
+	//       "pattern": "^developers/[^/]+/users/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/{+parent}/grants",
+	//   "request": {
+	//     "$ref": "Grant"
+	//   },
+	//   "response": {
+	//     "$ref": "Grant"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.grants.delete":
+
+type GrantsDeleteCall struct {
+	s          *Service
+	name       string
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Delete: Removes all access for the user to the given package or
+// developer account.
+//
+//   - name: The name of the grant to delete. Format:
+//     developers/{developer}/users/{email}/grants/{package_name}.
+func (r *GrantsService) Delete(name string) *GrantsDeleteCall {
+	c := &GrantsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *GrantsDeleteCall) Fields(s ...googleapi.Field) *GrantsDeleteCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *GrantsDeleteCall) Context(ctx context.Context) *GrantsDeleteCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *GrantsDeleteCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *GrantsDeleteCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("DELETE", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.grants.delete" call.
+func (c *GrantsDeleteCall) Do(opts ...googleapi.CallOption) error {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if err != nil {
+		return err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return gensupport.WrapError(err)
+	}
+	return nil
+	// {
+	//   "description": "Removes all access for the user to the given package or developer account.",
+	//   "flatPath": "androidpublisher/v3/developers/{developersId}/users/{usersId}/grants/{grantsId}",
+	//   "httpMethod": "DELETE",
+	//   "id": "androidpublisher.grants.delete",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The name of the grant to delete. Format: developers/{developer}/users/{email}/grants/{package_name}",
+	//       "location": "path",
+	//       "pattern": "^developers/[^/]+/users/[^/]+/grants/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/{+name}",
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.grants.patch":
+
+type GrantsPatchCall struct {
+	s          *Service
+	name       string
+	grant      *Grant
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Patch: Updates access for the user to the given package.
+//
+//   - name: Resource name for this grant, following the pattern
+//     "developers/{developer}/users/{email}/grants/{package_name}". If
+//     this grant is for a draft app, the app ID will be used in this
+//     resource name instead of the package name.
+func (r *GrantsService) Patch(name string, grant *Grant) *GrantsPatchCall {
+	c := &GrantsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	c.grant = grant
+	return c
+}
+
+// UpdateMask sets the optional parameter "updateMask": The list of
+// fields to be updated.
+func (c *GrantsPatchCall) UpdateMask(updateMask string) *GrantsPatchCall {
+	c.urlParams_.Set("updateMask", updateMask)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *GrantsPatchCall) Fields(s ...googleapi.Field) *GrantsPatchCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *GrantsPatchCall) Context(ctx context.Context) *GrantsPatchCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *GrantsPatchCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *GrantsPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.grant)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("PATCH", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.grants.patch" call.
+// Exactly one of *Grant or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *Grant.ServerResponse.Header or (if a response was returned at all)
+// in error.(*googleapi.Error).Header. Use googleapi.IsNotModified to
+// check whether the returned error was because http.StatusNotModified
+// was returned.
+func (c *GrantsPatchCall) Do(opts ...googleapi.CallOption) (*Grant, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &Grant{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Updates access for the user to the given package.",
+	//   "flatPath": "androidpublisher/v3/developers/{developersId}/users/{usersId}/grants/{grantsId}",
+	//   "httpMethod": "PATCH",
+	//   "id": "androidpublisher.grants.patch",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. Resource name for this grant, following the pattern \"developers/{developer}/users/{email}/grants/{package_name}\". If this grant is for a draft app, the app ID will be used in this resource name instead of the package name.",
+	//       "location": "path",
+	//       "pattern": "^developers/[^/]+/users/[^/]+/grants/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "updateMask": {
+	//       "description": "Optional. The list of fields to be updated.",
+	//       "format": "google-fieldmask",
+	//       "location": "query",
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/{+name}",
+	//   "request": {
+	//     "$ref": "Grant"
+	//   },
+	//   "response": {
+	//     "$ref": "Grant"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
 // method id "androidpublisher.inappproducts.delete":
 
 type InappproductsDeleteCall struct {
@@ -9026,8 +15356,11 @@ type InappproductsDeleteCall struct {
 	header_     http.Header
 }
 
-// Delete: Deletes an in-app product (i.e. a managed product or a
-// subscriptions).
+// Delete: Deletes an in-app product (a managed product or a
+// subscription). This method should no longer be used to delete
+// subscriptions. See this article
+// (https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html)
+// for more information.
 //
 // - packageName: Package name of the app.
 // - sku: Unique identifier for the in-app product.
@@ -9065,7 +15398,7 @@ func (c *InappproductsDeleteCall) Header() http.Header {
 
 func (c *InappproductsDeleteCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9096,11 +15429,11 @@ func (c *InappproductsDeleteCall) Do(opts ...googleapi.CallOption) error {
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return err
+		return gensupport.WrapError(err)
 	}
 	return nil
 	// {
-	//   "description": "Deletes an in-app product (i.e. a managed product or a subscriptions).",
+	//   "description": "Deletes an in-app product (a managed product or a subscription). This method should no longer be used to delete subscriptions. See [this article](https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html) for more information.",
 	//   "flatPath": "androidpublisher/v3/applications/{packageName}/inappproducts/{sku}",
 	//   "httpMethod": "DELETE",
 	//   "id": "androidpublisher.inappproducts.delete",
@@ -9143,7 +15476,10 @@ type InappproductsGetCall struct {
 }
 
 // Get: Gets an in-app product, which can be a managed product or a
-// subscription.
+// subscription. This method should no longer be used to retrieve
+// subscriptions. See this article
+// (https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html)
+// for more information.
 //
 // - packageName: Package name of the app.
 // - sku: Unique identifier for the in-app product.
@@ -9191,7 +15527,7 @@ func (c *InappproductsGetCall) Header() http.Header {
 
 func (c *InappproductsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9230,17 +15566,17 @@ func (c *InappproductsGetCall) Do(opts ...googleapi.CallOption) (*InAppProduct, 
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &InAppProduct{
 		ServerResponse: googleapi.ServerResponse{
@@ -9254,7 +15590,7 @@ func (c *InappproductsGetCall) Do(opts ...googleapi.CallOption) (*InAppProduct, 
 	}
 	return ret, nil
 	// {
-	//   "description": "Gets an in-app product, which can be a managed product or a subscription.",
+	//   "description": "Gets an in-app product, which can be a managed product or a subscription. This method should no longer be used to retrieve subscriptions. See [this article](https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html) for more information.",
 	//   "flatPath": "androidpublisher/v3/applications/{packageName}/inappproducts/{sku}",
 	//   "httpMethod": "GET",
 	//   "id": "androidpublisher.inappproducts.get",
@@ -9298,8 +15634,11 @@ type InappproductsInsertCall struct {
 	header_      http.Header
 }
 
-// Insert: Creates an in-app product (i.e. a managed product or a
-// subscriptions).
+// Insert: Creates an in-app product (a managed product or a
+// subscription). This method should no longer be used to create
+// subscriptions. See this article
+// (https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html)
+// for more information.
 //
 // - packageName: Package name of the app.
 func (r *InappproductsService) Insert(packageName string, inappproduct *InAppProduct) *InappproductsInsertCall {
@@ -9346,7 +15685,7 @@ func (c *InappproductsInsertCall) Header() http.Header {
 
 func (c *InappproductsInsertCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9386,17 +15725,17 @@ func (c *InappproductsInsertCall) Do(opts ...googleapi.CallOption) (*InAppProduc
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &InAppProduct{
 		ServerResponse: googleapi.ServerResponse{
@@ -9410,7 +15749,7 @@ func (c *InappproductsInsertCall) Do(opts ...googleapi.CallOption) (*InAppProduc
 	}
 	return ret, nil
 	// {
-	//   "description": "Creates an in-app product (i.e. a managed product or a subscriptions).",
+	//   "description": "Creates an in-app product (a managed product or a subscription). This method should no longer be used to create subscriptions. See [this article](https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html) for more information.",
 	//   "flatPath": "androidpublisher/v3/applications/{packageName}/inappproducts",
 	//   "httpMethod": "POST",
 	//   "id": "androidpublisher.inappproducts.insert",
@@ -9456,7 +15795,14 @@ type InappproductsListCall struct {
 }
 
 // List: Lists all in-app products - both managed products and
-// subscriptions.
+// subscriptions. If an app has a large number of in-app products, the
+// response may be paginated. In this case the response field
+// `tokenPagination.nextPageToken` will be set and the caller should
+// provide its value as a `token` request parameter to retrieve the next
+// page. This method should no longer be used to retrieve subscriptions.
+// See this article
+// (https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html)
+// for more information.
 //
 // - packageName: Package name of the app.
 func (r *InappproductsService) List(packageName string) *InappproductsListCall {
@@ -9465,15 +15811,15 @@ func (r *InappproductsService) List(packageName string) *InappproductsListCall {
 	return c
 }
 
-// MaxResults sets the optional parameter "maxResults": How many results
-// the list operation should return.
+// MaxResults sets the optional parameter "maxResults": Deprecated and
+// ignored. The page size is determined by the server.
 func (c *InappproductsListCall) MaxResults(maxResults int64) *InappproductsListCall {
 	c.urlParams_.Set("maxResults", fmt.Sprint(maxResults))
 	return c
 }
 
-// StartIndex sets the optional parameter "startIndex": The index of the
-// first element to return.
+// StartIndex sets the optional parameter "startIndex": Deprecated and
+// ignored. Set the `token` parameter to retrieve the next page.
 func (c *InappproductsListCall) StartIndex(startIndex int64) *InappproductsListCall {
 	c.urlParams_.Set("startIndex", fmt.Sprint(startIndex))
 	return c
@@ -9523,7 +15869,7 @@ func (c *InappproductsListCall) Header() http.Header {
 
 func (c *InappproductsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9561,17 +15907,17 @@ func (c *InappproductsListCall) Do(opts ...googleapi.CallOption) (*Inappproducts
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &InappproductsListResponse{
 		ServerResponse: googleapi.ServerResponse{
@@ -9585,7 +15931,7 @@ func (c *InappproductsListCall) Do(opts ...googleapi.CallOption) (*Inappproducts
 	}
 	return ret, nil
 	// {
-	//   "description": "Lists all in-app products - both managed products and subscriptions.",
+	//   "description": "Lists all in-app products - both managed products and subscriptions. If an app has a large number of in-app products, the response may be paginated. In this case the response field `tokenPagination.nextPageToken` will be set and the caller should provide its value as a `token` request parameter to retrieve the next page. This method should no longer be used to retrieve subscriptions. See [this article](https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html) for more information.",
 	//   "flatPath": "androidpublisher/v3/applications/{packageName}/inappproducts",
 	//   "httpMethod": "GET",
 	//   "id": "androidpublisher.inappproducts.list",
@@ -9594,7 +15940,8 @@ func (c *InappproductsListCall) Do(opts ...googleapi.CallOption) (*Inappproducts
 	//   ],
 	//   "parameters": {
 	//     "maxResults": {
-	//       "description": "How many results the list operation should return.",
+	//       "deprecated": true,
+	//       "description": "Deprecated and ignored. The page size is determined by the server.",
 	//       "format": "uint32",
 	//       "location": "query",
 	//       "type": "integer"
@@ -9606,7 +15953,8 @@ func (c *InappproductsListCall) Do(opts ...googleapi.CallOption) (*Inappproducts
 	//       "type": "string"
 	//     },
 	//     "startIndex": {
-	//       "description": "The index of the first element to return.",
+	//       "deprecated": true,
+	//       "description": "Deprecated and ignored. Set the `token` parameter to retrieve the next page.",
 	//       "format": "uint32",
 	//       "location": "query",
 	//       "type": "integer"
@@ -9640,8 +15988,11 @@ type InappproductsPatchCall struct {
 	header_      http.Header
 }
 
-// Patch: Patches an in-app product (i.e. a managed product or a
-// subscriptions).
+// Patch: Patches an in-app product (a managed product or a
+// subscription). This method should no longer be used to update
+// subscriptions. See this article
+// (https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html)
+// for more information.
 //
 // - packageName: Package name of the app.
 // - sku: Unique identifier for the in-app product.
@@ -9690,7 +16041,7 @@ func (c *InappproductsPatchCall) Header() http.Header {
 
 func (c *InappproductsPatchCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9731,17 +16082,17 @@ func (c *InappproductsPatchCall) Do(opts ...googleapi.CallOption) (*InAppProduct
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &InAppProduct{
 		ServerResponse: googleapi.ServerResponse{
@@ -9755,7 +16106,7 @@ func (c *InappproductsPatchCall) Do(opts ...googleapi.CallOption) (*InAppProduct
 	}
 	return ret, nil
 	// {
-	//   "description": "Patches an in-app product (i.e. a managed product or a subscriptions).",
+	//   "description": "Patches an in-app product (a managed product or a subscription). This method should no longer be used to update subscriptions. See [this article](https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html) for more information.",
 	//   "flatPath": "androidpublisher/v3/applications/{packageName}/inappproducts/{sku}",
 	//   "httpMethod": "PATCH",
 	//   "id": "androidpublisher.inappproducts.patch",
@@ -9808,8 +16159,11 @@ type InappproductsUpdateCall struct {
 	header_      http.Header
 }
 
-// Update: Updates an in-app product (i.e. a managed product or a
-// subscriptions).
+// Update: Updates an in-app product (a managed product or a
+// subscription). This method should no longer be used to update
+// subscriptions. See this article
+// (https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html)
+// for more information.
 //
 // - packageName: Package name of the app.
 // - sku: Unique identifier for the in-app product.
@@ -9866,7 +16220,7 @@ func (c *InappproductsUpdateCall) Header() http.Header {
 
 func (c *InappproductsUpdateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -9907,17 +16261,17 @@ func (c *InappproductsUpdateCall) Do(opts ...googleapi.CallOption) (*InAppProduc
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &InAppProduct{
 		ServerResponse: googleapi.ServerResponse{
@@ -9931,7 +16285,7 @@ func (c *InappproductsUpdateCall) Do(opts ...googleapi.CallOption) (*InAppProduc
 	}
 	return ret, nil
 	// {
-	//   "description": "Updates an in-app product (i.e. a managed product or a subscriptions).",
+	//   "description": "Updates an in-app product (a managed product or a subscription). This method should no longer be used to update subscriptions. See [this article](https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html) for more information.",
 	//   "flatPath": "androidpublisher/v3/applications/{packageName}/inappproducts/{sku}",
 	//   "httpMethod": "PUT",
 	//   "id": "androidpublisher.inappproducts.update",
@@ -10068,7 +16422,7 @@ func (c *InternalappsharingartifactsUploadapkCall) Header() http.Header {
 
 func (c *InternalappsharingartifactsUploadapkCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10114,17 +16468,17 @@ func (c *InternalappsharingartifactsUploadapkCall) Do(opts ...googleapi.CallOpti
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	rx := c.mediaInfo_.ResumableUpload(res.Header.Get("Location"))
 	if rx != nil {
@@ -10140,7 +16494,7 @@ func (c *InternalappsharingartifactsUploadapkCall) Do(opts ...googleapi.CallOpti
 		}
 		defer res.Body.Close()
 		if err := googleapi.CheckResponse(res); err != nil {
-			return nil, err
+			return nil, gensupport.WrapError(err)
 		}
 	}
 	ret := &InternalAppSharingArtifact{
@@ -10290,7 +16644,7 @@ func (c *InternalappsharingartifactsUploadbundleCall) Header() http.Header {
 
 func (c *InternalappsharingartifactsUploadbundleCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10336,17 +16690,17 @@ func (c *InternalappsharingartifactsUploadbundleCall) Do(opts ...googleapi.CallO
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	rx := c.mediaInfo_.ResumableUpload(res.Header.Get("Location"))
 	if rx != nil {
@@ -10362,7 +16716,7 @@ func (c *InternalappsharingartifactsUploadbundleCall) Do(opts ...googleapi.CallO
 		}
 		defer res.Body.Close()
 		if err := googleapi.CheckResponse(res); err != nil {
-			return nil, err
+			return nil, gensupport.WrapError(err)
 		}
 	}
 	ret := &InternalAppSharingArtifact{
@@ -10420,6 +16774,3061 @@ func (c *InternalappsharingartifactsUploadbundleCall) Do(opts ...googleapi.CallO
 
 }
 
+// method id "androidpublisher.monetization.convertRegionPrices":
+
+type MonetizationConvertRegionPricesCall struct {
+	s                          *Service
+	packageName                string
+	convertregionpricesrequest *ConvertRegionPricesRequest
+	urlParams_                 gensupport.URLParams
+	ctx_                       context.Context
+	header_                    http.Header
+}
+
+// ConvertRegionPrices: Calculates the region prices, using today's
+// exchange rate and country-specific pricing patterns, based on the
+// price in the request for a set of regions.
+//
+// - packageName: The app package name.
+func (r *MonetizationService) ConvertRegionPrices(packageName string, convertregionpricesrequest *ConvertRegionPricesRequest) *MonetizationConvertRegionPricesCall {
+	c := &MonetizationConvertRegionPricesCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.convertregionpricesrequest = convertregionpricesrequest
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationConvertRegionPricesCall) Fields(s ...googleapi.Field) *MonetizationConvertRegionPricesCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationConvertRegionPricesCall) Context(ctx context.Context) *MonetizationConvertRegionPricesCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationConvertRegionPricesCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationConvertRegionPricesCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.convertregionpricesrequest)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/pricing:convertRegionPrices")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.convertRegionPrices" call.
+// Exactly one of *ConvertRegionPricesResponse or error will be non-nil.
+// Any non-2xx status code is an error. Response headers are in either
+// *ConvertRegionPricesResponse.ServerResponse.Header or (if a response
+// was returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *MonetizationConvertRegionPricesCall) Do(opts ...googleapi.CallOption) (*ConvertRegionPricesResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &ConvertRegionPricesResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Calculates the region prices, using today's exchange rate and country-specific pricing patterns, based on the price in the request for a set of regions.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/pricing:convertRegionPrices",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.monetization.convertRegionPrices",
+	//   "parameterOrder": [
+	//     "packageName"
+	//   ],
+	//   "parameters": {
+	//     "packageName": {
+	//       "description": "Required. The app package name.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/pricing:convertRegionPrices",
+	//   "request": {
+	//     "$ref": "ConvertRegionPricesRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "ConvertRegionPricesResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.archive":
+
+type MonetizationSubscriptionsArchiveCall struct {
+	s                          *Service
+	packageName                string
+	productId                  string
+	archivesubscriptionrequest *ArchiveSubscriptionRequest
+	urlParams_                 gensupport.URLParams
+	ctx_                       context.Context
+	header_                    http.Header
+}
+
+// Archive: Archives a subscription. Can only be done if at least one
+// base plan was active in the past, and no base plan is available for
+// new or existing subscribers currently. This action is irreversible,
+// and the subscription ID will remain reserved.
+//
+//   - packageName: The parent app (package name) of the app of the
+//     subscription to delete.
+//   - productId: The unique product ID of the subscription to delete.
+func (r *MonetizationSubscriptionsService) Archive(packageName string, productId string, archivesubscriptionrequest *ArchiveSubscriptionRequest) *MonetizationSubscriptionsArchiveCall {
+	c := &MonetizationSubscriptionsArchiveCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.archivesubscriptionrequest = archivesubscriptionrequest
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsArchiveCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsArchiveCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsArchiveCall) Context(ctx context.Context) *MonetizationSubscriptionsArchiveCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsArchiveCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsArchiveCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.archivesubscriptionrequest)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}:archive")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.archive" call.
+// Exactly one of *Subscription or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *Subscription.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsArchiveCall) Do(opts ...googleapi.CallOption) (*Subscription, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &Subscription{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Archives a subscription. Can only be done if at least one base plan was active in the past, and no base plan is available for new or existing subscribers currently. This action is irreversible, and the subscription ID will remain reserved.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}:archive",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.monetization.subscriptions.archive",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId"
+	//   ],
+	//   "parameters": {
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) of the app of the subscription to delete.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The unique product ID of the subscription to delete.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}:archive",
+	//   "request": {
+	//     "$ref": "ArchiveSubscriptionRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "Subscription"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.create":
+
+type MonetizationSubscriptionsCreateCall struct {
+	s            *Service
+	packageName  string
+	subscription *Subscription
+	urlParams_   gensupport.URLParams
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Create: Creates a new subscription. Newly added base plans will
+// remain in draft state until activated.
+//
+//   - packageName: The parent app (package name) for which the
+//     subscription should be created. Must be equal to the package_name
+//     field on the Subscription resource.
+func (r *MonetizationSubscriptionsService) Create(packageName string, subscription *Subscription) *MonetizationSubscriptionsCreateCall {
+	c := &MonetizationSubscriptionsCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.subscription = subscription
+	return c
+}
+
+// ProductId sets the optional parameter "productId": Required. The ID
+// to use for the subscription. For the requirements on this format, see
+// the documentation of the product_id field on the Subscription
+// resource.
+func (c *MonetizationSubscriptionsCreateCall) ProductId(productId string) *MonetizationSubscriptionsCreateCall {
+	c.urlParams_.Set("productId", productId)
+	return c
+}
+
+// RegionsVersionVersion sets the optional parameter
+// "regionsVersion.version": Required. The latest version is 2022/02.
+func (c *MonetizationSubscriptionsCreateCall) RegionsVersionVersion(regionsVersionVersion string) *MonetizationSubscriptionsCreateCall {
+	c.urlParams_.Set("regionsVersion.version", regionsVersionVersion)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsCreateCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsCreateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsCreateCall) Context(ctx context.Context) *MonetizationSubscriptionsCreateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsCreateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsCreateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.subscription)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.create" call.
+// Exactly one of *Subscription or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *Subscription.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsCreateCall) Do(opts ...googleapi.CallOption) (*Subscription, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &Subscription{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Creates a new subscription. Newly added base plans will remain in draft state until activated.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.monetization.subscriptions.create",
+	//   "parameterOrder": [
+	//     "packageName"
+	//   ],
+	//   "parameters": {
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) for which the subscription should be created. Must be equal to the package_name field on the Subscription resource.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The ID to use for the subscription. For the requirements on this format, see the documentation of the product_id field on the Subscription resource.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "regionsVersion.version": {
+	//       "description": "Required. The latest version is 2022/02.",
+	//       "location": "query",
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions",
+	//   "request": {
+	//     "$ref": "Subscription"
+	//   },
+	//   "response": {
+	//     "$ref": "Subscription"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.delete":
+
+type MonetizationSubscriptionsDeleteCall struct {
+	s           *Service
+	packageName string
+	productId   string
+	urlParams_  gensupport.URLParams
+	ctx_        context.Context
+	header_     http.Header
+}
+
+// Delete: Deletes a subscription. A subscription can only be deleted if
+// it has never had a base plan published.
+//
+//   - packageName: The parent app (package name) of the app of the
+//     subscription to delete.
+//   - productId: The unique product ID of the subscription to delete.
+func (r *MonetizationSubscriptionsService) Delete(packageName string, productId string) *MonetizationSubscriptionsDeleteCall {
+	c := &MonetizationSubscriptionsDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsDeleteCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsDeleteCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsDeleteCall) Context(ctx context.Context) *MonetizationSubscriptionsDeleteCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsDeleteCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsDeleteCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("DELETE", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.delete" call.
+func (c *MonetizationSubscriptionsDeleteCall) Do(opts ...googleapi.CallOption) error {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if err != nil {
+		return err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return gensupport.WrapError(err)
+	}
+	return nil
+	// {
+	//   "description": "Deletes a subscription. A subscription can only be deleted if it has never had a base plan published.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}",
+	//   "httpMethod": "DELETE",
+	//   "id": "androidpublisher.monetization.subscriptions.delete",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId"
+	//   ],
+	//   "parameters": {
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) of the app of the subscription to delete.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The unique product ID of the subscription to delete.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}",
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.get":
+
+type MonetizationSubscriptionsGetCall struct {
+	s            *Service
+	packageName  string
+	productId    string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Get: Reads a single subscription.
+//
+//   - packageName: The parent app (package name) of the subscription to
+//     get.
+//   - productId: The unique product ID of the subscription to get.
+func (r *MonetizationSubscriptionsService) Get(packageName string, productId string) *MonetizationSubscriptionsGetCall {
+	c := &MonetizationSubscriptionsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsGetCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsGetCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *MonetizationSubscriptionsGetCall) IfNoneMatch(entityTag string) *MonetizationSubscriptionsGetCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsGetCall) Context(ctx context.Context) *MonetizationSubscriptionsGetCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsGetCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsGetCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("GET", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.get" call.
+// Exactly one of *Subscription or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *Subscription.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsGetCall) Do(opts ...googleapi.CallOption) (*Subscription, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &Subscription{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Reads a single subscription.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}",
+	//   "httpMethod": "GET",
+	//   "id": "androidpublisher.monetization.subscriptions.get",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId"
+	//   ],
+	//   "parameters": {
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) of the subscription to get.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The unique product ID of the subscription to get.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}",
+	//   "response": {
+	//     "$ref": "Subscription"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.list":
+
+type MonetizationSubscriptionsListCall struct {
+	s            *Service
+	packageName  string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// List: Lists all subscriptions under a given app.
+//
+//   - packageName: The parent app (package name) for which the
+//     subscriptions should be read.
+func (r *MonetizationSubscriptionsService) List(packageName string) *MonetizationSubscriptionsListCall {
+	c := &MonetizationSubscriptionsListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	return c
+}
+
+// PageSize sets the optional parameter "pageSize": The maximum number
+// of subscriptions to return. The service may return fewer than this
+// value. If unspecified, at most 50 subscriptions will be returned. The
+// maximum value is 1000; values above 1000 will be coerced to 1000.
+func (c *MonetizationSubscriptionsListCall) PageSize(pageSize int64) *MonetizationSubscriptionsListCall {
+	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
+	return c
+}
+
+// PageToken sets the optional parameter "pageToken": A page token,
+// received from a previous `ListSubscriptions` call. Provide this to
+// retrieve the subsequent page. When paginating, all other parameters
+// provided to `ListSubscriptions` must match the call that provided the
+// page token.
+func (c *MonetizationSubscriptionsListCall) PageToken(pageToken string) *MonetizationSubscriptionsListCall {
+	c.urlParams_.Set("pageToken", pageToken)
+	return c
+}
+
+// ShowArchived sets the optional parameter "showArchived": Whether
+// archived subscriptions should be included in the response. Defaults
+// to false.
+func (c *MonetizationSubscriptionsListCall) ShowArchived(showArchived bool) *MonetizationSubscriptionsListCall {
+	c.urlParams_.Set("showArchived", fmt.Sprint(showArchived))
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsListCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsListCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *MonetizationSubscriptionsListCall) IfNoneMatch(entityTag string) *MonetizationSubscriptionsListCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsListCall) Context(ctx context.Context) *MonetizationSubscriptionsListCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsListCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("GET", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.list" call.
+// Exactly one of *ListSubscriptionsResponse or error will be non-nil.
+// Any non-2xx status code is an error. Response headers are in either
+// *ListSubscriptionsResponse.ServerResponse.Header or (if a response
+// was returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsListCall) Do(opts ...googleapi.CallOption) (*ListSubscriptionsResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &ListSubscriptionsResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Lists all subscriptions under a given app.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions",
+	//   "httpMethod": "GET",
+	//   "id": "androidpublisher.monetization.subscriptions.list",
+	//   "parameterOrder": [
+	//     "packageName"
+	//   ],
+	//   "parameters": {
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) for which the subscriptions should be read.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "pageSize": {
+	//       "description": "The maximum number of subscriptions to return. The service may return fewer than this value. If unspecified, at most 50 subscriptions will be returned. The maximum value is 1000; values above 1000 will be coerced to 1000.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "type": "integer"
+	//     },
+	//     "pageToken": {
+	//       "description": "A page token, received from a previous `ListSubscriptions` call. Provide this to retrieve the subsequent page. When paginating, all other parameters provided to `ListSubscriptions` must match the call that provided the page token.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "showArchived": {
+	//       "description": "Whether archived subscriptions should be included in the response. Defaults to false.",
+	//       "location": "query",
+	//       "type": "boolean"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions",
+	//   "response": {
+	//     "$ref": "ListSubscriptionsResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *MonetizationSubscriptionsListCall) Pages(ctx context.Context, f func(*ListSubscriptionsResponse) error) error {
+	c.ctx_ = ctx
+	defer c.PageToken(c.urlParams_.Get("pageToken")) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.PageToken(x.NextPageToken)
+	}
+}
+
+// method id "androidpublisher.monetization.subscriptions.patch":
+
+type MonetizationSubscriptionsPatchCall struct {
+	s            *Service
+	packageName  string
+	productId    string
+	subscription *Subscription
+	urlParams_   gensupport.URLParams
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Patch: Updates an existing subscription.
+//
+//   - packageName: Immutable. Package name of the parent app.
+//   - productId: Immutable. Unique product ID of the product. Unique
+//     within the parent app. Product IDs must be composed of lower-case
+//     letters (a-z), numbers (0-9), underscores (_) and dots (.). It must
+//     start with a lower-case letter or number, and be between 1 and 40
+//     (inclusive) characters in length.
+func (r *MonetizationSubscriptionsService) Patch(packageName string, productId string, subscription *Subscription) *MonetizationSubscriptionsPatchCall {
+	c := &MonetizationSubscriptionsPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.subscription = subscription
+	return c
+}
+
+// RegionsVersionVersion sets the optional parameter
+// "regionsVersion.version": Required. The latest version is 2022/02.
+func (c *MonetizationSubscriptionsPatchCall) RegionsVersionVersion(regionsVersionVersion string) *MonetizationSubscriptionsPatchCall {
+	c.urlParams_.Set("regionsVersion.version", regionsVersionVersion)
+	return c
+}
+
+// UpdateMask sets the optional parameter "updateMask": Required. The
+// list of fields to be updated.
+func (c *MonetizationSubscriptionsPatchCall) UpdateMask(updateMask string) *MonetizationSubscriptionsPatchCall {
+	c.urlParams_.Set("updateMask", updateMask)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsPatchCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsPatchCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsPatchCall) Context(ctx context.Context) *MonetizationSubscriptionsPatchCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsPatchCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.subscription)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("PATCH", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.patch" call.
+// Exactly one of *Subscription or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *Subscription.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsPatchCall) Do(opts ...googleapi.CallOption) (*Subscription, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &Subscription{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Updates an existing subscription.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}",
+	//   "httpMethod": "PATCH",
+	//   "id": "androidpublisher.monetization.subscriptions.patch",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId"
+	//   ],
+	//   "parameters": {
+	//     "packageName": {
+	//       "description": "Immutable. Package name of the parent app.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Immutable. Unique product ID of the product. Unique within the parent app. Product IDs must be composed of lower-case letters (a-z), numbers (0-9), underscores (_) and dots (.). It must start with a lower-case letter or number, and be between 1 and 40 (inclusive) characters in length.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "regionsVersion.version": {
+	//       "description": "Required. The latest version is 2022/02.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "updateMask": {
+	//       "description": "Required. The list of fields to be updated.",
+	//       "format": "google-fieldmask",
+	//       "location": "query",
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}",
+	//   "request": {
+	//     "$ref": "Subscription"
+	//   },
+	//   "response": {
+	//     "$ref": "Subscription"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.basePlans.activate":
+
+type MonetizationSubscriptionsBasePlansActivateCall struct {
+	s                       *Service
+	packageName             string
+	productId               string
+	basePlanId              string
+	activatebaseplanrequest *ActivateBasePlanRequest
+	urlParams_              gensupport.URLParams
+	ctx_                    context.Context
+	header_                 http.Header
+}
+
+// Activate: Activates a base plan. Once activated, base plans will be
+// available to new subscribers.
+//
+//   - basePlanId: The unique base plan ID of the base plan to activate.
+//   - packageName: The parent app (package name) of the base plan to
+//     activate.
+//   - productId: The parent subscription (ID) of the base plan to
+//     activate.
+func (r *MonetizationSubscriptionsBasePlansService) Activate(packageName string, productId string, basePlanId string, activatebaseplanrequest *ActivateBasePlanRequest) *MonetizationSubscriptionsBasePlansActivateCall {
+	c := &MonetizationSubscriptionsBasePlansActivateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.basePlanId = basePlanId
+	c.activatebaseplanrequest = activatebaseplanrequest
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsBasePlansActivateCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsBasePlansActivateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsBasePlansActivateCall) Context(ctx context.Context) *MonetizationSubscriptionsBasePlansActivateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsBasePlansActivateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsBasePlansActivateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.activatebaseplanrequest)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}:activate")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+		"basePlanId":  c.basePlanId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.basePlans.activate" call.
+// Exactly one of *Subscription or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *Subscription.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsBasePlansActivateCall) Do(opts ...googleapi.CallOption) (*Subscription, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &Subscription{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Activates a base plan. Once activated, base plans will be available to new subscribers.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}:activate",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.monetization.subscriptions.basePlans.activate",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId",
+	//     "basePlanId"
+	//   ],
+	//   "parameters": {
+	//     "basePlanId": {
+	//       "description": "Required. The unique base plan ID of the base plan to activate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) of the base plan to activate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The parent subscription (ID) of the base plan to activate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}:activate",
+	//   "request": {
+	//     "$ref": "ActivateBasePlanRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "Subscription"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.basePlans.deactivate":
+
+type MonetizationSubscriptionsBasePlansDeactivateCall struct {
+	s                         *Service
+	packageName               string
+	productId                 string
+	basePlanId                string
+	deactivatebaseplanrequest *DeactivateBasePlanRequest
+	urlParams_                gensupport.URLParams
+	ctx_                      context.Context
+	header_                   http.Header
+}
+
+// Deactivate: Deactivates a base plan. Once deactivated, the base plan
+// will become unavailable to new subscribers, but existing subscribers
+// will maintain their subscription
+//
+//   - basePlanId: The unique base plan ID of the base plan to deactivate.
+//   - packageName: The parent app (package name) of the base plan to
+//     deactivate.
+//   - productId: The parent subscription (ID) of the base plan to
+//     deactivate.
+func (r *MonetizationSubscriptionsBasePlansService) Deactivate(packageName string, productId string, basePlanId string, deactivatebaseplanrequest *DeactivateBasePlanRequest) *MonetizationSubscriptionsBasePlansDeactivateCall {
+	c := &MonetizationSubscriptionsBasePlansDeactivateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.basePlanId = basePlanId
+	c.deactivatebaseplanrequest = deactivatebaseplanrequest
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsBasePlansDeactivateCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsBasePlansDeactivateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsBasePlansDeactivateCall) Context(ctx context.Context) *MonetizationSubscriptionsBasePlansDeactivateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsBasePlansDeactivateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsBasePlansDeactivateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.deactivatebaseplanrequest)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}:deactivate")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+		"basePlanId":  c.basePlanId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.basePlans.deactivate" call.
+// Exactly one of *Subscription or error will be non-nil. Any non-2xx
+// status code is an error. Response headers are in either
+// *Subscription.ServerResponse.Header or (if a response was returned at
+// all) in error.(*googleapi.Error).Header. Use googleapi.IsNotModified
+// to check whether the returned error was because
+// http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsBasePlansDeactivateCall) Do(opts ...googleapi.CallOption) (*Subscription, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &Subscription{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Deactivates a base plan. Once deactivated, the base plan will become unavailable to new subscribers, but existing subscribers will maintain their subscription",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}:deactivate",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.monetization.subscriptions.basePlans.deactivate",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId",
+	//     "basePlanId"
+	//   ],
+	//   "parameters": {
+	//     "basePlanId": {
+	//       "description": "Required. The unique base plan ID of the base plan to deactivate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) of the base plan to deactivate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The parent subscription (ID) of the base plan to deactivate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}:deactivate",
+	//   "request": {
+	//     "$ref": "DeactivateBasePlanRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "Subscription"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.basePlans.delete":
+
+type MonetizationSubscriptionsBasePlansDeleteCall struct {
+	s           *Service
+	packageName string
+	productId   string
+	basePlanId  string
+	urlParams_  gensupport.URLParams
+	ctx_        context.Context
+	header_     http.Header
+}
+
+// Delete: Deletes a base plan. Can only be done for draft base plans.
+// This action is irreversible.
+//
+//   - basePlanId: The unique offer ID of the base plan to delete.
+//   - packageName: The parent app (package name) of the base plan to
+//     delete.
+//   - productId: The parent subscription (ID) of the base plan to delete.
+func (r *MonetizationSubscriptionsBasePlansService) Delete(packageName string, productId string, basePlanId string) *MonetizationSubscriptionsBasePlansDeleteCall {
+	c := &MonetizationSubscriptionsBasePlansDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.basePlanId = basePlanId
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsBasePlansDeleteCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsBasePlansDeleteCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsBasePlansDeleteCall) Context(ctx context.Context) *MonetizationSubscriptionsBasePlansDeleteCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsBasePlansDeleteCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsBasePlansDeleteCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("DELETE", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+		"basePlanId":  c.basePlanId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.basePlans.delete" call.
+func (c *MonetizationSubscriptionsBasePlansDeleteCall) Do(opts ...googleapi.CallOption) error {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if err != nil {
+		return err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return gensupport.WrapError(err)
+	}
+	return nil
+	// {
+	//   "description": "Deletes a base plan. Can only be done for draft base plans. This action is irreversible.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}",
+	//   "httpMethod": "DELETE",
+	//   "id": "androidpublisher.monetization.subscriptions.basePlans.delete",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId",
+	//     "basePlanId"
+	//   ],
+	//   "parameters": {
+	//     "basePlanId": {
+	//       "description": "Required. The unique offer ID of the base plan to delete.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) of the base plan to delete.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The parent subscription (ID) of the base plan to delete.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}",
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.basePlans.migratePrices":
+
+type MonetizationSubscriptionsBasePlansMigratePricesCall struct {
+	s                            *Service
+	packageName                  string
+	productId                    string
+	basePlanId                   string
+	migratebaseplanpricesrequest *MigrateBasePlanPricesRequest
+	urlParams_                   gensupport.URLParams
+	ctx_                         context.Context
+	header_                      http.Header
+}
+
+// MigratePrices: Migrates subscribers who are receiving an historical
+// subscription price to the currently-offered price for the specified
+// region. Requests will cause price change notifications to be sent to
+// users who are currently receiving an historical price older than the
+// supplied timestamp. Subscribers who do not agree to the new price
+// will have their subscription ended at the next renewal.
+//
+//   - basePlanId: The unique base plan ID of the base plan to update
+//     prices on.
+//   - packageName: Package name of the parent app. Must be equal to the
+//     package_name field on the Subscription resource.
+//   - productId: The ID of the subscription to update. Must be equal to
+//     the product_id field on the Subscription resource.
+func (r *MonetizationSubscriptionsBasePlansService) MigratePrices(packageName string, productId string, basePlanId string, migratebaseplanpricesrequest *MigrateBasePlanPricesRequest) *MonetizationSubscriptionsBasePlansMigratePricesCall {
+	c := &MonetizationSubscriptionsBasePlansMigratePricesCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.basePlanId = basePlanId
+	c.migratebaseplanpricesrequest = migratebaseplanpricesrequest
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsBasePlansMigratePricesCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsBasePlansMigratePricesCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsBasePlansMigratePricesCall) Context(ctx context.Context) *MonetizationSubscriptionsBasePlansMigratePricesCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsBasePlansMigratePricesCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsBasePlansMigratePricesCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.migratebaseplanpricesrequest)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}:migratePrices")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+		"basePlanId":  c.basePlanId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.basePlans.migratePrices" call.
+// Exactly one of *MigrateBasePlanPricesResponse or error will be
+// non-nil. Any non-2xx status code is an error. Response headers are in
+// either *MigrateBasePlanPricesResponse.ServerResponse.Header or (if a
+// response was returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsBasePlansMigratePricesCall) Do(opts ...googleapi.CallOption) (*MigrateBasePlanPricesResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &MigrateBasePlanPricesResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Migrates subscribers who are receiving an historical subscription price to the currently-offered price for the specified region. Requests will cause price change notifications to be sent to users who are currently receiving an historical price older than the supplied timestamp. Subscribers who do not agree to the new price will have their subscription ended at the next renewal.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}:migratePrices",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.monetization.subscriptions.basePlans.migratePrices",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId",
+	//     "basePlanId"
+	//   ],
+	//   "parameters": {
+	//     "basePlanId": {
+	//       "description": "Required. The unique base plan ID of the base plan to update prices on.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Required. Package name of the parent app. Must be equal to the package_name field on the Subscription resource.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The ID of the subscription to update. Must be equal to the product_id field on the Subscription resource.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}:migratePrices",
+	//   "request": {
+	//     "$ref": "MigrateBasePlanPricesRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "MigrateBasePlanPricesResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.basePlans.offers.activate":
+
+type MonetizationSubscriptionsBasePlansOffersActivateCall struct {
+	s                                *Service
+	packageName                      string
+	productId                        string
+	basePlanId                       string
+	offerId                          string
+	activatesubscriptionofferrequest *ActivateSubscriptionOfferRequest
+	urlParams_                       gensupport.URLParams
+	ctx_                             context.Context
+	header_                          http.Header
+}
+
+// Activate: Activates a subscription offer. Once activated,
+// subscription offers will be available to new subscribers.
+//
+//   - basePlanId: The parent base plan (ID) of the offer to activate.
+//   - offerId: The unique offer ID of the offer to activate.
+//   - packageName: The parent app (package name) of the offer to
+//     activate.
+//   - productId: The parent subscription (ID) of the offer to activate.
+func (r *MonetizationSubscriptionsBasePlansOffersService) Activate(packageName string, productId string, basePlanId string, offerId string, activatesubscriptionofferrequest *ActivateSubscriptionOfferRequest) *MonetizationSubscriptionsBasePlansOffersActivateCall {
+	c := &MonetizationSubscriptionsBasePlansOffersActivateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.basePlanId = basePlanId
+	c.offerId = offerId
+	c.activatesubscriptionofferrequest = activatesubscriptionofferrequest
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsBasePlansOffersActivateCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsBasePlansOffersActivateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsBasePlansOffersActivateCall) Context(ctx context.Context) *MonetizationSubscriptionsBasePlansOffersActivateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsBasePlansOffersActivateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsBasePlansOffersActivateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.activatesubscriptionofferrequest)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}:activate")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+		"basePlanId":  c.basePlanId,
+		"offerId":     c.offerId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.basePlans.offers.activate" call.
+// Exactly one of *SubscriptionOffer or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *SubscriptionOffer.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsBasePlansOffersActivateCall) Do(opts ...googleapi.CallOption) (*SubscriptionOffer, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &SubscriptionOffer{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Activates a subscription offer. Once activated, subscription offers will be available to new subscribers.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}:activate",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.monetization.subscriptions.basePlans.offers.activate",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId",
+	//     "basePlanId",
+	//     "offerId"
+	//   ],
+	//   "parameters": {
+	//     "basePlanId": {
+	//       "description": "Required. The parent base plan (ID) of the offer to activate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "offerId": {
+	//       "description": "Required. The unique offer ID of the offer to activate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) of the offer to activate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The parent subscription (ID) of the offer to activate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}:activate",
+	//   "request": {
+	//     "$ref": "ActivateSubscriptionOfferRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "SubscriptionOffer"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.basePlans.offers.create":
+
+type MonetizationSubscriptionsBasePlansOffersCreateCall struct {
+	s                 *Service
+	packageName       string
+	productId         string
+	basePlanId        string
+	subscriptionoffer *SubscriptionOffer
+	urlParams_        gensupport.URLParams
+	ctx_              context.Context
+	header_           http.Header
+}
+
+// Create: Creates a new subscription offer. Only auto-renewing base
+// plans can have subscription offers. The offer state will be DRAFT
+// until it is activated.
+//
+//   - basePlanId: The parent base plan (ID) for which the offer should be
+//     created. Must be equal to the base_plan_id field on the
+//     SubscriptionOffer resource.
+//   - packageName: The parent app (package name) for which the offer
+//     should be created. Must be equal to the package_name field on the
+//     Subscription resource.
+//   - productId: The parent subscription (ID) for which the offer should
+//     be created. Must be equal to the product_id field on the
+//     SubscriptionOffer resource.
+func (r *MonetizationSubscriptionsBasePlansOffersService) Create(packageName string, productId string, basePlanId string, subscriptionoffer *SubscriptionOffer) *MonetizationSubscriptionsBasePlansOffersCreateCall {
+	c := &MonetizationSubscriptionsBasePlansOffersCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.basePlanId = basePlanId
+	c.subscriptionoffer = subscriptionoffer
+	return c
+}
+
+// OfferId sets the optional parameter "offerId": Required. The ID to
+// use for the offer. For the requirements on this format, see the
+// documentation of the offer_id field on the SubscriptionOffer
+// resource.
+func (c *MonetizationSubscriptionsBasePlansOffersCreateCall) OfferId(offerId string) *MonetizationSubscriptionsBasePlansOffersCreateCall {
+	c.urlParams_.Set("offerId", offerId)
+	return c
+}
+
+// RegionsVersionVersion sets the optional parameter
+// "regionsVersion.version": Required. The latest version is 2022/02.
+func (c *MonetizationSubscriptionsBasePlansOffersCreateCall) RegionsVersionVersion(regionsVersionVersion string) *MonetizationSubscriptionsBasePlansOffersCreateCall {
+	c.urlParams_.Set("regionsVersion.version", regionsVersionVersion)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsBasePlansOffersCreateCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsBasePlansOffersCreateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsBasePlansOffersCreateCall) Context(ctx context.Context) *MonetizationSubscriptionsBasePlansOffersCreateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsBasePlansOffersCreateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsBasePlansOffersCreateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.subscriptionoffer)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+		"basePlanId":  c.basePlanId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.basePlans.offers.create" call.
+// Exactly one of *SubscriptionOffer or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *SubscriptionOffer.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsBasePlansOffersCreateCall) Do(opts ...googleapi.CallOption) (*SubscriptionOffer, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &SubscriptionOffer{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Creates a new subscription offer. Only auto-renewing base plans can have subscription offers. The offer state will be DRAFT until it is activated.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.monetization.subscriptions.basePlans.offers.create",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId",
+	//     "basePlanId"
+	//   ],
+	//   "parameters": {
+	//     "basePlanId": {
+	//       "description": "Required. The parent base plan (ID) for which the offer should be created. Must be equal to the base_plan_id field on the SubscriptionOffer resource.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "offerId": {
+	//       "description": "Required. The ID to use for the offer. For the requirements on this format, see the documentation of the offer_id field on the SubscriptionOffer resource.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) for which the offer should be created. Must be equal to the package_name field on the Subscription resource.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The parent subscription (ID) for which the offer should be created. Must be equal to the product_id field on the SubscriptionOffer resource.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "regionsVersion.version": {
+	//       "description": "Required. The latest version is 2022/02.",
+	//       "location": "query",
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers",
+	//   "request": {
+	//     "$ref": "SubscriptionOffer"
+	//   },
+	//   "response": {
+	//     "$ref": "SubscriptionOffer"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.basePlans.offers.deactivate":
+
+type MonetizationSubscriptionsBasePlansOffersDeactivateCall struct {
+	s                                  *Service
+	packageName                        string
+	productId                          string
+	basePlanId                         string
+	offerId                            string
+	deactivatesubscriptionofferrequest *DeactivateSubscriptionOfferRequest
+	urlParams_                         gensupport.URLParams
+	ctx_                               context.Context
+	header_                            http.Header
+}
+
+// Deactivate: Deactivates a subscription offer. Once deactivated,
+// existing subscribers will maintain their subscription, but the offer
+// will become unavailable to new subscribers.
+//
+//   - basePlanId: The parent base plan (ID) of the offer to deactivate.
+//   - offerId: The unique offer ID of the offer to deactivate.
+//   - packageName: The parent app (package name) of the offer to
+//     deactivate.
+//   - productId: The parent subscription (ID) of the offer to deactivate.
+func (r *MonetizationSubscriptionsBasePlansOffersService) Deactivate(packageName string, productId string, basePlanId string, offerId string, deactivatesubscriptionofferrequest *DeactivateSubscriptionOfferRequest) *MonetizationSubscriptionsBasePlansOffersDeactivateCall {
+	c := &MonetizationSubscriptionsBasePlansOffersDeactivateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.basePlanId = basePlanId
+	c.offerId = offerId
+	c.deactivatesubscriptionofferrequest = deactivatesubscriptionofferrequest
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsBasePlansOffersDeactivateCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsBasePlansOffersDeactivateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsBasePlansOffersDeactivateCall) Context(ctx context.Context) *MonetizationSubscriptionsBasePlansOffersDeactivateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsBasePlansOffersDeactivateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsBasePlansOffersDeactivateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.deactivatesubscriptionofferrequest)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}:deactivate")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+		"basePlanId":  c.basePlanId,
+		"offerId":     c.offerId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.basePlans.offers.deactivate" call.
+// Exactly one of *SubscriptionOffer or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *SubscriptionOffer.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsBasePlansOffersDeactivateCall) Do(opts ...googleapi.CallOption) (*SubscriptionOffer, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &SubscriptionOffer{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Deactivates a subscription offer. Once deactivated, existing subscribers will maintain their subscription, but the offer will become unavailable to new subscribers.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}:deactivate",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.monetization.subscriptions.basePlans.offers.deactivate",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId",
+	//     "basePlanId",
+	//     "offerId"
+	//   ],
+	//   "parameters": {
+	//     "basePlanId": {
+	//       "description": "Required. The parent base plan (ID) of the offer to deactivate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "offerId": {
+	//       "description": "Required. The unique offer ID of the offer to deactivate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) of the offer to deactivate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The parent subscription (ID) of the offer to deactivate.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}:deactivate",
+	//   "request": {
+	//     "$ref": "DeactivateSubscriptionOfferRequest"
+	//   },
+	//   "response": {
+	//     "$ref": "SubscriptionOffer"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.basePlans.offers.delete":
+
+type MonetizationSubscriptionsBasePlansOffersDeleteCall struct {
+	s           *Service
+	packageName string
+	productId   string
+	basePlanId  string
+	offerId     string
+	urlParams_  gensupport.URLParams
+	ctx_        context.Context
+	header_     http.Header
+}
+
+// Delete: Deletes a subscription offer. Can only be done for draft
+// offers. This action is irreversible.
+//
+// - basePlanId: The parent base plan (ID) of the offer to delete.
+// - offerId: The unique offer ID of the offer to delete.
+// - packageName: The parent app (package name) of the offer to delete.
+// - productId: The parent subscription (ID) of the offer to delete.
+func (r *MonetizationSubscriptionsBasePlansOffersService) Delete(packageName string, productId string, basePlanId string, offerId string) *MonetizationSubscriptionsBasePlansOffersDeleteCall {
+	c := &MonetizationSubscriptionsBasePlansOffersDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.basePlanId = basePlanId
+	c.offerId = offerId
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsBasePlansOffersDeleteCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsBasePlansOffersDeleteCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsBasePlansOffersDeleteCall) Context(ctx context.Context) *MonetizationSubscriptionsBasePlansOffersDeleteCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsBasePlansOffersDeleteCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsBasePlansOffersDeleteCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("DELETE", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+		"basePlanId":  c.basePlanId,
+		"offerId":     c.offerId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.basePlans.offers.delete" call.
+func (c *MonetizationSubscriptionsBasePlansOffersDeleteCall) Do(opts ...googleapi.CallOption) error {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if err != nil {
+		return err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return gensupport.WrapError(err)
+	}
+	return nil
+	// {
+	//   "description": "Deletes a subscription offer. Can only be done for draft offers. This action is irreversible.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}",
+	//   "httpMethod": "DELETE",
+	//   "id": "androidpublisher.monetization.subscriptions.basePlans.offers.delete",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId",
+	//     "basePlanId",
+	//     "offerId"
+	//   ],
+	//   "parameters": {
+	//     "basePlanId": {
+	//       "description": "Required. The parent base plan (ID) of the offer to delete.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "offerId": {
+	//       "description": "Required. The unique offer ID of the offer to delete.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) of the offer to delete.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The parent subscription (ID) of the offer to delete.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}",
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.basePlans.offers.get":
+
+type MonetizationSubscriptionsBasePlansOffersGetCall struct {
+	s            *Service
+	packageName  string
+	productId    string
+	basePlanId   string
+	offerId      string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Get: Reads a single offer
+//
+// - basePlanId: The parent base plan (ID) of the offer to get.
+// - offerId: The unique offer ID of the offer to get.
+// - packageName: The parent app (package name) of the offer to get.
+// - productId: The parent subscription (ID) of the offer to get.
+func (r *MonetizationSubscriptionsBasePlansOffersService) Get(packageName string, productId string, basePlanId string, offerId string) *MonetizationSubscriptionsBasePlansOffersGetCall {
+	c := &MonetizationSubscriptionsBasePlansOffersGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.basePlanId = basePlanId
+	c.offerId = offerId
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsBasePlansOffersGetCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsBasePlansOffersGetCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *MonetizationSubscriptionsBasePlansOffersGetCall) IfNoneMatch(entityTag string) *MonetizationSubscriptionsBasePlansOffersGetCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsBasePlansOffersGetCall) Context(ctx context.Context) *MonetizationSubscriptionsBasePlansOffersGetCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsBasePlansOffersGetCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsBasePlansOffersGetCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("GET", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+		"basePlanId":  c.basePlanId,
+		"offerId":     c.offerId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.basePlans.offers.get" call.
+// Exactly one of *SubscriptionOffer or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *SubscriptionOffer.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsBasePlansOffersGetCall) Do(opts ...googleapi.CallOption) (*SubscriptionOffer, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &SubscriptionOffer{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Reads a single offer",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}",
+	//   "httpMethod": "GET",
+	//   "id": "androidpublisher.monetization.subscriptions.basePlans.offers.get",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId",
+	//     "basePlanId",
+	//     "offerId"
+	//   ],
+	//   "parameters": {
+	//     "basePlanId": {
+	//       "description": "Required. The parent base plan (ID) of the offer to get.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "offerId": {
+	//       "description": "Required. The unique offer ID of the offer to get.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) of the offer to get.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The parent subscription (ID) of the offer to get.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}",
+	//   "response": {
+	//     "$ref": "SubscriptionOffer"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.monetization.subscriptions.basePlans.offers.list":
+
+type MonetizationSubscriptionsBasePlansOffersListCall struct {
+	s            *Service
+	packageName  string
+	productId    string
+	basePlanId   string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// List: Lists all offers under a given subscription.
+//
+//   - basePlanId: The parent base plan (ID) for which the offers should
+//     be read. May be specified as '-' to read all offers under a
+//     subscription or an app. Must be specified as '-' if product_id is
+//     specified as '-'.
+//   - packageName: The parent app (package name) for which the
+//     subscriptions should be read.
+//   - productId: The parent subscription (ID) for which the offers should
+//     be read. May be specified as '-' to read all offers under an app.
+func (r *MonetizationSubscriptionsBasePlansOffersService) List(packageName string, productId string, basePlanId string) *MonetizationSubscriptionsBasePlansOffersListCall {
+	c := &MonetizationSubscriptionsBasePlansOffersListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.basePlanId = basePlanId
+	return c
+}
+
+// PageSize sets the optional parameter "pageSize": The maximum number
+// of subscriptions to return. The service may return fewer than this
+// value. If unspecified, at most 50 subscriptions will be returned. The
+// maximum value is 1000; values above 1000 will be coerced to 1000.
+func (c *MonetizationSubscriptionsBasePlansOffersListCall) PageSize(pageSize int64) *MonetizationSubscriptionsBasePlansOffersListCall {
+	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
+	return c
+}
+
+// PageToken sets the optional parameter "pageToken": A page token,
+// received from a previous `ListSubscriptionsOffers` call. Provide this
+// to retrieve the subsequent page. When paginating, all other
+// parameters provided to `ListSubscriptionOffers` must match the call
+// that provided the page token.
+func (c *MonetizationSubscriptionsBasePlansOffersListCall) PageToken(pageToken string) *MonetizationSubscriptionsBasePlansOffersListCall {
+	c.urlParams_.Set("pageToken", pageToken)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsBasePlansOffersListCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsBasePlansOffersListCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *MonetizationSubscriptionsBasePlansOffersListCall) IfNoneMatch(entityTag string) *MonetizationSubscriptionsBasePlansOffersListCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsBasePlansOffersListCall) Context(ctx context.Context) *MonetizationSubscriptionsBasePlansOffersListCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsBasePlansOffersListCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsBasePlansOffersListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("GET", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+		"basePlanId":  c.basePlanId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.basePlans.offers.list" call.
+// Exactly one of *ListSubscriptionOffersResponse or error will be
+// non-nil. Any non-2xx status code is an error. Response headers are in
+// either *ListSubscriptionOffersResponse.ServerResponse.Header or (if a
+// response was returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsBasePlansOffersListCall) Do(opts ...googleapi.CallOption) (*ListSubscriptionOffersResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &ListSubscriptionOffersResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Lists all offers under a given subscription.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers",
+	//   "httpMethod": "GET",
+	//   "id": "androidpublisher.monetization.subscriptions.basePlans.offers.list",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId",
+	//     "basePlanId"
+	//   ],
+	//   "parameters": {
+	//     "basePlanId": {
+	//       "description": "Required. The parent base plan (ID) for which the offers should be read. May be specified as '-' to read all offers under a subscription or an app. Must be specified as '-' if product_id is specified as '-'.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Required. The parent app (package name) for which the subscriptions should be read.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "pageSize": {
+	//       "description": "The maximum number of subscriptions to return. The service may return fewer than this value. If unspecified, at most 50 subscriptions will be returned. The maximum value is 1000; values above 1000 will be coerced to 1000.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "type": "integer"
+	//     },
+	//     "pageToken": {
+	//       "description": "A page token, received from a previous `ListSubscriptionsOffers` call. Provide this to retrieve the subsequent page. When paginating, all other parameters provided to `ListSubscriptionOffers` must match the call that provided the page token.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. The parent subscription (ID) for which the offers should be read. May be specified as '-' to read all offers under an app.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers",
+	//   "response": {
+	//     "$ref": "ListSubscriptionOffersResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *MonetizationSubscriptionsBasePlansOffersListCall) Pages(ctx context.Context, f func(*ListSubscriptionOffersResponse) error) error {
+	c.ctx_ = ctx
+	defer c.PageToken(c.urlParams_.Get("pageToken")) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.PageToken(x.NextPageToken)
+	}
+}
+
+// method id "androidpublisher.monetization.subscriptions.basePlans.offers.patch":
+
+type MonetizationSubscriptionsBasePlansOffersPatchCall struct {
+	s                 *Service
+	packageName       string
+	productId         string
+	basePlanId        string
+	offerId           string
+	subscriptionoffer *SubscriptionOffer
+	urlParams_        gensupport.URLParams
+	ctx_              context.Context
+	header_           http.Header
+}
+
+// Patch: Updates an existing subscription offer.
+//
+//   - basePlanId: Immutable. The ID of the base plan to which this offer
+//     is an extension.
+//   - offerId: Immutable. Unique ID of this subscription offer. Must be
+//     unique within the base plan.
+//   - packageName: Immutable. The package name of the app the parent
+//     subscription belongs to.
+//   - productId: Immutable. The ID of the parent subscription this offer
+//     belongs to.
+func (r *MonetizationSubscriptionsBasePlansOffersService) Patch(packageName string, productId string, basePlanId string, offerId string, subscriptionoffer *SubscriptionOffer) *MonetizationSubscriptionsBasePlansOffersPatchCall {
+	c := &MonetizationSubscriptionsBasePlansOffersPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.basePlanId = basePlanId
+	c.offerId = offerId
+	c.subscriptionoffer = subscriptionoffer
+	return c
+}
+
+// RegionsVersionVersion sets the optional parameter
+// "regionsVersion.version": Required. The latest version is 2022/02.
+func (c *MonetizationSubscriptionsBasePlansOffersPatchCall) RegionsVersionVersion(regionsVersionVersion string) *MonetizationSubscriptionsBasePlansOffersPatchCall {
+	c.urlParams_.Set("regionsVersion.version", regionsVersionVersion)
+	return c
+}
+
+// UpdateMask sets the optional parameter "updateMask": Required. The
+// list of fields to be updated.
+func (c *MonetizationSubscriptionsBasePlansOffersPatchCall) UpdateMask(updateMask string) *MonetizationSubscriptionsBasePlansOffersPatchCall {
+	c.urlParams_.Set("updateMask", updateMask)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *MonetizationSubscriptionsBasePlansOffersPatchCall) Fields(s ...googleapi.Field) *MonetizationSubscriptionsBasePlansOffersPatchCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *MonetizationSubscriptionsBasePlansOffersPatchCall) Context(ctx context.Context) *MonetizationSubscriptionsBasePlansOffersPatchCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *MonetizationSubscriptionsBasePlansOffersPatchCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *MonetizationSubscriptionsBasePlansOffersPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.subscriptionoffer)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("PATCH", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+		"basePlanId":  c.basePlanId,
+		"offerId":     c.offerId,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.monetization.subscriptions.basePlans.offers.patch" call.
+// Exactly one of *SubscriptionOffer or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *SubscriptionOffer.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *MonetizationSubscriptionsBasePlansOffersPatchCall) Do(opts ...googleapi.CallOption) (*SubscriptionOffer, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &SubscriptionOffer{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Updates an existing subscription offer.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}",
+	//   "httpMethod": "PATCH",
+	//   "id": "androidpublisher.monetization.subscriptions.basePlans.offers.patch",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId",
+	//     "basePlanId",
+	//     "offerId"
+	//   ],
+	//   "parameters": {
+	//     "basePlanId": {
+	//       "description": "Required. Immutable. The ID of the base plan to which this offer is an extension.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "offerId": {
+	//       "description": "Required. Immutable. Unique ID of this subscription offer. Must be unique within the base plan.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "packageName": {
+	//       "description": "Required. Immutable. The package name of the app the parent subscription belongs to.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "Required. Immutable. The ID of the parent subscription this offer belongs to.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "regionsVersion.version": {
+	//       "description": "Required. The latest version is 2022/02.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "updateMask": {
+	//       "description": "Required. The list of fields to be updated.",
+	//       "format": "google-fieldmask",
+	//       "location": "query",
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers/{offerId}",
+	//   "request": {
+	//     "$ref": "SubscriptionOffer"
+	//   },
+	//   "response": {
+	//     "$ref": "SubscriptionOffer"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
 // method id "androidpublisher.orders.refund":
 
 type OrdersRefundCall struct {
@@ -10431,13 +19840,14 @@ type OrdersRefundCall struct {
 	header_     http.Header
 }
 
-// Refund: Refund a user's subscription or in-app purchase order.
+// Refund: Refunds a user's subscription or in-app purchase order.
+// Orders older than 1 year cannot be refunded.
 //
-// - orderId: The order ID provided to the user when the subscription or
-//   in-app order was purchased.
-// - packageName: The package name of the application for which this
-//   subscription or in-app item was purchased (for example,
-//   'com.some.thing').
+//   - orderId: The order ID provided to the user when the subscription or
+//     in-app order was purchased.
+//   - packageName: The package name of the application for which this
+//     subscription or in-app item was purchased (for example,
+//     'com.some.thing').
 func (r *OrdersService) Refund(packageName string, orderId string) *OrdersRefundCall {
 	c := &OrdersRefundCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -10482,7 +19892,7 @@ func (c *OrdersRefundCall) Header() http.Header {
 
 func (c *OrdersRefundCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10513,11 +19923,11 @@ func (c *OrdersRefundCall) Do(opts ...googleapi.CallOption) error {
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return err
+		return gensupport.WrapError(err)
 	}
 	return nil
 	// {
-	//   "description": "Refund a user's subscription or in-app purchase order.",
+	//   "description": "Refunds a user's subscription or in-app purchase order. Orders older than 1 year cannot be refunded.",
 	//   "flatPath": "androidpublisher/v3/applications/{packageName}/orders/{orderId}:refund",
 	//   "httpMethod": "POST",
 	//   "id": "androidpublisher.orders.refund",
@@ -10567,12 +19977,12 @@ type PurchasesProductsAcknowledgeCall struct {
 
 // Acknowledge: Acknowledges a purchase of an inapp item.
 //
-// - packageName: The package name of the application the inapp product
-//   was sold in (for example, 'com.some.thing').
-// - productId: The inapp product SKU (for example,
-//   'com.some.thing.inapp1').
-// - token: The token provided to the user's device when the inapp
-//   product was purchased.
+//   - packageName: The package name of the application the inapp product
+//     was sold in (for example, 'com.some.thing').
+//   - productId: The inapp product SKU (for example,
+//     'com.some.thing.inapp1').
+//   - token: The token provided to the user's device when the inapp
+//     product was purchased.
 func (r *PurchasesProductsService) Acknowledge(packageName string, productId string, token string, productpurchasesacknowledgerequest *ProductPurchasesAcknowledgeRequest) *PurchasesProductsAcknowledgeCall {
 	c := &PurchasesProductsAcknowledgeCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -10609,7 +20019,7 @@ func (c *PurchasesProductsAcknowledgeCall) Header() http.Header {
 
 func (c *PurchasesProductsAcknowledgeCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10646,7 +20056,7 @@ func (c *PurchasesProductsAcknowledgeCall) Do(opts ...googleapi.CallOption) erro
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return err
+		return gensupport.WrapError(err)
 	}
 	return nil
 	// {
@@ -10690,6 +20100,134 @@ func (c *PurchasesProductsAcknowledgeCall) Do(opts ...googleapi.CallOption) erro
 
 }
 
+// method id "androidpublisher.purchases.products.consume":
+
+type PurchasesProductsConsumeCall struct {
+	s           *Service
+	packageName string
+	productId   string
+	token       string
+	urlParams_  gensupport.URLParams
+	ctx_        context.Context
+	header_     http.Header
+}
+
+// Consume: Consumes a purchase for an inapp item.
+//
+//   - packageName: The package name of the application the inapp product
+//     was sold in (for example, 'com.some.thing').
+//   - productId: The inapp product SKU (for example,
+//     'com.some.thing.inapp1').
+//   - token: The token provided to the user's device when the inapp
+//     product was purchased.
+func (r *PurchasesProductsService) Consume(packageName string, productId string, token string) *PurchasesProductsConsumeCall {
+	c := &PurchasesProductsConsumeCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.productId = productId
+	c.token = token
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *PurchasesProductsConsumeCall) Fields(s ...googleapi.Field) *PurchasesProductsConsumeCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *PurchasesProductsConsumeCall) Context(ctx context.Context) *PurchasesProductsConsumeCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *PurchasesProductsConsumeCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *PurchasesProductsConsumeCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/purchases/products/{productId}/tokens/{token}:consume")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"productId":   c.productId,
+		"token":       c.token,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.purchases.products.consume" call.
+func (c *PurchasesProductsConsumeCall) Do(opts ...googleapi.CallOption) error {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if err != nil {
+		return err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return gensupport.WrapError(err)
+	}
+	return nil
+	// {
+	//   "description": "Consumes a purchase for an inapp item.",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/purchases/products/{productId}/tokens/{token}:consume",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.purchases.products.consume",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "productId",
+	//     "token"
+	//   ],
+	//   "parameters": {
+	//     "packageName": {
+	//       "description": "The package name of the application the inapp product was sold in (for example, 'com.some.thing').",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "productId": {
+	//       "description": "The inapp product SKU (for example, 'com.some.thing.inapp1').",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "token": {
+	//       "description": "The token provided to the user's device when the inapp product was purchased.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/purchases/products/{productId}/tokens/{token}:consume",
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
 // method id "androidpublisher.purchases.products.get":
 
 type PurchasesProductsGetCall struct {
@@ -10705,12 +20243,12 @@ type PurchasesProductsGetCall struct {
 
 // Get: Checks the purchase and consumption status of an inapp item.
 //
-// - packageName: The package name of the application the inapp product
-//   was sold in (for example, 'com.some.thing').
-// - productId: The inapp product SKU (for example,
-//   'com.some.thing.inapp1').
-// - token: The token provided to the user's device when the inapp
-//   product was purchased.
+//   - packageName: The package name of the application the inapp product
+//     was sold in (for example, 'com.some.thing').
+//   - productId: The inapp product SKU (for example,
+//     'com.some.thing.inapp1').
+//   - token: The token provided to the user's device when the inapp
+//     product was purchased.
 func (r *PurchasesProductsService) Get(packageName string, productId string, token string) *PurchasesProductsGetCall {
 	c := &PurchasesProductsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -10756,7 +20294,7 @@ func (c *PurchasesProductsGetCall) Header() http.Header {
 
 func (c *PurchasesProductsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10796,17 +20334,17 @@ func (c *PurchasesProductsGetCall) Do(opts ...googleapi.CallOption) (*ProductPur
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &ProductPurchase{
 		ServerResponse: googleapi.ServerResponse{
@@ -10875,12 +20413,12 @@ type PurchasesSubscriptionsAcknowledgeCall struct {
 
 // Acknowledge: Acknowledges a subscription purchase.
 //
-// - packageName: The package name of the application for which this
-//   subscription was purchased (for example, 'com.some.thing').
-// - subscriptionId: The purchased subscription ID (for example,
-//   'monthly001').
-// - token: The token provided to the user's device when the
-//   subscription was purchased.
+//   - packageName: The package name of the application for which this
+//     subscription was purchased (for example, 'com.some.thing').
+//   - subscriptionId: The purchased subscription ID (for example,
+//     'monthly001').
+//   - token: The token provided to the user's device when the
+//     subscription was purchased.
 func (r *PurchasesSubscriptionsService) Acknowledge(packageName string, subscriptionId string, token string, subscriptionpurchasesacknowledgerequest *SubscriptionPurchasesAcknowledgeRequest) *PurchasesSubscriptionsAcknowledgeCall {
 	c := &PurchasesSubscriptionsAcknowledgeCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -10917,7 +20455,7 @@ func (c *PurchasesSubscriptionsAcknowledgeCall) Header() http.Header {
 
 func (c *PurchasesSubscriptionsAcknowledgeCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -10954,7 +20492,7 @@ func (c *PurchasesSubscriptionsAcknowledgeCall) Do(opts ...googleapi.CallOption)
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return err
+		return gensupport.WrapError(err)
 	}
 	return nil
 	// {
@@ -11013,12 +20551,12 @@ type PurchasesSubscriptionsCancelCall struct {
 // Cancel: Cancels a user's subscription purchase. The subscription
 // remains valid until its expiration time.
 //
-// - packageName: The package name of the application for which this
-//   subscription was purchased (for example, 'com.some.thing').
-// - subscriptionId: The purchased subscription ID (for example,
-//   'monthly001').
-// - token: The token provided to the user's device when the
-//   subscription was purchased.
+//   - packageName: The package name of the application for which this
+//     subscription was purchased (for example, 'com.some.thing').
+//   - subscriptionId: The purchased subscription ID (for example,
+//     'monthly001').
+//   - token: The token provided to the user's device when the
+//     subscription was purchased.
 func (r *PurchasesSubscriptionsService) Cancel(packageName string, subscriptionId string, token string) *PurchasesSubscriptionsCancelCall {
 	c := &PurchasesSubscriptionsCancelCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -11054,7 +20592,7 @@ func (c *PurchasesSubscriptionsCancelCall) Header() http.Header {
 
 func (c *PurchasesSubscriptionsCancelCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11086,7 +20624,7 @@ func (c *PurchasesSubscriptionsCancelCall) Do(opts ...googleapi.CallOption) erro
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return err
+		return gensupport.WrapError(err)
 	}
 	return nil
 	// {
@@ -11143,12 +20681,12 @@ type PurchasesSubscriptionsDeferCall struct {
 // Defer: Defers a user's subscription purchase until a specified future
 // expiration time.
 //
-// - packageName: The package name of the application for which this
-//   subscription was purchased (for example, 'com.some.thing').
-// - subscriptionId: The purchased subscription ID (for example,
-//   'monthly001').
-// - token: The token provided to the user's device when the
-//   subscription was purchased.
+//   - packageName: The package name of the application for which this
+//     subscription was purchased (for example, 'com.some.thing').
+//   - subscriptionId: The purchased subscription ID (for example,
+//     'monthly001').
+//   - token: The token provided to the user's device when the
+//     subscription was purchased.
 func (r *PurchasesSubscriptionsService) Defer(packageName string, subscriptionId string, token string, subscriptionpurchasesdeferrequest *SubscriptionPurchasesDeferRequest) *PurchasesSubscriptionsDeferCall {
 	c := &PurchasesSubscriptionsDeferCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -11185,7 +20723,7 @@ func (c *PurchasesSubscriptionsDeferCall) Header() http.Header {
 
 func (c *PurchasesSubscriptionsDeferCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11228,17 +20766,17 @@ func (c *PurchasesSubscriptionsDeferCall) Do(opts ...googleapi.CallOption) (*Sub
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &SubscriptionPurchasesDeferResponse{
 		ServerResponse: googleapi.ServerResponse{
@@ -11311,12 +20849,12 @@ type PurchasesSubscriptionsGetCall struct {
 // Get: Checks whether a user's subscription purchase is valid and
 // returns its expiry time.
 //
-// - packageName: The package name of the application for which this
-//   subscription was purchased (for example, 'com.some.thing').
-// - subscriptionId: The purchased subscription ID (for example,
-//   'monthly001').
-// - token: The token provided to the user's device when the
-//   subscription was purchased.
+//   - packageName: The package name of the application for which this
+//     subscription was purchased (for example, 'com.some.thing').
+//   - subscriptionId: The purchased subscription ID (for example,
+//     'monthly001').
+//   - token: The token provided to the user's device when the
+//     subscription was purchased.
 func (r *PurchasesSubscriptionsService) Get(packageName string, subscriptionId string, token string) *PurchasesSubscriptionsGetCall {
 	c := &PurchasesSubscriptionsGetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -11362,7 +20900,7 @@ func (c *PurchasesSubscriptionsGetCall) Header() http.Header {
 
 func (c *PurchasesSubscriptionsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11402,17 +20940,17 @@ func (c *PurchasesSubscriptionsGetCall) Do(opts ...googleapi.CallOption) (*Subsc
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &SubscriptionPurchase{
 		ServerResponse: googleapi.ServerResponse{
@@ -11482,12 +21020,12 @@ type PurchasesSubscriptionsRefundCall struct {
 // remains valid until its expiration time and it will continue to
 // recur.
 //
-// - packageName: The package name of the application for which this
-//   subscription was purchased (for example, 'com.some.thing').
-// - subscriptionId: "The purchased subscription ID (for example,
-//   'monthly001').
-// - token: The token provided to the user's device when the
-//   subscription was purchased.
+//   - packageName: The package name of the application for which this
+//     subscription was purchased (for example, 'com.some.thing').
+//   - subscriptionId: "The purchased subscription ID (for example,
+//     'monthly001').
+//   - token: The token provided to the user's device when the
+//     subscription was purchased.
 func (r *PurchasesSubscriptionsService) Refund(packageName string, subscriptionId string, token string) *PurchasesSubscriptionsRefundCall {
 	c := &PurchasesSubscriptionsRefundCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -11523,7 +21061,7 @@ func (c *PurchasesSubscriptionsRefundCall) Header() http.Header {
 
 func (c *PurchasesSubscriptionsRefundCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11555,7 +21093,7 @@ func (c *PurchasesSubscriptionsRefundCall) Do(opts ...googleapi.CallOption) erro
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return err
+		return gensupport.WrapError(err)
 	}
 	return nil
 	// {
@@ -11612,12 +21150,12 @@ type PurchasesSubscriptionsRevokeCall struct {
 // purchase. Access to the subscription will be terminated immediately
 // and it will stop recurring.
 //
-// - packageName: The package name of the application for which this
-//   subscription was purchased (for example, 'com.some.thing').
-// - subscriptionId: The purchased subscription ID (for example,
-//   'monthly001').
-// - token: The token provided to the user's device when the
-//   subscription was purchased.
+//   - packageName: The package name of the application for which this
+//     subscription was purchased (for example, 'com.some.thing').
+//   - subscriptionId: The purchased subscription ID (for example,
+//     'monthly001').
+//   - token: The token provided to the user's device when the
+//     subscription was purchased.
 func (r *PurchasesSubscriptionsService) Revoke(packageName string, subscriptionId string, token string) *PurchasesSubscriptionsRevokeCall {
 	c := &PurchasesSubscriptionsRevokeCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -11653,7 +21191,7 @@ func (c *PurchasesSubscriptionsRevokeCall) Header() http.Header {
 
 func (c *PurchasesSubscriptionsRevokeCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11685,7 +21223,7 @@ func (c *PurchasesSubscriptionsRevokeCall) Do(opts ...googleapi.CallOption) erro
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return err
+		return gensupport.WrapError(err)
 	}
 	return nil
 	// {
@@ -11726,6 +21264,164 @@ func (c *PurchasesSubscriptionsRevokeCall) Do(opts ...googleapi.CallOption) erro
 
 }
 
+// method id "androidpublisher.purchases.subscriptionsv2.get":
+
+type PurchasesSubscriptionsv2GetCall struct {
+	s            *Service
+	packageName  string
+	token        string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// Get: Get metadata about a subscription
+//
+//   - packageName: The package of the application for which this
+//     subscription was purchased (for example, 'com.some.thing').
+//   - token: The token provided to the user's device when the
+//     subscription was purchased.
+func (r *PurchasesSubscriptionsv2Service) Get(packageName string, token string) *PurchasesSubscriptionsv2GetCall {
+	c := &PurchasesSubscriptionsv2GetCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.packageName = packageName
+	c.token = token
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *PurchasesSubscriptionsv2GetCall) Fields(s ...googleapi.Field) *PurchasesSubscriptionsv2GetCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *PurchasesSubscriptionsv2GetCall) IfNoneMatch(entityTag string) *PurchasesSubscriptionsv2GetCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *PurchasesSubscriptionsv2GetCall) Context(ctx context.Context) *PurchasesSubscriptionsv2GetCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *PurchasesSubscriptionsv2GetCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *PurchasesSubscriptionsv2GetCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/applications/{packageName}/purchases/subscriptionsv2/tokens/{token}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("GET", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"packageName": c.packageName,
+		"token":       c.token,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.purchases.subscriptionsv2.get" call.
+// Exactly one of *SubscriptionPurchaseV2 or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *SubscriptionPurchaseV2.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *PurchasesSubscriptionsv2GetCall) Do(opts ...googleapi.CallOption) (*SubscriptionPurchaseV2, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &SubscriptionPurchaseV2{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Get metadata about a subscription",
+	//   "flatPath": "androidpublisher/v3/applications/{packageName}/purchases/subscriptionsv2/tokens/{token}",
+	//   "httpMethod": "GET",
+	//   "id": "androidpublisher.purchases.subscriptionsv2.get",
+	//   "parameterOrder": [
+	//     "packageName",
+	//     "token"
+	//   ],
+	//   "parameters": {
+	//     "packageName": {
+	//       "description": "The package of the application for which this subscription was purchased (for example, 'com.some.thing').",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "token": {
+	//       "description": "Required. The token provided to the user's device when the subscription was purchased.",
+	//       "location": "path",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/applications/{packageName}/purchases/subscriptionsv2/tokens/{token}",
+	//   "response": {
+	//     "$ref": "SubscriptionPurchaseV2"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
 // method id "androidpublisher.purchases.voidedpurchases.list":
 
 type PurchasesVoidedpurchasesListCall struct {
@@ -11740,8 +21436,8 @@ type PurchasesVoidedpurchasesListCall struct {
 // List: Lists the purchases that were canceled, refunded or
 // charged-back.
 //
-// - packageName: The package name of the application for which voided
-//   purchases need to be returned (for example, 'com.some.thing').
+//   - packageName: The package name of the application for which voided
+//     purchases need to be returned (for example, 'com.some.thing').
 func (r *PurchasesVoidedpurchasesService) List(packageName string) *PurchasesVoidedpurchasesListCall {
 	c := &PurchasesVoidedpurchasesListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
 	c.packageName = packageName
@@ -11848,7 +21544,7 @@ func (c *PurchasesVoidedpurchasesListCall) Header() http.Header {
 
 func (c *PurchasesVoidedpurchasesListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -11886,17 +21582,17 @@ func (c *PurchasesVoidedpurchasesListCall) Do(opts ...googleapi.CallOption) (*Vo
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &VoidedPurchasesListResponse{
 		ServerResponse: googleapi.ServerResponse{
@@ -12038,7 +21734,7 @@ func (c *ReviewsGetCall) Header() http.Header {
 
 func (c *ReviewsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12077,17 +21773,17 @@ func (c *ReviewsGetCall) Do(opts ...googleapi.CallOption) (*Review, error) {
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &Review{
 		ServerResponse: googleapi.ServerResponse{
@@ -12224,7 +21920,7 @@ func (c *ReviewsListCall) Header() http.Header {
 
 func (c *ReviewsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12262,17 +21958,17 @@ func (c *ReviewsListCall) Do(opts ...googleapi.CallOption) (*ReviewsListResponse
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &ReviewsListResponse{
 		ServerResponse: googleapi.ServerResponse{
@@ -12385,7 +22081,7 @@ func (c *ReviewsReplyCall) Header() http.Header {
 
 func (c *ReviewsReplyCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12426,17 +22122,17 @@ func (c *ReviewsReplyCall) Do(opts ...googleapi.CallOption) (*ReviewsReplyRespon
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &ReviewsReplyResponse{
 		ServerResponse: googleapi.ServerResponse{
@@ -12538,7 +22234,7 @@ func (c *SystemapksVariantsCreateCall) Header() http.Header {
 
 func (c *SystemapksVariantsCreateCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12579,17 +22275,17 @@ func (c *SystemapksVariantsCreateCall) Do(opts ...googleapi.CallOption) (*Varian
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &Variant{
 		ServerResponse: googleapi.ServerResponse{
@@ -12704,7 +22400,7 @@ func (c *SystemapksVariantsDownloadCall) Header() http.Header {
 
 func (c *SystemapksVariantsDownloadCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12741,7 +22437,7 @@ func (c *SystemapksVariantsDownloadCall) Download(opts ...googleapi.CallOption) 
 	}
 	if err := googleapi.CheckResponse(res); err != nil {
 		res.Body.Close()
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	return res, nil
 }
@@ -12755,7 +22451,7 @@ func (c *SystemapksVariantsDownloadCall) Do(opts ...googleapi.CallOption) error 
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return err
+		return gensupport.WrapError(err)
 	}
 	return nil
 	// {
@@ -12863,7 +22559,7 @@ func (c *SystemapksVariantsGetCall) Header() http.Header {
 
 func (c *SystemapksVariantsGetCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -12903,17 +22599,17 @@ func (c *SystemapksVariantsGetCall) Do(opts ...googleapi.CallOption) (*Variant, 
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &Variant{
 		ServerResponse: googleapi.ServerResponse{
@@ -13029,7 +22725,7 @@ func (c *SystemapksVariantsListCall) Header() http.Header {
 
 func (c *SystemapksVariantsListCall) doRequest(alt string) (*http.Response, error) {
 	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/20210728")
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
 	for k, v := range c.header_ {
 		reqHeaders[k] = v
 	}
@@ -13068,17 +22764,17 @@ func (c *SystemapksVariantsListCall) Do(opts ...googleapi.CallOption) (*SystemAp
 		if res.Body != nil {
 			res.Body.Close()
 		}
-		return nil, &googleapi.Error{
+		return nil, gensupport.WrapError(&googleapi.Error{
 			Code:   res.StatusCode,
 			Header: res.Header,
-		}
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer googleapi.CloseBody(res)
 	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, err
+		return nil, gensupport.WrapError(err)
 	}
 	ret := &SystemApksListResponse{
 		ServerResponse: googleapi.ServerResponse{
@@ -13118,6 +22814,605 @@ func (c *SystemapksVariantsListCall) Do(opts ...googleapi.CallOption) (*SystemAp
 	//   "path": "androidpublisher/v3/applications/{packageName}/systemApks/{versionCode}/variants",
 	//   "response": {
 	//     "$ref": "SystemApksListResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.users.create":
+
+type UsersCreateCall struct {
+	s          *Service
+	parent     string
+	user       *User
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Create: Grant access for a user to the given developer account.
+//
+//   - parent: The developer account to add the user to. Format:
+//     developers/{developer}.
+func (r *UsersService) Create(parent string, user *User) *UsersCreateCall {
+	c := &UsersCreateCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	c.user = user
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *UsersCreateCall) Fields(s ...googleapi.Field) *UsersCreateCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *UsersCreateCall) Context(ctx context.Context) *UsersCreateCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *UsersCreateCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *UsersCreateCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.user)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/{+parent}/users")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("POST", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.users.create" call.
+// Exactly one of *User or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *User.ServerResponse.Header or (if a response was returned at all) in
+// error.(*googleapi.Error).Header. Use googleapi.IsNotModified to check
+// whether the returned error was because http.StatusNotModified was
+// returned.
+func (c *UsersCreateCall) Do(opts ...googleapi.CallOption) (*User, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &User{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Grant access for a user to the given developer account.",
+	//   "flatPath": "androidpublisher/v3/developers/{developersId}/users",
+	//   "httpMethod": "POST",
+	//   "id": "androidpublisher.users.create",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "parent": {
+	//       "description": "Required. The developer account to add the user to. Format: developers/{developer}",
+	//       "location": "path",
+	//       "pattern": "^developers/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/{+parent}/users",
+	//   "request": {
+	//     "$ref": "User"
+	//   },
+	//   "response": {
+	//     "$ref": "User"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.users.delete":
+
+type UsersDeleteCall struct {
+	s          *Service
+	name       string
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Delete: Removes all access for the user to the given developer
+// account.
+//
+//   - name: The name of the user to delete. Format:
+//     developers/{developer}/users/{email}.
+func (r *UsersService) Delete(name string) *UsersDeleteCall {
+	c := &UsersDeleteCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *UsersDeleteCall) Fields(s ...googleapi.Field) *UsersDeleteCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *UsersDeleteCall) Context(ctx context.Context) *UsersDeleteCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *UsersDeleteCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *UsersDeleteCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("DELETE", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.users.delete" call.
+func (c *UsersDeleteCall) Do(opts ...googleapi.CallOption) error {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if err != nil {
+		return err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return gensupport.WrapError(err)
+	}
+	return nil
+	// {
+	//   "description": "Removes all access for the user to the given developer account.",
+	//   "flatPath": "androidpublisher/v3/developers/{developersId}/users/{usersId}",
+	//   "httpMethod": "DELETE",
+	//   "id": "androidpublisher.users.delete",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. The name of the user to delete. Format: developers/{developer}/users/{email}",
+	//       "location": "path",
+	//       "pattern": "^developers/[^/]+/users/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/{+name}",
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// method id "androidpublisher.users.list":
+
+type UsersListCall struct {
+	s            *Service
+	parent       string
+	urlParams_   gensupport.URLParams
+	ifNoneMatch_ string
+	ctx_         context.Context
+	header_      http.Header
+}
+
+// List: Lists all users with access to a developer account.
+//
+//   - parent: The developer account to fetch users from. Format:
+//     developers/{developer}.
+func (r *UsersService) List(parent string) *UsersListCall {
+	c := &UsersListCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.parent = parent
+	return c
+}
+
+// PageSize sets the optional parameter "pageSize": The maximum number
+// of results to return. This must be set to -1 to disable pagination.
+func (c *UsersListCall) PageSize(pageSize int64) *UsersListCall {
+	c.urlParams_.Set("pageSize", fmt.Sprint(pageSize))
+	return c
+}
+
+// PageToken sets the optional parameter "pageToken": A token received
+// from a previous call to this method, in order to retrieve further
+// results.
+func (c *UsersListCall) PageToken(pageToken string) *UsersListCall {
+	c.urlParams_.Set("pageToken", pageToken)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *UsersListCall) Fields(s ...googleapi.Field) *UsersListCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// IfNoneMatch sets the optional parameter which makes the operation
+// fail if the object's ETag matches the given value. This is useful for
+// getting updates only after the object has changed since the last
+// request. Use googleapi.IsNotModified to check whether the response
+// error from Do is the result of In-None-Match.
+func (c *UsersListCall) IfNoneMatch(entityTag string) *UsersListCall {
+	c.ifNoneMatch_ = entityTag
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *UsersListCall) Context(ctx context.Context) *UsersListCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *UsersListCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *UsersListCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	if c.ifNoneMatch_ != "" {
+		reqHeaders.Set("If-None-Match", c.ifNoneMatch_)
+	}
+	var body io.Reader = nil
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/{+parent}/users")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("GET", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"parent": c.parent,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.users.list" call.
+// Exactly one of *ListUsersResponse or error will be non-nil. Any
+// non-2xx status code is an error. Response headers are in either
+// *ListUsersResponse.ServerResponse.Header or (if a response was
+// returned at all) in error.(*googleapi.Error).Header. Use
+// googleapi.IsNotModified to check whether the returned error was
+// because http.StatusNotModified was returned.
+func (c *UsersListCall) Do(opts ...googleapi.CallOption) (*ListUsersResponse, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &ListUsersResponse{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Lists all users with access to a developer account.",
+	//   "flatPath": "androidpublisher/v3/developers/{developersId}/users",
+	//   "httpMethod": "GET",
+	//   "id": "androidpublisher.users.list",
+	//   "parameterOrder": [
+	//     "parent"
+	//   ],
+	//   "parameters": {
+	//     "pageSize": {
+	//       "description": "The maximum number of results to return. This must be set to -1 to disable pagination.",
+	//       "format": "int32",
+	//       "location": "query",
+	//       "type": "integer"
+	//     },
+	//     "pageToken": {
+	//       "description": "A token received from a previous call to this method, in order to retrieve further results.",
+	//       "location": "query",
+	//       "type": "string"
+	//     },
+	//     "parent": {
+	//       "description": "Required. The developer account to fetch users from. Format: developers/{developer}",
+	//       "location": "path",
+	//       "pattern": "^developers/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/{+parent}/users",
+	//   "response": {
+	//     "$ref": "ListUsersResponse"
+	//   },
+	//   "scopes": [
+	//     "https://www.googleapis.com/auth/androidpublisher"
+	//   ]
+	// }
+
+}
+
+// Pages invokes f for each page of results.
+// A non-nil error returned from f will halt the iteration.
+// The provided context supersedes any context provided to the Context method.
+func (c *UsersListCall) Pages(ctx context.Context, f func(*ListUsersResponse) error) error {
+	c.ctx_ = ctx
+	defer c.PageToken(c.urlParams_.Get("pageToken")) // reset paging to original point
+	for {
+		x, err := c.Do()
+		if err != nil {
+			return err
+		}
+		if err := f(x); err != nil {
+			return err
+		}
+		if x.NextPageToken == "" {
+			return nil
+		}
+		c.PageToken(x.NextPageToken)
+	}
+}
+
+// method id "androidpublisher.users.patch":
+
+type UsersPatchCall struct {
+	s          *Service
+	name       string
+	user       *User
+	urlParams_ gensupport.URLParams
+	ctx_       context.Context
+	header_    http.Header
+}
+
+// Patch: Updates access for the user to the developer account.
+//
+//   - name: Resource name for this user, following the pattern
+//     "developers/{developer}/users/{email}".
+func (r *UsersService) Patch(name string, user *User) *UsersPatchCall {
+	c := &UsersPatchCall{s: r.s, urlParams_: make(gensupport.URLParams)}
+	c.name = name
+	c.user = user
+	return c
+}
+
+// UpdateMask sets the optional parameter "updateMask": The list of
+// fields to be updated.
+func (c *UsersPatchCall) UpdateMask(updateMask string) *UsersPatchCall {
+	c.urlParams_.Set("updateMask", updateMask)
+	return c
+}
+
+// Fields allows partial responses to be retrieved. See
+// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
+// for more information.
+func (c *UsersPatchCall) Fields(s ...googleapi.Field) *UsersPatchCall {
+	c.urlParams_.Set("fields", googleapi.CombineFields(s))
+	return c
+}
+
+// Context sets the context to be used in this call's Do method. Any
+// pending HTTP request will be aborted if the provided context is
+// canceled.
+func (c *UsersPatchCall) Context(ctx context.Context) *UsersPatchCall {
+	c.ctx_ = ctx
+	return c
+}
+
+// Header returns an http.Header that can be modified by the caller to
+// add HTTP headers to the request.
+func (c *UsersPatchCall) Header() http.Header {
+	if c.header_ == nil {
+		c.header_ = make(http.Header)
+	}
+	return c.header_
+}
+
+func (c *UsersPatchCall) doRequest(alt string) (*http.Response, error) {
+	reqHeaders := make(http.Header)
+	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
+	for k, v := range c.header_ {
+		reqHeaders[k] = v
+	}
+	reqHeaders.Set("User-Agent", c.s.userAgent())
+	var body io.Reader = nil
+	body, err := googleapi.WithoutDataWrapper.JSONReader(c.user)
+	if err != nil {
+		return nil, err
+	}
+	reqHeaders.Set("Content-Type", "application/json")
+	c.urlParams_.Set("alt", alt)
+	c.urlParams_.Set("prettyPrint", "false")
+	urls := googleapi.ResolveRelative(c.s.BasePath, "androidpublisher/v3/{+name}")
+	urls += "?" + c.urlParams_.Encode()
+	req, err := http.NewRequest("PATCH", urls, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header = reqHeaders
+	googleapi.Expand(req.URL, map[string]string{
+		"name": c.name,
+	})
+	return gensupport.SendRequest(c.ctx_, c.s.client, req)
+}
+
+// Do executes the "androidpublisher.users.patch" call.
+// Exactly one of *User or error will be non-nil. Any non-2xx status
+// code is an error. Response headers are in either
+// *User.ServerResponse.Header or (if a response was returned at all) in
+// error.(*googleapi.Error).Header. Use googleapi.IsNotModified to check
+// whether the returned error was because http.StatusNotModified was
+// returned.
+func (c *UsersPatchCall) Do(opts ...googleapi.CallOption) (*User, error) {
+	gensupport.SetOptions(c.urlParams_, opts...)
+	res, err := c.doRequest("json")
+	if res != nil && res.StatusCode == http.StatusNotModified {
+		if res.Body != nil {
+			res.Body.Close()
+		}
+		return nil, gensupport.WrapError(&googleapi.Error{
+			Code:   res.StatusCode,
+			Header: res.Header,
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer googleapi.CloseBody(res)
+	if err := googleapi.CheckResponse(res); err != nil {
+		return nil, gensupport.WrapError(err)
+	}
+	ret := &User{
+		ServerResponse: googleapi.ServerResponse{
+			Header:         res.Header,
+			HTTPStatusCode: res.StatusCode,
+		},
+	}
+	target := &ret
+	if err := gensupport.DecodeResponse(target, res); err != nil {
+		return nil, err
+	}
+	return ret, nil
+	// {
+	//   "description": "Updates access for the user to the developer account.",
+	//   "flatPath": "androidpublisher/v3/developers/{developersId}/users/{usersId}",
+	//   "httpMethod": "PATCH",
+	//   "id": "androidpublisher.users.patch",
+	//   "parameterOrder": [
+	//     "name"
+	//   ],
+	//   "parameters": {
+	//     "name": {
+	//       "description": "Required. Resource name for this user, following the pattern \"developers/{developer}/users/{email}\".",
+	//       "location": "path",
+	//       "pattern": "^developers/[^/]+/users/[^/]+$",
+	//       "required": true,
+	//       "type": "string"
+	//     },
+	//     "updateMask": {
+	//       "description": "Optional. The list of fields to be updated.",
+	//       "format": "google-fieldmask",
+	//       "location": "query",
+	//       "type": "string"
+	//     }
+	//   },
+	//   "path": "androidpublisher/v3/{+name}",
+	//   "request": {
+	//     "$ref": "User"
+	//   },
+	//   "response": {
+	//     "$ref": "User"
 	//   },
 	//   "scopes": [
 	//     "https://www.googleapis.com/auth/androidpublisher"

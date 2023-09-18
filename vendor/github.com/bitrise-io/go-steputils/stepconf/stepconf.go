@@ -62,6 +62,9 @@ func Print(config interface{}) {
 
 func valueString(v reflect.Value) string {
 	if v.Kind() != reflect.Ptr {
+		if v.Kind() == reflect.String && v.Len() == 0 {
+			return fmt.Sprintf("<unset>")
+		}
 		return fmt.Sprintf("%v", v.Interface())
 	}
 
@@ -88,7 +91,12 @@ func toString(config interface{}) string {
 
 	str := fmt.Sprint(colorstring.Bluef("%s:\n", strings.Title(t.Name())))
 	for i := 0; i < t.NumField(); i++ {
-		str += fmt.Sprintf("- %s: %s\n", t.Field(i).Name, valueString(v.Field(i)))
+		field := t.Field(i)
+		var key, _ = parseTag(field.Tag.Get("env"))
+		if key == "" {
+			key = field.Name
+		}
+		str += fmt.Sprintf("- %s: %s\n", key, valueString(v.Field(i)))
 	}
 
 	return str
@@ -272,7 +280,7 @@ func validateConstraint(value, constraint string) error {
 	return nil
 }
 
-//ValidateRangeFields validates if the given range is proper. Ranges are optional, empty values are valid.
+// ValidateRangeFields validates if the given range is proper. Ranges are optional, empty values are valid.
 func ValidateRangeFields(valueStr, constraint string) error {
 	if valueStr == "" {
 		return nil
