@@ -16,6 +16,82 @@ app:
   - GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
 
 workflows:
+  test_multiple_aab_deploy:
+    summary: Builds and deploys a main app and a wearable app as AAB
+    envs:
+    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-wear-os.git
+    - BRANCH: master
+
+    - BITRISEIO_ANDROID_KEYSTORE_URL: $MULTIAAB_ANDROID_KEYSTORE_URL
+    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $MULTIAAB_ANDROID_KEYSTORE_PASSWORD
+    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $MULTIAAB_ANDROID_KEY_ALIAS
+    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $MULTIAAB_ANDROID_KEY_PASSWORD
+
+    - PACKAGE_NAME: io.bitrise.android.sample_xyztouristattractions
+
+    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - TRACK: internal
+    before_run:
+    - _setup
+    steps:
+    - script:
+        title: Visual Studio stack workaround
+        description: A specific build-tools version is missing from the stack and Gradle can't install it at runtime because licenses have not been accepted
+        inputs:
+        - content: |-
+            set -ex
+            yes | sdkmanager --install "build-tools;29.0.2"
+    - script:
+        title: Set $VERSION_CODE
+        inputs:
+        - content: |-
+            set -ex
+
+            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 ))
+    - change-android-versioncode-and-versionname:
+        inputs:
+        - new_version_code: $VERSION_CODE
+        - version_code_offset: "0"
+        - build_gradle_path: $BITRISE_SOURCE_DIR/Application/build.gradle
+    - change-android-versioncode-and-versionname:
+        inputs:
+        - new_version_code: $VERSION_CODE
+        - version_code_offset: "1"
+        - build_gradle_path: $BITRISE_SOURCE_DIR/Wearable/build.gradle
+    - android-build:
+        title: Build main app
+        inputs:
+        - variant: release
+        - build_type: aab
+        - module: Application
+    - sign-apk:
+        inputs:
+        - android_app: $BITRISE_AAB_PATH
+        - use_apk_signer: true
+    - android-build:
+        title: Build wearable app
+        inputs:
+        - variant: release
+        - build_type: aab
+        - module: Wearable
+    - sign-apk:
+        inputs:
+        - android_app: $BITRISE_AAB_PATH
+        - use_apk_signer: true
+    - path::./:
+        title: Execute step
+        # Limit running this test to only one stack to avoid parallel testing issues
+        # Running E2E tests on all stacks in parallel would cause conflicting deployments in Google Play to the same app
+        run_if: |-
+            {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
+        - package_name: $PACKAGE_NAME
+        - app_path: $BITRISE_DEPLOY_DIR/Wearable-release-bitrise-signed.aab|$BITRISE_DEPLOY_DIR/Application-release-bitrise-signed.aab
+        - track: $TRACK
+        - mapping_file: $BITRISE_DEPLOY_DIR/Wearable-mapping.txt|$BITRISE_DEPLOY_DIR/Application-mapping.txt
+        - verbose_log: true
+
   test_wearos_deploy:
     summary: Builds and deploys a main app and a wearable app as AAB
     envs:
