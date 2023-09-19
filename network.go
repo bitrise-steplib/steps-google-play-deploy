@@ -65,9 +65,9 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 	// }
 	retryClient.ResponseLogHook = func(logger retryablehttp.Logger, resp *http.Response) {
 		const authHeaderKey = "Authorization"
-		req := resp.Request
+		req := resp.Request.Clone(context.Background())
 		authHeaderVal := req.Header.Get(authHeaderKey)
-		authHeaderVal = "REDACTED debug ID " + string(md5.New().Sum([]byte(authHeaderVal))) // nolint: gosec
+		authHeaderVal = url.QueryEscape("REDACTED debug ID " + string(md5.New().Sum([]byte(authHeaderVal)))) // nolint: gosec
 		req.Header.Set(authHeaderKey, authHeaderVal)
 
 		reqDump, err := httputil.DumpRequestOut(req, false)

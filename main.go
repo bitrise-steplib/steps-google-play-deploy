@@ -11,6 +11,7 @@ import (
 
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/retry"
 	"google.golang.org/api/androidpublisher/v3"
 	"google.golang.org/api/option"
 )
@@ -167,24 +168,24 @@ func main() {
 	log.SetEnableDebugLog(configs.IsDebugLog)
 	log.Donef("Configuration read successfully")
 
-	for retryCount := 1; retryCount <= maxRetries; retryCount++ {
+	err := retry.Times(maxRetries).Wait(30 * time.Second).TryWithAbort(func(attempt uint) (error, bool) {
 		//
 		// Create client and service
 		fmt.Println()
 		log.Infof("Authenticating")
 		client, err := createHTTPClient(string(configs.JSONKeyPath))
 		if err != nil {
-			failf("Failed to create HTTP client: %v", err)
+			return fmt.Errorf("Failed to create HTTP client: %v", err), true
 		}
 		service, err := androidpublisher.NewService(context.Background(), option.WithHTTPClient(client))
 		if err != nil {
-			failf("Failed to create publisher service, error: %s", err)
+			return fmt.Errorf("Failed to create publisher service, error: %s", err), true
 		}
 		log.Donef("Authenticated client created")
 
 		errorString := executeEdit(service, configs, false)
 		if errorString == "" {
-			return
+			return nil, false
 		}
 		if strings.Contains(errorString, changesNotSentForReviewMessage) {
 			if configs.RetryWithoutSendingToReview {
@@ -192,7 +193,7 @@ func main() {
 				log.Warnf("Trying to commit edit with setting changesNotSentForReview to true. Please make sure to send the changes to review from Google Play Console UI.")
 				errorString = executeEdit(service, configs, true)
 				if errorString == "" {
-					return
+					return nil, false
 				}
 			} else {
 				log.Warnf("Sending the edit to review failed. Please change \"Retry changes without sending to review\" input to true if you wish to send the changes with the changesNotSentForReview flag. Please note that in that case the review has to be manually initiated from Google Play Console UI")
@@ -204,14 +205,17 @@ func main() {
 		}
 		if strings.Contains(errorString, missingAuthError) {
 			log.Warnf("%s", errorString)
-			log.Infof("Retrying (waiting 30s)... (%d of %d)", retryCount, maxRetries)
-			time.Sleep(30 * time.Second)
+			if attempt < maxRetries {
+				log.Infof("Retrying (after 30s) %d of %d...", attempt+1, maxRetries)
+			}
 
-			continue
+			return fmt.Errorf(errorString), false
 		}
 
-		failf(errorString)
-	}
+		return fmt.Errorf(errorString), true
+	})
+
+	failf(err.Error())
 }
 
 func executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool) (errorString string) {
