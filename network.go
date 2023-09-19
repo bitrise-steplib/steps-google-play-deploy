@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/md5"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -48,28 +49,33 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 	retryClient := retry.NewHTTPClient()
 	retryClient.RetryWaitMin = 2 * time.Second
 	retryClient.RetryMax = 6
-	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
-		if resp != nil && resp.StatusCode == http.StatusUnauthorized {
-			log.Debugf("Received HTTP 401 (Unauthorized), retrying request...")
+	// retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	// 	if resp != nil && resp.StatusCode == http.StatusUnauthorized {
+	// 		log.Debugf("Received HTTP 401 (Unauthorized), retrying request...")
 
-			return true, nil
-		}
+	// 		return true, nil
+	// 	}
 
-		shouldRetry, err := retryablehttp.DefaultRetryPolicy(ctx, resp, err)
-		if shouldRetry && resp != nil {
-			log.Debugf("Retry network error: %d", resp.StatusCode)
-		}
+	// 	shouldRetry, err := retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+	// 	if shouldRetry && resp != nil {
+	// 		log.Debugf("Retry network error: %d", resp.StatusCode)
+	// 	}
 
-		return shouldRetry, err
-	}
-	retryClient.RequestLogHook = func(logger retryablehttp.Logger, req *http.Request, _ int) {
-		reqDump, err := httputil.DumpRequestOut(req, false)
+	// 	return shouldRetry, err
+	// }
+	retryClient.ResponseLogHook = func(logger retryablehttp.Logger, resp *http.Response) {
+		const authHeaderKey = "Authorization"
+		req := resp.Request
+		authHeaderVal := req.Header.Get(authHeaderKey)
+		authHeaderVal = "[REDACTED debug ID:" + string(md5.New().Sum([]byte(authHeaderVal))) + "]" // nolint: gosec
+		req.Header.Set(authHeaderKey, authHeaderVal)
+
+		reqDump, err := httputil.DumpRequestOut(resp.Request, false)
 		if err != nil {
 			log.Printf("failed to dump request: %v\n", err)
 		}
-		log.Printf("Request: %s\n", reqDump)
-	}
-	retryClient.ResponseLogHook = func(logger retryablehttp.Logger, resp *http.Response) {
+		log.Printf("Request: %s", reqDump)
+
 		dumpBody := false
 		if resp.StatusCode >= 300 || resp.StatusCode < 200 {
 			dumpBody = true
@@ -79,7 +85,7 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 		if err != nil {
 			log.Printf("failed to dump response: %s\n", err)
 		}
-		log.Printf("Response: %s\n", respDump)
+		log.Printf("Response: %s", respDump)
 	}
 
 	refreshCtx := context.WithValue(context.Background(), oauth2.HTTPClient, retryClient.StandardClient())
