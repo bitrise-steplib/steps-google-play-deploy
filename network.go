@@ -67,12 +67,12 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 		const authHeaderKey = "Authorization"
 		req := resp.Request
 		authHeaderVal := req.Header.Get(authHeaderKey)
-		authHeaderVal = "[REDACTED debug ID <" + string(md5.New().Sum([]byte(authHeaderVal))) + ">]" // nolint: gosec
+		authHeaderVal = "REDACTED debug ID " + string(md5.New().Sum([]byte(authHeaderVal))) // nolint: gosec
 		req.Header.Set(authHeaderKey, authHeaderVal)
 
-		reqDump, err := httputil.DumpRequestOut(resp.Request, false)
+		reqDump, err := httputil.DumpRequestOut(req, false)
 		if err != nil {
-			log.Printf("failed to dump request: %v\n", err)
+			log.Printf("failed to dump request: %v", err)
 		}
 		log.Printf("Request: %s", reqDump)
 
@@ -83,7 +83,7 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 
 		respDump, err := httputil.DumpResponse(resp, dumpBody)
 		if err != nil {
-			log.Printf("failed to dump response: %s\n", err)
+			log.Printf("failed to dump response: %s", err)
 		}
 		log.Printf("Response: %s", respDump)
 	}

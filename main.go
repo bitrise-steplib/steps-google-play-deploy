@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/log"
@@ -203,7 +204,8 @@ func main() {
 		}
 		if strings.Contains(errorString, missingAuthError) {
 			log.Warnf("%s", errorString)
-			log.Infof("Retrying... (%d of %d)", retryCount)
+			log.Infof("Retrying (waiting 30s)... (%d of %d)", retryCount, maxRetries)
+			time.Sleep(30 * time.Second)
 
 			continue
 		}
