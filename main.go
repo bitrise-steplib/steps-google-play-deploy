@@ -14,8 +14,12 @@ import (
 	"google.golang.org/api/option"
 )
 
-const changesNotSentForReviewMessage = "Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true"
-const internalServerError = "googleapi: Error 500"
+const (
+	changesNotSentForReviewMessage = "Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true"
+	internalServerError            = "googleapi: Error 500"
+	missingAuthError               = "googleapi: Error 401"
+	maxRetries                     = 6
+)
 
 func failf(format string, v ...interface{}) {
 	log.Errorf(format, v...)
@@ -162,41 +166,50 @@ func main() {
 	log.SetEnableDebugLog(configs.IsDebugLog)
 	log.Donef("Configuration read successfully")
 
-	//
-	// Create client and service
-	fmt.Println()
-	log.Infof("Authenticating")
-	client, err := createHTTPClient(string(configs.JSONKeyPath))
-	if err != nil {
-		failf("Failed to create HTTP client: %v", err)
-	}
-	service, err := androidpublisher.NewService(context.Background(), option.WithHTTPClient(client))
-	if err != nil {
-		failf("Failed to create publisher service, error: %s", err)
-	}
-	log.Donef("Authenticated client created")
-
-	errorString := executeEdit(service, configs, false)
-	if errorString == "" {
-		return
-	}
-	if strings.Contains(errorString, changesNotSentForReviewMessage) {
-		if configs.RetryWithoutSendingToReview {
-			log.Warnf(errorString)
-			log.Warnf("Trying to commit edit with setting changesNotSentForReview to true. Please make sure to send the changes to review from Google Play Console UI.")
-			errorString = executeEdit(service, configs, true)
-			if errorString == "" {
-				return
-			}
-		} else {
-			log.Warnf("Sending the edit to review failed. Please change \"Retry changes without sending to review\" input to true if you wish to send the changes with the changesNotSentForReview flag. Please note that in that case the review has to be manually initiated from Google Play Console UI")
+	for retryCount := 1; retryCount <= maxRetries; retryCount++ {
+		//
+		// Create client and service
+		fmt.Println()
+		log.Infof("Authenticating")
+		client, err := createHTTPClient(string(configs.JSONKeyPath))
+		if err != nil {
+			failf("Failed to create HTTP client: %v", err)
 		}
+		service, err := androidpublisher.NewService(context.Background(), option.WithHTTPClient(client))
+		if err != nil {
+			failf("Failed to create publisher service, error: %s", err)
+		}
+		log.Donef("Authenticated client created")
+
+		errorString := executeEdit(service, configs, false)
+		if errorString == "" {
+			return
+		}
+		if strings.Contains(errorString, changesNotSentForReviewMessage) {
+			if configs.RetryWithoutSendingToReview {
+				log.Warnf(errorString)
+				log.Warnf("Trying to commit edit with setting changesNotSentForReview to true. Please make sure to send the changes to review from Google Play Console UI.")
+				errorString = executeEdit(service, configs, true)
+				if errorString == "" {
+					return
+				}
+			} else {
+				log.Warnf("Sending the edit to review failed. Please change \"Retry changes without sending to review\" input to true if you wish to send the changes with the changesNotSentForReview flag. Please note that in that case the review has to be manually initiated from Google Play Console UI")
+			}
+		}
+		if strings.Contains(errorString, internalServerError) {
+			log.Warnf("Google Play API responded with an unknown error")
+			log.Warnf("Suggestion: create a release manually in Google Play Console because the UI has the capability to present the underlying error in certain cases")
+		}
+		if strings.Contains(errorString, missingAuthError) {
+			log.Warnf("%s", errorString)
+			log.Infof("Retrying... (%d of %d)", retryCount)
+
+			continue
+		}
+
+		failf(errorString)
 	}
-	if strings.Contains(errorString, internalServerError) {
-		log.Warnf("Google Play API responded with an unknown error")
-		log.Warnf("Suggestion: create a release manually in Google Play Console because the UI has the capability to present the underlying error in certain cases")
-	}
-	failf(errorString)
 }
 
 func executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool) (errorString string) {
@@ -210,6 +223,15 @@ func executeEdit(service *androidpublisher.Service, configs Configs, changesNotS
 	if err != nil {
 		return fmt.Sprintf("Failed to perform edit insert call, error: %s", err)
 	}
+
+	defer func() {
+		if errorString != "" {
+			deleteEditCall := editsService.Delete(configs.PackageName, appEdit.Id)
+			if err := deleteEditCall.Do(); err != nil {
+				log.Warnf("Failed to delete edit: %w", err)
+			}
+		}
+	}()
 	log.Printf(" editID: %s", appEdit.Id)
 	log.Donef("Edit insert created")
 

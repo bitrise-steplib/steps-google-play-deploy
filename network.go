@@ -82,10 +82,9 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 		log.Printf("Response: %s\n", respDump)
 	}
 
-	retryCtx := context.WithValue(context.Background(), oauth2.HTTPClient, retryClient.StandardClient())
+	refreshCtx := context.WithValue(context.Background(), oauth2.HTTPClient, retryClient.StandardClient())
 
-	client := oauth2.NewClient(retryCtx, authConfig.TokenSourceWithExpiry(retryCtx, 10*time.Hour))
-	return client, nil
+	return authConfig.Client(refreshCtx), nil
 }
 
 // jwtConfigFromJSONKeyFile gets the jwt config from the given file.
