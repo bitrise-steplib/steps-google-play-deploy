@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/md5"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -48,30 +47,23 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 
 	retryClient := retry.NewHTTPClient()
 	retryClient.RetryWaitMin = 2 * time.Second
-	retryClient.RetryMax = 6
-	// retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
-	// 	if resp != nil && resp.StatusCode == http.StatusUnauthorized {
-	// 		log.Debugf("Received HTTP 401 (Unauthorized), retrying request...")
+	retryClient.RetryMax = 3
+	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if resp != nil && resp.StatusCode == http.StatusUnauthorized {
+			log.Debugf("Received HTTP 401 (Unauthorized), retrying request...")
 
-	// 		return true, nil
-	// 	}
+			return true, nil
+		}
 
-	// 	shouldRetry, err := retryablehttp.DefaultRetryPolicy(ctx, resp, err)
-	// 	if shouldRetry && resp != nil {
-	// 		log.Debugf("Retry network error: %d", resp.StatusCode)
-	// 	}
+		shouldRetry, err := retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+		if shouldRetry && resp != nil {
+			log.Debugf("Retry network error: %d", resp.StatusCode)
+		}
 
-	// 	return shouldRetry, err
-	// }
+		return shouldRetry, err
+	}
 	retryClient.ResponseLogHook = func(logger retryablehttp.Logger, resp *http.Response) {
-		const authHeaderKey = "Authorization"
-		req := resp.Request.Clone(context.Background())
-		authHeaderVal := req.Header.Get(authHeaderKey)
-		hash := md5.New() // nolint: gosec
-		authHeaderVal = url.QueryEscape("REDACTED debug ID " + string(hash.Sum([]byte(authHeaderVal))))
-		req.Header.Set(authHeaderKey, authHeaderVal)
-
-		reqDump, err := httputil.DumpRequestOut(req, false)
+		reqDump, err := httputil.DumpRequestOut(resp.Request, false)
 		if err != nil {
 			log.Printf("failed to dump request: %v", err)
 		}
