@@ -67,7 +67,8 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 		const authHeaderKey = "Authorization"
 		req := resp.Request.Clone(context.Background())
 		authHeaderVal := req.Header.Get(authHeaderKey)
-		authHeaderVal = url.QueryEscape("REDACTED debug ID " + string(md5.New().Sum([]byte(authHeaderVal)))) // nolint: gosec
+		hash := md5.New() // nolint: gosec
+		authHeaderVal = url.QueryEscape("REDACTED debug ID " + string(hash.Sum([]byte(authHeaderVal))))
 		req.Header.Set(authHeaderKey, authHeaderVal)
 
 		reqDump, err := httputil.DumpRequestOut(req, false)
