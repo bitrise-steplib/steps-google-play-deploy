@@ -204,11 +204,12 @@ func main() {
 			log.Warnf("Suggestion: create a release manually in Google Play Console because the UI has the capability to present the underlying error in certain cases")
 		}
 		if strings.Contains(errorString, missingAuthError) {
-			log.Warnf("%s", errorString)
 			if attempt < maxRetries {
+				log.Warnf("%s", errorString)
 				log.Infof("Retrying (after 30s) %d of %d...", attempt+1, maxRetries)
 			}
 
+			log.Warnf("Please contact Google Play if authentication issues persist at https://support.google.com/googleplay/android-developer/contact/general_contact")
 			return fmt.Errorf(errorString), false
 		}
 
