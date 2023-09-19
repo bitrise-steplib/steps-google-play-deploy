@@ -62,7 +62,7 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 		return shouldRetry, err
 	}
 	retryClient.RequestLogHook = func(logger retryablehttp.Logger, req *http.Request, _ int) {
-		reqDump, err := httputil.DumpRequestOut(req, true)
+		reqDump, err := httputil.DumpRequestOut(req, false)
 		if err != nil {
 			log.Printf("failed to dump request: %v\n", err)
 		}
@@ -84,7 +84,7 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 	retryCtx := context.WithValue(context.Background(), oauth2.HTTPClient, retryClient.StandardClient())
 
 	forceTokenRefresh := 10 * time.Second
-	tokenSource := oauth2.ReuseTokenSourceWithExpiry(nil, authConfig.TokenSource(retryCtx), forceTokenRefresh)
+	tokenSource := authConfig.TokenSourceWithExpiry(retryCtx, forceTokenRefresh)
 	return oauth2.NewClient(retryCtx, tokenSource), nil
 }
 

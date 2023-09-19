@@ -82,6 +82,10 @@ func (c *Config) TokenSource(ctx context.Context) oauth2.TokenSource {
 	return oauth2.ReuseTokenSource(nil, jwtSource{ctx, c})
 }
 
+func (c *Config) TokenSourceWithExpiry(ctx context.Context, expiry time.Duration) oauth2.TokenSource {
+	return oauth2.ReuseTokenSourceWithExpiry(nil, jwtSource{ctx, c}, expiry)
+}
+
 // Client returns an HTTP client wrapping the context's
 // HTTP transport and adding Authorization headers with tokens
 // obtained from c.
