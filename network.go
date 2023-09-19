@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -59,6 +60,25 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 		}
 
 		return shouldRetry, err
+	}
+	retryClient.RequestLogHook = func(logger retryablehttp.Logger, req *http.Request, _ int) {
+		reqDump, err := httputil.DumpRequestOut(req, true)
+		if err != nil {
+			log.Printf("failed to dump request: %v\n", err)
+		}
+		log.Printf("Request: %s\n", reqDump)
+	}
+	retryClient.ResponseLogHook = func(logger retryablehttp.Logger, resp *http.Response) {
+		dumpBody := false
+		if resp.StatusCode >= 300 || resp.StatusCode < 200 {
+			dumpBody = true
+		}
+
+		respDump, err := httputil.DumpResponse(resp, dumpBody)
+		if err != nil {
+			log.Printf("failed to dump response: %s\n", err)
+		}
+		log.Printf("Response: %s\n", respDump)
 	}
 
 	retryCtx := context.WithValue(context.Background(), oauth2.HTTPClient, retryClient.StandardClient())
