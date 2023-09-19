@@ -170,7 +170,7 @@ func main() {
 	if err != nil {
 		failf("Failed to create HTTP client: %v", err)
 	}
-	service, err := androidpublisher.NewService(context.TODO(), option.WithHTTPClient(client))
+	service, err := androidpublisher.NewService(context.Background(), option.WithHTTPClient(client))
 	if err != nil {
 		failf("Failed to create publisher service, error: %s", err)
 	}

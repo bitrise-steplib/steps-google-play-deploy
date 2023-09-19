@@ -52,15 +52,6 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 		if resp != nil && resp.StatusCode == http.StatusUnauthorized {
 			log.Debugf("Received HTTP 401 (Unauthorized), retrying request...")
 
-			ts, err := google.DefaultTokenSource(ctx)
-			if err != nil {
-				return false, err
-			}
-			_, err = ts.Token()
-			if err != nil {
-				return false, err
-			}
-
 			return true, nil
 		}
 
@@ -93,7 +84,8 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 
 	retryCtx := context.WithValue(context.Background(), oauth2.HTTPClient, retryClient.StandardClient())
 
-	return authConfig.Client(retryCtx), nil
+	client := oauth2.NewClient(retryCtx, authConfig.TokenSourceWithExpiry(retryCtx, 10*time.Hour))
+	return client, nil
 }
 
 // jwtConfigFromJSONKeyFile gets the jwt config from the given file.
