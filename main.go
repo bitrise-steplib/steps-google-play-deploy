@@ -215,7 +215,9 @@ func main() {
 		return fmt.Errorf(errorString), true
 	})
 
-	failf(err.Error())
+	if err != nil {
+		failf(err.Error())
+	}
 }
 
 func executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool) (errorString string) {
