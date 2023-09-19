@@ -233,14 +233,6 @@ func executeEdit(service *androidpublisher.Service, configs Configs, changesNotS
 		return fmt.Sprintf("Failed to perform edit insert call, error: %s", err)
 	}
 
-	defer func() {
-		if errorString != "" {
-			deleteEditCall := editsService.Delete(configs.PackageName, appEdit.Id)
-			if err := deleteEditCall.Do(); err != nil {
-				log.Warnf("Failed to delete edit: %w", err)
-			}
-		}
-	}()
 	log.Printf(" editID: %s", appEdit.Id)
 	log.Donef("Edit insert created")
 
