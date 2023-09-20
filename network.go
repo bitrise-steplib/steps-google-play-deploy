@@ -62,12 +62,12 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 
 		return shouldRetry, err
 	}
-	retryClient.ResponseLogHook = func(logger retryablehttp.Logger, resp *http.Response) {
+	retryClient.ResponseLogHook = func(debugLogger retryablehttp.Logger, resp *http.Response) {
 		reqDump, err := httputil.DumpRequestOut(resp.Request, false)
 		if err != nil {
-			log.Printf("failed to dump request: %v", err)
+			debugLogger.Printf("failed to dump request: %v", err)
 		}
-		log.Printf("Request: %s", reqDump)
+		debugLogger.Printf("Request: %s", reqDump)
 
 		dumpBody := false
 		if resp.StatusCode >= 300 || resp.StatusCode < 200 {
@@ -76,9 +76,9 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 
 		respDump, err := httputil.DumpResponse(resp, dumpBody)
 		if err != nil {
-			log.Printf("failed to dump response: %s", err)
+			debugLogger.Printf("failed to dump response: %s", err)
 		}
-		log.Printf("Response: %s", respDump)
+		debugLogger.Printf("Response: %s", respDump)
 	}
 
 	refreshCtx := context.WithValue(context.Background(), oauth2.HTTPClient, retryClient.StandardClient())
