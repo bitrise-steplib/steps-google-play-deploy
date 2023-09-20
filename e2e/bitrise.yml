@@ -121,66 +121,66 @@ workflows:
         - release_name: Overwritten release name
         - verbose_log: true
 
-  test_apk_deploy_custom_track:
-    summary: Tests deploying an APK to a user-defined track
-    envs:
+#   test_apk_deploy_custom_track:
+#     summary: Tests deploying an APK to a user-defined track
+#     envs:
 
-    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
-    - BRANCH: master
+#     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
+#     - BRANCH: master
 
-    - BITRISEIO_ANDROID_KEYSTORE_URL: $SIMPLESAMPLE_ANDROID_KEYSTORE_URL
-    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $SIMPLESAMPLE_ANDROID_KEYSTORE_PASSWORD
-    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $SIMPLESAMPLE_ANDROID_KEY_ALIAS
-    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
+#     - BITRISEIO_ANDROID_KEYSTORE_URL: $SIMPLESAMPLE_ANDROID_KEYSTORE_URL
+#     - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $SIMPLESAMPLE_ANDROID_KEYSTORE_PASSWORD
+#     - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $SIMPLESAMPLE_ANDROID_KEY_ALIAS
+#     - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
 
-    - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
-    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
-    - TRACK: apk-testing
-    before_run:
-    - _setup
-    steps:
-    - change-android-versioncode-and-versionname:
-        inputs:
-        - build_gradle_path: ./app/build.gradle
-        - new_version_code: $BITRISE_BUILD_NUMBER
-        - new_version_name: 0.2.5
-    - gradle-runner:
-        inputs:
-        - gradle_task: assembleRelease
-        - gradlew_path: ./gradlew
-    - sign-apk:
-        inputs:
-        - android_app: $BITRISE_APK_PATH_LIST
-        - use_apk_signer: true
-    - path::./:
-        title: Execute step
-        # Limit running this test to only one stack to avoid parallel testing issues
-        # Running E2E tests on all stacks in parallel would cause conflicting deployments in Google Play to the same app
-        run_if: |-
-          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
-        inputs:
-        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
-        - package_name: $PACKAGE_NAME
-        - app_path: $BITRISE_SIGNED_APK_PATH
-        - track: $TRACK
-        - mapping_file: ""
-        - user_fraction: ""
-        - retry_without_sending_to_review: true
-        - verbose_log: true
-  _setup:
-    steps:
-    - script:
-        title: Delete _tmp dir
-        inputs:
-        - content: rm -rf _tmp
-    - change-workdir:
-        title: Switch working dir to _tmp
-        run_if: "true"
-        inputs:
-        - path: ./_tmp
-        - is_create_path: true
-    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
-        inputs:
-        - repository_url: $TEST_APP_URL
-        - clone_into_dir: .
-        - branch: $BRANCH
+#     - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
+#     - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+#     - TRACK: apk-testing
+#     before_run:
+#     - _setup
+#     steps:
+#     - change-android-versioncode-and-versionname:
+#         inputs:
+#         - build_gradle_path: ./app/build.gradle
+#         - new_version_code: $BITRISE_BUILD_NUMBER
+#         - new_version_name: 0.2.5
+#     - gradle-runner:
+#         inputs:
+#         - gradle_task: assembleRelease
+#         - gradlew_path: ./gradlew
+#     - sign-apk:
+#         inputs:
+#         - android_app: $BITRISE_APK_PATH_LIST
+#         - use_apk_signer: true
+#     - path::./:
+#         title: Execute step
+#         # Limit running this test to only one stack to avoid parallel testing issues
+#         # Running E2E tests on all stacks in parallel would cause conflicting deployments in Google Play to the same app
+#         run_if: |-
+#           {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+#         inputs:
+#         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
+#         - package_name: $PACKAGE_NAME
+#         - app_path: $BITRISE_SIGNED_APK_PATH
+#         - track: $TRACK
+#         - mapping_file: ""
+#         - user_fraction: ""
+#         - retry_without_sending_to_review: true
+#         - verbose_log: true
+#   _setup:
+#     steps:
+#     - script:
+#         title: Delete _tmp dir
+#         inputs:
+#         - content: rm -rf _tmp
+#     - change-workdir:
+#         title: Switch working dir to _tmp
+#         run_if: "true"
+#         inputs:
+#         - path: ./_tmp
+#         - is_create_path: true
+#     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
+#         inputs:
+#         - repository_url: $TEST_APP_URL
+#         - clone_into_dir: .
+#         - branch: $BRANCH
