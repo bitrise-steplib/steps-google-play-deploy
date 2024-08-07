@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -145,13 +144,10 @@ func Test_validateExpansionFilePath(t *testing.T) {
 
 func Test_readLocalisedRecentChanges(t *testing.T) {
 	createTestFiles := func(localeToNote map[string]string) (string, error) {
-		tmpDir, err := ioutil.TempDir("", "Test_readLocalisedRecentChanges")
-		if err != nil {
-			return "", err
-		}
+		tmpDir := t.TempDir()
 
 		for locale, notes := range localeToNote {
-			if err := ioutil.WriteFile(filepath.Join(tmpDir, "whatsnew-"+locale), []byte(notes), 0600); err != nil {
+			if err := os.WriteFile(filepath.Join(tmpDir, "whatsnew-"+locale), []byte(notes), 0600); err != nil {
 				return "", err
 			}
 		}
