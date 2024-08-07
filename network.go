@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -114,7 +114,7 @@ func downloadContent(downloadURL string) ([]byte, error) {
 		}
 	}()
 
-	contentBytes, err := ioutil.ReadAll(resp.Body)
+	contentBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return []byte{}, fmt.Errorf("failed to read received conent, error: %s", err)
 	}
