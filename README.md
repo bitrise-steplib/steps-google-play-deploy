@@ -108,7 +108,11 @@ steps:
 
 <details>
 <summary>Outputs</summary>
-There are no outputs defined in this step
+
+| Key              | Description                                        |                                      
+|------------------|----------------------------------------------------|
+| `FAILURE_REASON` | Reason the upload to Google Play failed, if it did |
+
 </details>
 
 ## 🙋 Contributing

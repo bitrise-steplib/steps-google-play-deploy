@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
+	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/log"
 	"google.golang.org/api/androidpublisher/v3"
 	"google.golang.org/api/option"
@@ -226,6 +227,11 @@ func executeEdit(service *androidpublisher.Service, configs Configs, changesNotS
 	log.Infof("Upload apks or app bundles")
 	versionCodes, err := uploadApplications(configs, service, appEdit)
 	if err != nil {
+		if failureReason := tools.ExportEnvironmentWithEnvman("FAILURE_REASON", err.Error()); failureReason != nil {
+			log.Warnf("Unable to export failure reason")
+		} else {
+			log.Donef("Failure reason exported")
+		}
 		return fmt.Sprintf("Failed to upload application(s): %v", err)
 	}
 	log.Donef("Applications uploaded")

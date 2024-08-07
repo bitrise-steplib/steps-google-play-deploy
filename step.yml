@@ -197,3 +197,8 @@ inputs:
     value_options:
     - "true"
     - "false"
+outputs:
+- FAILURE_REASON:
+  opts:
+    title: Error upload reason
+    summary: Response given from Google about why aab/apk was not uploaded
