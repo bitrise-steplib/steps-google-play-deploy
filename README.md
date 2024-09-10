@@ -9,16 +9,16 @@ Upload your Android app to Google Play.
 
 The Step uploads your Android app to Google Play. It works with both APK and AAB files.
 
-Please note that in order to successfully use this Step, you must [upload your first APK or AAB file manually](https://support.google.com/googleplay/android-developer/answer/9859152?hl=en&visit_id=637407764704794872-3953166533&rd=1), using Google's own web interface! 
-Once you uploaded one APK or AAB of your app to Google Play manually, you can use our Step for all subsequent versions. 
+Please note that in order to successfully use this Step, you must [upload your first APK or AAB file manually](https://support.google.com/googleplay/android-developer/answer/9859152?hl=en&visit_id=637407764704794872-3953166533&rd=1), using Google's own web interface!
+Once you uploaded one APK or AAB of your app to Google Play manually, you can use our Step for all subsequent versions.
 
 ### Configuring the Step
 
 The Step uses Google's API so before attempting to use the Step, you need to [Set up Google API access](https://devcenter.bitrise.io/deploy/android-deploy/deploying-android-apps/#setting-up-google-play-api-access). This includes:
 - [Linking your Google Developer Console to an API project](https://developers.google.com/android-publisher/getting_started#linking_your_api_project).
 - [Setting up API access using a service account](https://developers.google.com/android-publisher/getting_started#using_a_service_account).
-- Granting the necessary access rights to the service account. 
-- Upload the service account JSON key to Bitrise and store it in a [Secret Env Var](https://devcenter.bitrise.io/builds/env-vars-secret-env-vars/). 
+- Granting the necessary access rights to the service account.
+- Upload the service account JSON key to Bitrise and store it in a [Secret Env Var](https://devcenter.bitrise.io/builds/env-vars-secret-env-vars/).
 
 Due to the way the Google Play Publisher API works, you have to grant at least the following permissions to that service account:
 - Edit store listing, pricing & distribution
@@ -30,25 +30,25 @@ Read the full process in our [Deploying Android apps guide](https://devcenter.bi
 
 To deploy your app with the Step:
 
-1. In the **Service Account JSON key file path**, add the Secret that stores your service account JSON key. 
-1. In the **App file path** input, set the path to your APK and/or AAB files. You can add multiple paths here, separated with a newline. 
+1. In the **Service Account JSON key file path**, add the Secret that stores your service account JSON key.
+1. In the **App file path** input, set the path to your APK and/or AAB files. You can add multiple paths here, separated with a newline.
    In most cases, the default values work well unless you changed the output variable of the Step that build your APK or AAB.
-1. In the **Package name**  input, set the package name of your app.  
+1. In the **Package name**  input, set the package name of your app.
 1. In the **Track** input, add the track to which you want to assign the app. This can be any of the built-in tracks or a custom track of your own.
 
-### Troubleshooting 
+### Troubleshooting
 
 If the Step fails, check the following:
-- If it's an authentication error, check that your Secret points to the correct file (and that a file is uploaded at all). 
+- If it's an authentication error, check that your Secret points to the correct file (and that a file is uploaded at all).
 - Make sure your service account has the necessary access rights.
-- Check that there's no typo in the package name and that you selected an existing track for the app. 
+- Check that there's no typo in the package name and that you selected an existing track for the app.
 
-### Useful links 
+### Useful links
 
 - [Google Play Developer API - Getting Started](https://developers.google.com/android-publisher/getting_started)
 - [Deploying Android apps](https://devcenter.bitrise.io/deploy/android-deploy/deploying-android-apps/)
 
-### Related Steps 
+### Related Steps
 
 - [TestFairy Deploy Android](https://www.bitrise.io/integrations/steps/testfairy-deploy-android)
 - [AppCenter Android Deploy](https://www.bitrise.io/integrations/steps/appcenter-deploy-android)
@@ -104,12 +104,13 @@ steps:
 | `mapping_file` | The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names. Uploading a mapping file is not required when deploying an AAB as the app bundle contains the mapping file itself. In case of deploying [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html), you can specify multiple mapping.txt files as a newline (`\n`) or pipe (`\|`) separated list. The order of mapping files should match the list of APK or AAB files in the `app_path` input. |  | `$BITRISE_MAPPING_PATH` |
 | `retry_without_sending_to_review` | If set to `true` and the initial change request fails, the changes will not be reviewed until they are manually sent for review from the Google Play Console UI. If set to `false`, the step fails if the changes can't be automatically sent to review. | required | `false` |
 | `ack_bundle_installation_warning` | Must be set to `true` if the App Bundle installation may trigger a warning on user devices (for example, if installation size may be over a threshold, typically 100 MB). | required | `false` |
+| `dry_run` | If set to `true` then the changes will not be committed to create a real release in the Play Console. Use this flag to validate your configuration without triggering a new review. See the [API reference](https://developers.google.com/android-publisher/api-ref/rest/v3/edits/validate). | | `false` |
 </details>
 
 <details>
 <summary>Outputs</summary>
 
-| Key              | Description                                        |                                      
+| Key              | Description                                        |
 |------------------|----------------------------------------------------|
 | `FAILURE_REASON` | Reason the upload to Google Play failed, if it did |
 

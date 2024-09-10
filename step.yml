@@ -176,7 +176,6 @@ inputs:
     value_options:
     - "true"
     - "false"
-
 - ack_bundle_installation_warning: "false"
   opts:
     title: Acknowledge Bundle Installation Warning
@@ -187,7 +186,16 @@ inputs:
     value_options:
     - "true"
     - "false"
-
+- dry_run: "false"
+  opts:
+    title: Dry Run
+    description: |-
+      If set to `true` then the changes will not be committed to create a real release in the Play
+      Console. Use this flag to validate your configuration without triggering a new review.
+    is_required: false
+    value_options:
+    - "true"
+    - "false"
 - verbose_log: "false"
   opts:
     title: Enable verbose logging
