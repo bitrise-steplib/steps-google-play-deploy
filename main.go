@@ -175,7 +175,11 @@ func UploadToGooglePlay(ctx context.Context, configs Configs) error {
 	}
 	log.Donef("Authenticated client created")
 
-	errorString := executeEdit(service, configs, false)
+	// if RetryWithoutSendingToReview is true, we will try to commit the edit with changesNotSentForReview set to true
+	// if the edit is not sent for review, we will return an error
+	// if the edit is sent for review, we will return nil
+	RetryWithoutSendingToReview := false
+	errorString := executeEdit(service, configs, RetryWithoutSendingToReview)
 	if errorString == "" {
 		return nil
 	}
