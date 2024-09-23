@@ -1,4 +1,4 @@
-package main
+package upload_to_google_play
 
 import (
 	"bytes"
@@ -147,20 +147,16 @@ func versionCodeMapToSlice(codeMap map[int64]int) []int64 {
 	return versionCodes
 }
 
-func main() {
+func UploadToGooglePlay(ctx context.Context, configs Configs) error {
 	//
 	// Getting configs
-	fmt.Println()
-	log.Infof("Getting configuration")
-	var configs Configs
-	if err := stepconf.Parse(&configs); err != nil {
-		failf("Couldn't create config: %s\n", err)
-	}
+
 	stepconf.Print(configs)
 	if err := configs.validate(); err != nil {
 		failf(err.Error())
+		return err
 	}
-	log.SetEnableDebugLog(configs.IsDebugLog)
+	//log.SetEnableDebugLog(configs.IsDebugLog)
 	log.Donef("Configuration read successfully")
 
 	//
@@ -170,16 +166,18 @@ func main() {
 	client, err := createHTTPClient(string(configs.JSONKeyPath))
 	if err != nil {
 		failf("Failed to create HTTP client: %v", err)
+		return err
 	}
-	service, err := androidpublisher.NewService(context.TODO(), option.WithHTTPClient(client))
+	service, err := androidpublisher.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		failf("Failed to create publisher service, error: %s", err)
+		return err
 	}
 	log.Donef("Authenticated client created")
 
 	errorString := executeEdit(service, configs, false)
 	if errorString == "" {
-		return
+		return nil
 	}
 	if strings.Contains(errorString, changesNotSentForReviewMessage) {
 		if configs.RetryWithoutSendingToReview {
@@ -187,17 +185,23 @@ func main() {
 			log.Warnf("Trying to commit edit with setting changesNotSentForReview to true. Please make sure to send the changes to review from Google Play Console UI.")
 			errorString = executeEdit(service, configs, true)
 			if errorString == "" {
-				return
+				return nil
+			} else {
+				return fmt.Errorf("failed to commit edit with changesNotSentForReview set to true")
 			}
 		} else {
 			log.Warnf("Sending the edit to review failed. Please change \"Retry changes without sending to review\" input to true if you wish to send the changes with the changesNotSentForReview flag. Please note that in that case the review has to be manually initiated from Google Play Console UI")
+			return fmt.Errorf("sending the edit to review failed. Please change \"Retry changes without sending to review\" input to true if you wish to send the changes with the changesNotSentForReview flag. Please note that in that case the review has to be manually initiated from Google Play Console UI")
 		}
 	}
 	if strings.Contains(errorString, internalServerError) {
+
 		log.Warnf("Google Play API responded with an unknown error")
 		log.Warnf("Suggestion: create a release manually in Google Play Console because the UI has the capability to present the underlying error in certain cases")
+		return fmt.Errorf("google Play API responded with an unknown error. Suggestion: create a release manually in Google Play Console because the UI has the capability to present the underlying error in certain cases")
 	}
 	failf(errorString)
+	return nil
 }
 
 func executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool) (errorString string) {

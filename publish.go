@@ -1,4 +1,4 @@
-package main
+package upload_to_google_play
 
 import (
 	"fmt"
