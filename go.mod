@@ -1,4 +1,4 @@
-module github.com/bitrise-steplib/steps-google-play-deploy
+module github.com/dashwave/steps-google-play-deploy
 
 go 1.20
 
