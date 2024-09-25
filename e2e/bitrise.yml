@@ -181,6 +181,7 @@ workflows:
 
     - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
     - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - TRACK: internal
     before_run:
     - _setup
     steps:
@@ -218,6 +219,7 @@ workflows:
         - package_name: $PACKAGE_NAME
         - app_path: $BITRISE_SIGNED_APK_PATH
         - dry_run: true
+        - track: $TRACK
         - mapping_file: ""
         - user_fraction: ""
         - retry_without_sending_to_review: true
