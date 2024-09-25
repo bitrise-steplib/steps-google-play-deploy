@@ -202,7 +202,7 @@ workflows:
         - use_apk_signer: true
     - path::./:
         title: Execute step
-       inputs:
+        inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
         - app_path: $BITRISE_SIGNED_APK_PATH
