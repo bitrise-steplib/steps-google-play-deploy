@@ -187,10 +187,17 @@ workflows:
     - set-java-version:
         inputs:
         - set_java_version: "17"
+    - script:
+        title: Set $VERSION_CODE higher than previously submitted
+        inputs:
+        - content: |-
+            set -ex
+
+            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 1 ))
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
-        - new_version_code: $BITRISE_BUILD_NUMBER
+        - new_version_code: $VERSION_CODE
         - new_version_name: 0.2.5-dryrun
     - gradle-runner:
         inputs:
