@@ -177,7 +177,7 @@ func main() {
 	}
 	log.Donef("Authenticated client created")
 
-	errorString := executeEdit(service, configs, false)
+	errorString := executeEdit(service, configs, false, configs.DryRun)
 	if errorString == "" {
 		return
 	}
@@ -185,7 +185,7 @@ func main() {
 		if configs.RetryWithoutSendingToReview {
 			log.Warnf(errorString)
 			log.Warnf("Trying to commit edit with setting changesNotSentForReview to true. Please make sure to send the changes to review from Google Play Console UI.")
-			errorString = executeEdit(service, configs, true)
+			errorString = executeEdit(service, configs, true, false)
 			if errorString == "" {
 				return
 			}
@@ -200,7 +200,7 @@ func main() {
 	failf(errorString)
 }
 
-func executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool) (errorString string) {
+func executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool, dryRun bool) (errorString string) {
 	editsService := androidpublisher.NewEditsService(service)
 	//
 	// Create insert edit
@@ -245,15 +245,27 @@ func executeEdit(service *androidpublisher.Service, configs Configs, changesNotS
 	}
 	log.Donef("Track updated")
 
-	//
-	// Commit edit
-	fmt.Println()
-	log.Infof("Committing edit")
-	editsCommitCall := editsService.Commit(configs.PackageName, appEdit.Id)
-	editsCommitCall.ChangesNotSentForReview(changesNotSentForReview)
-	if _, err := editsCommitCall.Do(); err != nil {
-		return fmt.Sprintf("Failed to commit edit, error: %s", err)
+	if dryRun {
+		//
+		// Validate edit
+		fmt.Println()
+		log.Infof("Dry run: validating edit without committing")
+		validateEditCall := editsService.Validate(configs.PackageName, appEdit.Id)
+		if _, err := validateEditCall.Do(); err != nil {
+			return fmt.Sprintf("Failed to validate edit, error: %s", err)
+		}
+		log.Donef("Edit validated")
+	} else {
+		//
+		// Commit edit
+		fmt.Println()
+		log.Infof("Committing edit")
+		editsCommitCall := editsService.Commit(configs.PackageName, appEdit.Id)
+		editsCommitCall.ChangesNotSentForReview(changesNotSentForReview)
+		if _, err := editsCommitCall.Do(); err != nil {
+			return fmt.Sprintf("Failed to commit edit, error: %s", err)
+		}
+		log.Donef("Edit committed")
 	}
-	log.Donef("Edit committed")
 	return ""
 }

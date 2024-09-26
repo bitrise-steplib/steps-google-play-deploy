@@ -169,6 +169,62 @@ workflows:
         - user_fraction: ""
         - retry_without_sending_to_review: true
         - verbose_log: true
+  test_dry_run:
+    envs:
+    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
+    - BRANCH: master
+
+    - BITRISEIO_ANDROID_KEYSTORE_URL: $SIMPLESAMPLE_ANDROID_KEYSTORE_URL
+    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $SIMPLESAMPLE_ANDROID_KEYSTORE_PASSWORD
+    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $SIMPLESAMPLE_ANDROID_KEY_ALIAS
+    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
+
+    - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
+    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - TRACK: internal
+    before_run:
+    - _setup
+    steps:
+    - set-java-version:
+        inputs:
+        - set_java_version: "17"
+    - script:
+        title: Set $VERSION_CODE higher than previously submitted
+        inputs:
+        - content: |-
+            set -ex
+
+            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 1 ))
+    - change-android-versioncode-and-versionname:
+        inputs:
+        - build_gradle_path: ./app/build.gradle
+        - new_version_code: $VERSION_CODE
+        - new_version_name: 0.2.5-dryrun
+    - gradle-runner:
+        inputs:
+        - gradle_task: assembleRelease
+        - gradlew_path: ./gradlew
+    - sign-apk:
+        inputs:
+        - android_app: $BITRISE_APK_PATH_LIST
+        - use_apk_signer: true
+    - path::./:
+        title: Execute step
+        # Limit running this test to only one stack to avoid parallel testing issues
+        # Running E2E tests on all stacks in parallel would cause conflicting deployments in Google Play to the same app
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
+        - package_name: $PACKAGE_NAME
+        - app_path: $BITRISE_SIGNED_APK_PATH
+        - dry_run: true
+        - track: $TRACK
+        - mapping_file: ""
+        - user_fraction: ""
+        - retry_without_sending_to_review: true
+        - verbose_log: true
+
   _setup:
     steps:
     - script:
