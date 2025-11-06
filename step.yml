@@ -55,9 +55,10 @@ support_url: https://github.com/bitrise-io/steps-google-play-deploy/issues
 project_type_tags:
 - android
 - cordova
-- ionic
-- react-native
 - flutter
+- ionic
+- kotlin-multiplatform
+- react-native
 type_tags:
 - deploy
 is_requires_admin_user: false
