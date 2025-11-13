@@ -20,7 +20,7 @@ workflows:
     summary: Builds and deploys a main app and a wearable app as AAB
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-wear-os.git
-    - BRANCH: update-target-sdk
+    - BRANCH: master
 
     - BITRISEIO_ANDROID_KEYSTORE_URL: $MULTIAAB_ANDROID_KEYSTORE_URL
     - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $MULTIAAB_ANDROID_KEYSTORE_PASSWORD
