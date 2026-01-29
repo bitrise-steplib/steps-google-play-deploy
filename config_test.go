@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
+	"github.com/bitrise-io/go-utils/v2/log"
 )
 
 func Test_fraction(t *testing.T) {
@@ -49,6 +50,7 @@ func Test_fraction(t *testing.T) {
 }
 
 func Test_parseInputList(t *testing.T) {
+	publisher := NewPublisher(log.NewLogger())
 	tests := []struct {
 		name     string
 		list     string
@@ -82,7 +84,7 @@ func Test_parseInputList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotApps := parseInputList(tt.list); !reflect.DeepEqual(gotApps, tt.wantApps) {
+			if gotApps := parseInputList(tt.list, publisher); !reflect.DeepEqual(gotApps, tt.wantApps) {
 				t.Errorf("parseInputList() = %v, want %v", gotApps, tt.wantApps)
 			}
 		})
@@ -137,7 +139,8 @@ func TestConfigs_appPaths(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotApps, gotWarnings := tt.config.appPaths()
+			publisher := NewPublisher(log.NewLogger())
+			gotApps, gotWarnings := tt.config.appPaths(publisher)
 			if !reflect.DeepEqual(gotApps, tt.wantApps) {
 				t.Errorf("Configs.appPaths() gotApps = %v, want %v", gotApps, tt.wantApps)
 			}
@@ -198,7 +201,8 @@ func TestConfigs_mappingPaths(t *testing.T) {
 			}
 		}
 
-		gotErr := tt.configs.validateMappingFile()
+		publisher := NewPublisher(log.NewLogger())
+		gotErr := tt.configs.validateMappingFile(publisher)
 
 		if tt.wantErr && gotErr == nil {
 			t.Errorf("%s: wanted error but result is nil", tt.name)
@@ -226,7 +230,8 @@ func Test_expansionFiles(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := expansionFiles(tt.appPaths, tt.expansionFilePathConfig)
+			publisher := NewPublisher(log.NewLogger())
+			got, err := expansionFiles(tt.appPaths, tt.expansionFilePathConfig, publisher)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("expansionFiles() error = %v, wantErr %v", err, tt.wantErr)
 				return

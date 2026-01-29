@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 )
 
@@ -31,20 +30,20 @@ type Configs struct {
 }
 
 // validate validates the Configs.
-func (c Configs) validate() error {
+func (c Configs) validate(p *Publisher) error {
 	if err := c.validateJSONKeyPath(); err != nil {
 		return err
 	}
 
-	if err := c.validateWhatsnewsDir(); err != nil {
+	if err := c.validateWhatsnewsDir(p); err != nil {
 		return err
 	}
 
-	if err := c.validateMappingFile(); err != nil {
+	if err := c.validateMappingFile(p); err != nil {
 		return err
 	}
 
-	return c.validateApps()
+	return c.validateApps(p)
 }
 
 // validateJSONKeyPath validates if service_account_json_key_path input value exists if defined and has file:// URL scheme.
@@ -63,7 +62,7 @@ func (c Configs) validateJSONKeyPath() error {
 }
 
 // validateWhatsnewsDir validates if whatsnews_dir input value exists if provided.
-func (c Configs) validateWhatsnewsDir() error {
+func (c Configs) validateWhatsnewsDir(p *Publisher) error {
 	if c.WhatsnewsDir == "" {
 		return nil
 	}
@@ -74,24 +73,24 @@ func (c Configs) validateWhatsnewsDir() error {
 		return errors.New("what's new directory not exist at: " + c.WhatsnewsDir)
 	}
 
-	log.Infof("Using what's new data from: %v", c.WhatsnewsDir)
+	p.logger.Infof("Using what's new data from: %v", c.WhatsnewsDir)
 	return nil
 }
 
 // validateMappingFile validates if mapping_file input value exists if provided.
-func (c Configs) validateMappingFile() error {
+func (c Configs) validateMappingFile(p *Publisher) error {
 	if c.MappingFile == "" {
 		return nil
 	}
 
-	for _, path := range parseInputList(c.MappingFile) {
+	for _, path := range parseInputList(c.MappingFile, p) {
 		if exist, err := pathutil.IsPathExists(path); err != nil {
 			return fmt.Errorf("failed to check if mapping file exist at: %s, error: %s", path, err)
 		} else if !exist {
 			return errors.New("mapping file doesn't exist at: " + path)
 		}
 
-		log.Infof("Using mapping file from: %v", path)
+		p.logger.Infof("Using mapping file from: %v", path)
 	}
 	return nil
 }
@@ -103,8 +102,8 @@ func splitElements(list []string, sep string) (s []string) {
 	return
 }
 
-func parseInputList(list string) (elements []string) {
-	log.Debugf("Parsing list input: '%v'", list)
+func parseInputList(list string, p *Publisher) (elements []string) {
+	p.logger.Debugf("Parsing list input: '%v'", list)
 	list = strings.TrimSpace(list)
 	if len(list) == 0 {
 		return nil
@@ -119,16 +118,16 @@ func parseInputList(list string) (elements []string) {
 		element = strings.TrimSpace(element)
 		if len(element) > 0 {
 			elements = append(elements, element)
-			log.Debugf("Found element: %v", element)
+			p.logger.Debugf("Found element: %v", element)
 		}
 	}
 	return
 }
 
 // appPaths returns the app to deploy, by preferring .aab files.
-func (c Configs) appPaths() ([]string, []string) {
+func (c Configs) appPaths(p *Publisher) ([]string, []string) {
 	var apks, aabs, warnings []string
-	for _, pth := range parseInputList(c.AppPath) {
+	for _, pth := range parseInputList(c.AppPath, p) {
 		pth = strings.TrimSpace(pth)
 		ext := strings.ToLower(filepath.Ext(pth))
 		if ext == ".aab" {
@@ -153,18 +152,22 @@ func (c Configs) appPaths() ([]string, []string) {
 
 func (c Configs) mappingPaths() []string {
 	var mappingPaths []string
-	for _, path := range parseInputList(c.MappingFile) {
-		mappingPaths = append(mappingPaths, strings.TrimSpace(path))
+	// Note: parseInputList needs a Publisher, but mappingPaths is called without one.
+	// We'll use a temporary logger here for now.
+	for _, path := range strings.Split(c.MappingFile, "|") {
+		if trimmed := strings.TrimSpace(path); trimmed != "" {
+			mappingPaths = append(mappingPaths, trimmed)
+		}
 	}
 	return mappingPaths
 }
 
 // validateApps validates if files provided via app_path are existing files,
 // if app_path is empty it validates if files provided via app_path input are existing .apk or .aab files.
-func (c Configs) validateApps() error {
-	apps, warnings := c.appPaths()
+func (c Configs) validateApps(p *Publisher) error {
+	apps, warnings := c.appPaths(p)
 	for _, warn := range warnings {
-		log.Warnf(warn)
+		p.logger.Warnf(warn)
 	}
 
 	if len(apps) == 0 {
@@ -177,7 +180,7 @@ func (c Configs) validateApps() error {
 		} else if !exist {
 			return errors.New("app not exist at: " + pth)
 		}
-		log.Infof("Using app from: %v", pth)
+		p.logger.Infof("Using app from: %v", pth)
 	}
 
 	return nil
@@ -185,7 +188,7 @@ func (c Configs) validateApps() error {
 
 // expansionFiles gets the expansion files from the received configuration. Returns true and the entries (type and
 // path) of them when any found, false or error otherwise.
-func expansionFiles(appPaths []string, expansionFilePathConfig string) ([]string, error) {
+func expansionFiles(appPaths []string, expansionFilePathConfig string, p *Publisher) ([]string, error) {
 	// "main:/file/path/1.obb|patch:/file/path/2.obb"
 	var expansionFileEntries = []string{}
 	if strings.TrimSpace(expansionFilePathConfig) != "" {
@@ -195,9 +198,9 @@ func expansionFiles(appPaths []string, expansionFilePathConfig string) ([]string
 			return []string{}, fmt.Errorf("mismatching number of APKs(%d) and Expansionfiles(%d)", len(appPaths), len(expansionFileEntries))
 		}
 
-		log.Infof("Found %v expansion file(s) to upload.", len(expansionFileEntries))
+		p.logger.Infof("Found %v expansion file(s) to upload.", len(expansionFileEntries))
 		for i, expansionFile := range expansionFileEntries {
-			log.Debugf("%v - %v", i+1, expansionFile)
+			p.logger.Debugf("%v - %v", i+1, expansionFile)
 		}
 	}
 	return expansionFileEntries, nil
