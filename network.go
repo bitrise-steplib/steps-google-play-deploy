@@ -46,7 +46,7 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryWaitMin = 2 * time.Second
-	retryClient.RetryMax = 6
+	retryClient.RetryMax = 4
 	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
 		if resp != nil && resp.StatusCode == http.StatusUnauthorized {
 			log.Debugf("Received HTTP 401 (Unauthorized), retrying request...")
