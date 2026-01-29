@@ -6,7 +6,6 @@ require (
 	github.com/bitrise-io/go-steputils v1.0.6
 	github.com/bitrise-io/go-utils v1.0.9
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.27.0.20260129100308-52ce76ca2ab2
-	github.com/go-jose/go-jose/v4 v4.1.3
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/oauth2 v0.12.0

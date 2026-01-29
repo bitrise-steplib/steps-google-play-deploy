@@ -23,8 +23,6 @@ github.com/bitrise-io/go-utils/v2/retry
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/go-jose/go-jose/v4 v4.1.3
-## explicit; go 1.24.0
 # github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 ## explicit
 github.com/golang/groupcache/lru
