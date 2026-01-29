@@ -11,7 +11,7 @@ import (
 
 	"github.com/bitrise-io/go-utils/fileutil"
 	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/retry"
+	"github.com/bitrise-io/go-utils/v2/retry"
 	"github.com/hashicorp/go-retryablehttp"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -44,7 +44,7 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 		}
 	}
 
-	retryClient := retry.NewHTTPClient()
+	retryClient := retryablehttp.NewClient()
 	retryClient.RetryWaitMin = 2 * time.Second
 	retryClient.RetryMax = 6
 	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
