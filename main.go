@@ -7,16 +7,19 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/log"
+	"github.com/bitrise-io/go-utils/v2/retry"
 	"google.golang.org/api/androidpublisher/v3"
 	"google.golang.org/api/option"
 )
 
 const changesNotSentForReviewMessage = "Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true"
 const internalServerError = "googleapi: Error 500"
+const expiredEditError = "failedPrecondition"
 
 func failf(format string, v ...interface{}) {
 	log.Errorf(format, v...)
@@ -177,8 +180,29 @@ func main() {
 	}
 	log.Donef("Authenticated client created")
 
-	errorString := executeEdit(service, configs, false, configs.DryRun)
-	if errorString == "" {
+	var errorString string
+	err = retry.Times(2).Wait(2 * time.Second).Try(func(attempt uint) error {
+		if attempt > 0 {
+			log.Warnf("Retrying with a new edit session (attempt %d)", attempt+1)
+		}
+
+		errorString = executeEdit(service, configs, false, configs.DryRun)
+		if errorString == "" {
+			return nil
+		}
+
+		// Retry only if edit session expired
+		if strings.Contains(errorString, expiredEditError) {
+			log.Warnf("Edit session expired: %s", errorString)
+			return fmt.Errorf("edit session expired")
+		}
+
+		// Don't retry other errors
+		return nil
+	})
+
+	// If successful after retry, return
+	if err == nil && errorString == "" {
 		return
 	}
 	if strings.Contains(errorString, changesNotSentForReviewMessage) {
