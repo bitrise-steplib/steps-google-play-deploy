@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
-	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-io/go-utils/v2/log"
 )
 
 // Configs stores the step's inputs
@@ -28,6 +28,7 @@ type Configs struct {
 	AckBundleInstallationWarning bool            `env:"ack_bundle_installation_warning,opt[true,false]"`
 	DryRun                       bool            `env:"dry_run,opt[true,false]"`
 	IsDebugLog                   bool            `env:"verbose_log,opt[true,false]"`
+	Logger                       log.Logger
 }
 
 // validate validates the Configs.
@@ -74,7 +75,7 @@ func (c Configs) validateWhatsnewsDir() error {
 		return errors.New("what's new directory not exist at: " + c.WhatsnewsDir)
 	}
 
-	log.Infof("Using what's new data from: %v", c.WhatsnewsDir)
+	c.Logger.Infof("Using what's new data from: %v", c.WhatsnewsDir)
 	return nil
 }
 
@@ -84,14 +85,14 @@ func (c Configs) validateMappingFile() error {
 		return nil
 	}
 
-	for _, path := range parseInputList(c.MappingFile) {
+	for _, path := range c.parseInputList(c.MappingFile) {
 		if exist, err := pathutil.IsPathExists(path); err != nil {
 			return fmt.Errorf("failed to check if mapping file exist at: %s, error: %s", path, err)
 		} else if !exist {
 			return errors.New("mapping file doesn't exist at: " + path)
 		}
 
-		log.Infof("Using mapping file from: %v", path)
+		c.Logger.Infof("Using mapping file from: %v", path)
 	}
 	return nil
 }
@@ -103,8 +104,8 @@ func splitElements(list []string, sep string) (s []string) {
 	return
 }
 
-func parseInputList(list string) (elements []string) {
-	log.Debugf("Parsing list input: '%v'", list)
+func (c Configs) parseInputList(list string) (elements []string) {
+	c.Logger.Debugf("Parsing list input: '%v'", list)
 	list = strings.TrimSpace(list)
 	if len(list) == 0 {
 		return nil
@@ -119,7 +120,7 @@ func parseInputList(list string) (elements []string) {
 		element = strings.TrimSpace(element)
 		if len(element) > 0 {
 			elements = append(elements, element)
-			log.Debugf("Found element: %v", element)
+			c.Logger.Debugf("Found element: %v", element)
 		}
 	}
 	return
@@ -128,14 +129,15 @@ func parseInputList(list string) (elements []string) {
 // appPaths returns the app to deploy, by preferring .aab files.
 func (c Configs) appPaths() ([]string, []string) {
 	var apks, aabs, warnings []string
-	for _, pth := range parseInputList(c.AppPath) {
+	for _, pth := range c.parseInputList(c.AppPath) {
 		pth = strings.TrimSpace(pth)
 		ext := strings.ToLower(filepath.Ext(pth))
-		if ext == ".aab" {
+		switch ext {
+		case ".aab":
 			aabs = append(aabs, pth)
-		} else if ext == ".apk" {
+		case ".apk":
 			apks = append(apks, pth)
-		} else {
+		default:
 			warnings = append(warnings, fmt.Sprintf("unknown app path extension in path: %s, supported extensions: .apk, .aab", pth))
 		}
 	}
@@ -153,8 +155,10 @@ func (c Configs) appPaths() ([]string, []string) {
 
 func (c Configs) mappingPaths() []string {
 	var mappingPaths []string
-	for _, path := range parseInputList(c.MappingFile) {
-		mappingPaths = append(mappingPaths, strings.TrimSpace(path))
+	for _, path := range strings.Split(c.MappingFile, "|") {
+		if trimmed := strings.TrimSpace(path); trimmed != "" {
+			mappingPaths = append(mappingPaths, trimmed)
+		}
 	}
 	return mappingPaths
 }
@@ -164,7 +168,7 @@ func (c Configs) mappingPaths() []string {
 func (c Configs) validateApps() error {
 	apps, warnings := c.appPaths()
 	for _, warn := range warnings {
-		log.Warnf(warn)
+		c.Logger.Warnf(warn)
 	}
 
 	if len(apps) == 0 {
@@ -177,7 +181,7 @@ func (c Configs) validateApps() error {
 		} else if !exist {
 			return errors.New("app not exist at: " + pth)
 		}
-		log.Infof("Using app from: %v", pth)
+		c.Logger.Infof("Using app from: %v", pth)
 	}
 
 	return nil
@@ -185,19 +189,19 @@ func (c Configs) validateApps() error {
 
 // expansionFiles gets the expansion files from the received configuration. Returns true and the entries (type and
 // path) of them when any found, false or error otherwise.
-func expansionFiles(appPaths []string, expansionFilePathConfig string) ([]string, error) {
+func (c Configs) expansionFiles(appPaths []string) ([]string, error) {
 	// "main:/file/path/1.obb|patch:/file/path/2.obb"
 	var expansionFileEntries = []string{}
-	if strings.TrimSpace(expansionFilePathConfig) != "" {
-		expansionFileEntries = strings.Split(expansionFilePathConfig, "|")
+	if strings.TrimSpace(c.ExpansionfilePath) != "" {
+		expansionFileEntries = strings.Split(c.ExpansionfilePath, "|")
 
 		if len(appPaths) != len(expansionFileEntries) {
 			return []string{}, fmt.Errorf("mismatching number of APKs(%d) and Expansionfiles(%d)", len(appPaths), len(expansionFileEntries))
 		}
 
-		log.Infof("Found %v expansion file(s) to upload.", len(expansionFileEntries))
+		c.Logger.Infof("Found %v expansion file(s) to upload.", len(expansionFileEntries))
 		for i, expansionFile := range expansionFileEntries {
-			log.Debugf("%v - %v", i+1, expansionFile)
+			c.Logger.Debugf("%v - %v", i+1, expansionFile)
 		}
 	}
 	return expansionFileEntries, nil

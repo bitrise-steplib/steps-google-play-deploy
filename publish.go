@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-utils/fileutil"
-	"github.com/bitrise-io/go-utils/log"
 	"google.golang.org/api/androidpublisher/v3"
 	"google.golang.org/api/googleapi"
 )
@@ -25,13 +24,13 @@ const bundleInstallationWarning = "Error 403: The installation of the app bundle
 	"and trigger user warning on some devices, and this needs to be explicitly acknowledged in the request."
 
 // uploadExpansionFiles uploads the expansion files for given applications, like .obb files.
-func uploadExpansionFiles(service *androidpublisher.Service, expFileEntry string, packageName string, appEditID string, versionCode int64) error {
+func (p *Publisher) uploadExpansionFiles(service *androidpublisher.Service, expFileEntry string, packageName string, appEditID string, versionCode int64) error {
 	cleanExpFileConfigEntry := strings.TrimSpace(expFileEntry)
 	if !validateExpansionFileConfig(cleanExpFileConfigEntry) {
 		return fmt.Errorf("invalid expansion file config: %s", expFileEntry)
 	}
 
-	expFilePth, expFileType, err := expFileInfo(cleanExpFileConfigEntry)
+	expFilePth, expFileType, err := p.expFileInfo(cleanExpFileConfigEntry)
 	if err != nil {
 		return err
 	}
@@ -39,19 +38,19 @@ func uploadExpansionFiles(service *androidpublisher.Service, expFileEntry string
 	if err != nil {
 		return fmt.Errorf("failed to read expansion file (%v), error: %s", expansionFile, err)
 	}
-	log.Debugf("Uploading expansion file %v with package name '%v', AppEditId '%v', version code '%v'", expansionFile, packageName, appEditID, versionCode)
+	p.logger.Debugf("Uploading expansion file %v with package name '%v', AppEditId '%v', version code '%v'", expansionFile, packageName, appEditID, versionCode)
 	editsExpansionFilesService := androidpublisher.NewEditsExpansionfilesService(service)
 	editsExpansionFilesCall := editsExpansionFilesService.Upload(packageName, appEditID, versionCode, expFileType)
 	editsExpansionFilesCall.Media(expansionFile, googleapi.ContentType("application/octet-stream"))
 	if _, err := editsExpansionFilesCall.Do(); err != nil {
 		return fmt.Errorf("failed to upload expansion file, error: %s", err)
 	}
-	log.Infof("Uploaded expansion file %v", expansionFile)
+	p.logger.Infof("Uploaded expansion file %v", expansionFile)
 	return nil
 }
 
 // expFilePth gets the expansion file path from a given config entry
-func expFileInfo(expFileConfigEntry string) (string, string, error) {
+func (p *Publisher) expFileInfo(expFileConfigEntry string) (string, string, error) {
 	// "main:/file/path/1.obb"
 	expansionFilePathSplit := strings.Split(expFileConfigEntry, ":")
 	if len(expansionFilePathSplit) < 2 {
@@ -60,11 +59,11 @@ func expFileInfo(expFileConfigEntry string) (string, string, error) {
 
 	// "main"
 	expFileType := strings.TrimSpace(expansionFilePathSplit[0])
-	log.Debugf("Expansion file type is %s", expFileType)
+	p.logger.Debugf("Expansion file type is %s", expFileType)
 
 	// "/file/path/1.obb"
 	expFilePth := strings.TrimSpace(strings.Join(expansionFilePathSplit[1:], ""))
-	log.Debugf("Expansion file path is %s", expFilePth)
+	p.logger.Debugf("Expansion file path is %s", expFilePth)
 	return expFilePth, expFileType, nil
 }
 
@@ -76,13 +75,13 @@ func validateExpansionFileConfig(expFileEntry string) bool {
 }
 
 // uploadMappingFile uploads a given mapping file to a given app artifact (based on versionCode) to Google Play.
-func uploadMappingFile(service *androidpublisher.Service, appEditID string, versionCode int64, packageName string, filePath string) error {
-	log.Debugf("Getting mapping file from %v", filePath)
+func (p *Publisher) uploadMappingFile(service *androidpublisher.Service, appEditID string, versionCode int64, packageName string, filePath string) error {
+	p.logger.Debugf("Getting mapping file from %v", filePath)
 	mappingFile, err := os.Open(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to read mapping file (%s), error: %s", filePath, err)
 	}
-	log.Debugf("Uploading mapping file %v with package name '%v', AppEditId '%v', version code '%v'", filePath, packageName, appEditID, versionCode)
+	p.logger.Debugf("Uploading mapping file %v with package name '%v', AppEditId '%v', version code '%v'", filePath, packageName, appEditID, versionCode)
 	editsDeobfuscationFilesService := androidpublisher.NewEditsDeobfuscationfilesService(service)
 	editsDeobfuscationFilesUploadCall := editsDeobfuscationFilesService.Upload(packageName, appEditID, versionCode, "proguard")
 	editsDeobfuscationFilesUploadCall.Media(mappingFile, googleapi.ContentType("application/octet-stream"))
@@ -91,13 +90,13 @@ func uploadMappingFile(service *androidpublisher.Service, appEditID string, vers
 		return fmt.Errorf("failed to upload mapping file, error: %s", err)
 	}
 
-	log.Printf(" uploaded mapping file for apk version: %d", versionCode)
+	p.logger.Printf(" uploaded mapping file for apk version: %d", versionCode)
 	return nil
 }
 
 // uploadAppBundle uploads aab files to Google Play. Returns the uploaded bundle itself or an error.
-func uploadAppBundle(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File, ackBundleInstallationWarning bool) (*androidpublisher.Bundle, error) {
-	log.Debugf("Uploading file %v with package name '%v', AppEditId '%v", appFile, packageName, appEditID)
+func (p *Publisher) uploadAppBundle(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File, ackBundleInstallationWarning bool) (*androidpublisher.Bundle, error) {
+	p.logger.Debugf("Uploading file %v with package name '%v', AppEditId '%v", appFile, packageName, appEditID)
 	editsBundlesService := androidpublisher.NewEditsBundlesService(service)
 
 	editsBundlesUploadCall := editsBundlesService.Upload(packageName, appEditID)
@@ -112,13 +111,13 @@ func uploadAppBundle(service *androidpublisher.Service, packageName string, appE
 		}
 		return nil, errors.New(msg)
 	}
-	log.Infof("Uploaded app bundle version: %d", bundle.VersionCode)
+	p.logger.Infof("Uploaded app bundle version: %d", bundle.VersionCode)
 	return bundle, nil
 }
 
 // uploadAppApk uploads an apk file to Google Play. Returns the apk itself or an error.
-func uploadAppApk(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File) (*androidpublisher.Apk, error) {
-	log.Debugf("Uploading file %v with package name '%v', AppEditId '%v", appFile, packageName, appEditID)
+func (p *Publisher) uploadAppApk(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File) (*androidpublisher.Apk, error) {
+	p.logger.Debugf("Uploading file %v with package name '%v', AppEditId '%v", appFile, packageName, appEditID)
 	editsApksService := androidpublisher.NewEditsApksService(service)
 
 	editsApksUploadCall := editsApksService.Upload(packageName, appEditID)
@@ -128,18 +127,18 @@ func uploadAppApk(service *androidpublisher.Service, packageName string, appEdit
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload apk, error: %s", err)
 	}
-	log.Infof("Uploaded apk version: %d", apk.VersionCode)
+	p.logger.Infof("Uploaded apk version: %d", apk.VersionCode)
 	return apk, nil
 }
 
 // updates the listing info of a given release.
-func updateListing(whatsNewsDir string, release *androidpublisher.TrackRelease) error {
-	log.Debugf("Checking if updating listing is required, whats new dir is '%v'", whatsNewsDir)
+func (p *Publisher) updateListing(whatsNewsDir string, release *androidpublisher.TrackRelease) error {
+	p.logger.Debugf("Checking if updating listing is required, whats new dir is '%v'", whatsNewsDir)
 	if whatsNewsDir != "" {
 		fmt.Println()
-		log.Infof("Update listing started")
+		p.logger.Infof("Update listing started")
 
-		recentChangesMap, err := readLocalisedRecentChanges(whatsNewsDir)
+		recentChangesMap, err := p.readLocalisedRecentChanges(whatsNewsDir)
 		if err != nil {
 			return fmt.Errorf("failed to read whatsnews, error: %s", err)
 		}
@@ -152,13 +151,13 @@ func updateListing(whatsNewsDir string, release *androidpublisher.TrackRelease) 
 			})
 		}
 		release.ReleaseNotes = releaseNotes
-		log.Infof("Update listing finished")
+		p.logger.Infof("Update listing finished")
 	}
 	return nil
 }
 
 // readLocalisedRecentChanges reads the recent changes from the given path and returns them as a map.
-func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, error) {
+func (p *Publisher) readLocalisedRecentChanges(recentChangesDir string) (map[string]string, error) {
 	recentChangesMap := map[string]string{}
 
 	pattern := filepath.Join(recentChangesDir, "whatsnew-*")
@@ -185,29 +184,29 @@ func readLocalisedRecentChanges(recentChangesDir string) (map[string]string, err
 		}
 	}
 	if len(recentChangesMap) > 0 {
-		log.Debugf("Found the following recent changes:")
+		p.logger.Debugf("Found the following recent changes:")
 		for language, recentChanges := range recentChangesMap {
-			log.Debugf("%v\n", language)
-			log.Debugf("Content: %v", recentChanges)
+			p.logger.Debugf("%v\n", language)
+			p.logger.Debugf("Content: %v", recentChanges)
 		}
 	} else {
-		log.Debugf("No recent changes found")
+		p.logger.Debugf("No recent changes found")
 	}
 
 	return recentChangesMap, nil
 }
 
 // createTrackRelease returns a release object with the given version codes and adds the listing information.
-func createTrackRelease(config Configs, versionCodes googleapi.Int64s) (*androidpublisher.TrackRelease, error) {
+func (p *Publisher) createTrackRelease(config Configs, versionCodes googleapi.Int64s) (*androidpublisher.TrackRelease, error) {
 	newRelease := &androidpublisher.TrackRelease{
 		VersionCodes:        versionCodes,
 		Status:              config.Status,
 		InAppUpdatePriority: int64(config.UpdatePriority),
 	}
-	log.Infof("Release version codes are: %v", newRelease.VersionCodes)
+	p.logger.Infof("Release version codes are: %v", newRelease.VersionCodes)
 
 	if newRelease.Status == "" {
-		newRelease.Status = releaseStatusFromConfig(config.UserFraction)
+		newRelease.Status = p.releaseStatusFromConfig(config.UserFraction)
 	}
 
 	if shouldApplyUserFraction(newRelease.Status) {
@@ -218,7 +217,7 @@ func createTrackRelease(config Configs, versionCodes googleapi.Int64s) (*android
 		newRelease.Name = config.ReleaseName
 	}
 
-	if err := updateListing(config.WhatsnewsDir, newRelease); err != nil {
+	if err := p.updateListing(config.WhatsnewsDir, newRelease); err != nil {
 		return nil, fmt.Errorf("failed to update listing, reason: %v", err)
 	}
 
@@ -226,9 +225,9 @@ func createTrackRelease(config Configs, versionCodes googleapi.Int64s) (*android
 }
 
 // releaseStatusFromConfig gets the release status from the config value of user fraction.
-func releaseStatusFromConfig(userFraction float64) string {
+func (p *Publisher) releaseStatusFromConfig(userFraction float64) string {
 	if userFraction != 0 {
-		log.Infof("Release is a staged rollout, %v of users will receive it.", userFraction)
+		p.logger.Infof("Release is a staged rollout, %v of users will receive it.", userFraction)
 		return releaseStatusInProgress
 	}
 	return releaseStatusCompleted

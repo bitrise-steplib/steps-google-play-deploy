@@ -10,8 +10,7 @@ import (
 	"time"
 
 	"github.com/bitrise-io/go-utils/fileutil"
-	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/retry"
+	"github.com/bitrise-io/go-utils/v2/retryhttp"
 	"github.com/hashicorp/go-retryablehttp"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -20,7 +19,7 @@ import (
 )
 
 // createHTTPClient creates an HTTP client for the communication during the uploads.
-func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
+func (p *Publisher) createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 	jsonKeyPth, isRemote, err := parseURI(string(jsonKeyPth))
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare key path (%s), error: %s", jsonKeyPth, err)
@@ -29,7 +28,7 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 	var authConfig *jwt.Config
 	var authConfErr error
 	if isRemote {
-		jsonContent, err := downloadContentWithRetry(jsonKeyPth, 3, 3)
+		jsonContent, err := p.downloadContentWithRetry(jsonKeyPth, 3, 3*time.Second)
 		if err != nil {
 			return nil, fmt.Errorf("failed to download json key file, error: %s", err)
 		}
@@ -44,18 +43,18 @@ func createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 		}
 	}
 
-	retryClient := retry.NewHTTPClient()
+	retryClient := retryhttp.NewClient(p.logger)
 	retryClient.RetryWaitMin = 2 * time.Second
 	retryClient.RetryMax = 6
 	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
 		if resp != nil && resp.StatusCode == http.StatusUnauthorized {
-			log.Debugf("Received HTTP 401 (Unauthorized), retrying request...")
+			p.logger.Debugf("Received HTTP 401 (Unauthorized), retrying request...")
 			return true, nil
 		}
 
 		shouldRetry, err := retryablehttp.DefaultRetryPolicy(ctx, resp, err)
 		if shouldRetry && resp != nil {
-			log.Debugf("Retry network error: %d", resp.StatusCode)
+			p.logger.Debugf("Retry network error: %d", resp.StatusCode)
 		}
 
 		return shouldRetry, err
@@ -92,31 +91,26 @@ func parseURI(keyURI string) (string, bool, error) {
 	return strings.TrimPrefix(keyURI, "file://"), jsonURL.Scheme == "http" || jsonURL.Scheme == "https", nil
 }
 
-// downloadContentWithRetry calls downloadContent method with a given number of retries and waiting interval between the retries.
-func downloadContentWithRetry(downloadURL string, numberOfRetries, waitInterval uint) ([]byte, error) {
-	var contentBytes []byte
-	return contentBytes, retry.Times(numberOfRetries).Wait(time.Duration(waitInterval) * time.Second).Try(func(attempt uint) error {
-		var err error
-		contentBytes, err = downloadContent(downloadURL)
-		return err
-	})
-}
+// downloadContentWithRetry downloads content from the given URL using a retryable HTTP client.
+func (p *Publisher) downloadContentWithRetry(downloadURL string, numberOfRetries int, waitInterval time.Duration) ([]byte, error) {
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryWaitMin = waitInterval
+	retryClient.RetryMax = numberOfRetries
+	retryClient.CheckRetry = retryablehttp.DefaultRetryPolicy
 
-// downloadContent opens the given url and returns the body of the response as a byte array.
-func downloadContent(downloadURL string) ([]byte, error) {
-	resp, err := http.Get(downloadURL)
+	resp, err := retryClient.Get(downloadURL)
 	if err != nil {
 		return []byte{}, fmt.Errorf("failed to download from (%s), error: %s", downloadURL, err)
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Warnf("failed to close (%s) body", downloadURL)
+			p.logger.Warnf("failed to close (%s) body", downloadURL)
 		}
 	}()
 
 	contentBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return []byte{}, fmt.Errorf("failed to read received conent, error: %s", err)
+		return []byte{}, fmt.Errorf("failed to read received content, error: %s", err)
 	}
 
 	return contentBytes, nil

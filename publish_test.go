@@ -6,10 +6,12 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_verifyStatusOfTheCreatedRelease(t *testing.T) {
+	publisher := NewPublisher(log.NewLogger())
 	tests := []struct {
 		name           string
 		config         Configs
@@ -31,7 +33,7 @@ func Test_verifyStatusOfTheCreatedRelease(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			trackRelease, err := createTrackRelease(tt.config, []int64{})
+			trackRelease, err := publisher.createTrackRelease(tt.config, []int64{})
 
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedStatus, trackRelease.Status)
@@ -40,6 +42,7 @@ func Test_verifyStatusOfTheCreatedRelease(t *testing.T) {
 }
 
 func Test_verifyUserFractionOfTheCreatedRelease(t *testing.T) {
+	publisher := NewPublisher(log.NewLogger())
 	tests := []struct {
 		name                 string
 		config               Configs
@@ -65,7 +68,7 @@ func Test_verifyUserFractionOfTheCreatedRelease(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			trackRelease, err := createTrackRelease(tt.config, []int64{})
+			trackRelease, err := publisher.createTrackRelease(tt.config, []int64{})
 
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedUserFraction, trackRelease.UserFraction)
@@ -74,6 +77,7 @@ func Test_verifyUserFractionOfTheCreatedRelease(t *testing.T) {
 }
 
 func Test_releaseStatusFromConfig(t *testing.T) {
+	publisher := NewPublisher(log.NewLogger())
 
 	tests := []struct {
 		name         string
@@ -85,7 +89,7 @@ func Test_releaseStatusFromConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := releaseStatusFromConfig(tt.userFraction); got != tt.want {
+			if got := publisher.releaseStatusFromConfig(tt.userFraction); got != tt.want {
 				t.Errorf("releaseStatusFromConfig() = %v, want %v", got, tt.want)
 			}
 		})
@@ -93,6 +97,7 @@ func Test_releaseStatusFromConfig(t *testing.T) {
 }
 
 func Test_expFileInfo(t *testing.T) {
+	publisher := NewPublisher(log.NewLogger())
 	tests := []struct {
 		name               string
 		expFileConfigEntry string
@@ -107,7 +112,7 @@ func Test_expFileInfo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := expFileInfo(tt.expFileConfigEntry)
+			got, got1, err := publisher.expFileInfo(tt.expFileConfigEntry)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("expFileInfo() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -143,6 +148,7 @@ func Test_validateExpansionFilePath(t *testing.T) {
 }
 
 func Test_readLocalisedRecentChanges(t *testing.T) {
+	publisher := NewPublisher(log.NewLogger())
 	createTestFiles := func(localeToNote map[string]string) (string, error) {
 		tmpDir := t.TempDir()
 
@@ -206,7 +212,7 @@ func Test_readLocalisedRecentChanges(t *testing.T) {
 				}
 			}()
 
-			got, err := readLocalisedRecentChanges(testDir)
+			got, err := publisher.readLocalisedRecentChanges(testDir)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("readLocalisedRecentChanges() error = %v, wantErr %v", err, tt.wantErr)
 				return
