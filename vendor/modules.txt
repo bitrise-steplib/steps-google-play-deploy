@@ -13,7 +13,6 @@ github.com/bitrise-io/go-steputils/tools
 github.com/bitrise-io/go-utils/colorstring
 github.com/bitrise-io/go-utils/command
 github.com/bitrise-io/go-utils/fileutil
-github.com/bitrise-io/go-utils/log
 github.com/bitrise-io/go-utils/parseutil
 github.com/bitrise-io/go-utils/pathutil
 github.com/bitrise-io/go-utils/pointers
