@@ -28,7 +28,7 @@ type Configs struct {
 	AckBundleInstallationWarning bool            `env:"ack_bundle_installation_warning,opt[true,false]"`
 	DryRun                       bool            `env:"dry_run,opt[true,false]"`
 	IsDebugLog                   bool            `env:"verbose_log,opt[true,false]"`
-	logger                       log.Logger
+	logger                       log.Logger      `env:"-"`
 }
 
 // validate validates the Configs.
