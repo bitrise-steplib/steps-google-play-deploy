@@ -36,14 +36,14 @@ func (p *Publisher) failf(format string, v ...interface{}) {
 // uploadApplications uploads every application file (apk or aab) to the Google Play. Returns the version codes of
 // the uploaded apps.
 func (p *Publisher) uploadApplications(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (map[int64]int, error) {
-	appPaths, _ := configs.appPaths(p)
+	appPaths, _ := configs.appPaths()
 	mappingPaths := configs.mappingPaths()
 	versionCodes := make(map[int64]int)
 
 	var versionCodeListLog bytes.Buffer
 	versionCodeListLog.WriteString("New version codes to upload: ")
 
-	expansionFilePaths, err := expansionFiles(appPaths, configs.ExpansionfilePath, p)
+	expansionFilePaths, err := configs.expansionFiles(appPaths)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,6 @@ func main() {
 	logger := log.NewLogger()
 	publisher := NewPublisher(logger)
 
-	//
 	// Getting configs
 	fmt.Println()
 	logger.Infof("Getting configuration")
@@ -171,18 +170,19 @@ func main() {
 		publisher.failf("Couldn't create config: %s\n", err)
 	}
 	stepconf.Print(configs)
-	if err := configs.validate(publisher); err != nil {
-		publisher.failf(err.Error())
-	}
 	logger = log.NewLogger(log.WithDebugLog(configs.IsDebugLog))
 	publisher = NewPublisher(logger)
+	configs.logger = logger
+	if err := configs.validate(); err != nil {
+		publisher.failf(err.Error())
+	}
 	logger.Donef("Configuration read successfully")
 
 	//
 	// Create client and service
 	fmt.Println()
 	logger.Infof("Authenticating")
-	client, err := createHTTPClient(string(configs.JSONKeyPath), publisher)
+	client, err := publisher.createHTTPClient(string(configs.JSONKeyPath))
 	if err != nil {
 		publisher.failf("Failed to create HTTP client: %v", err)
 	}

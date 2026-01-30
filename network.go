@@ -19,7 +19,7 @@ import (
 )
 
 // createHTTPClient creates an HTTP client for the communication during the uploads.
-func createHTTPClient(jsonKeyPth string, p *Publisher) (*http.Client, error) {
+func (p *Publisher) createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 	jsonKeyPth, isRemote, err := parseURI(string(jsonKeyPth))
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare key path (%s), error: %s", jsonKeyPth, err)
@@ -28,7 +28,7 @@ func createHTTPClient(jsonKeyPth string, p *Publisher) (*http.Client, error) {
 	var authConfig *jwt.Config
 	var authConfErr error
 	if isRemote {
-		jsonContent, err := downloadContentWithRetry(jsonKeyPth, 3, 3*time.Second, p)
+		jsonContent, err := p.downloadContentWithRetry(jsonKeyPth, 3, 3*time.Second)
 		if err != nil {
 			return nil, fmt.Errorf("failed to download json key file, error: %s", err)
 		}
@@ -92,7 +92,7 @@ func parseURI(keyURI string) (string, bool, error) {
 }
 
 // downloadContentWithRetry downloads content from the given URL using a retryable HTTP client.
-func downloadContentWithRetry(downloadURL string, numberOfRetries int, waitInterval time.Duration, p *Publisher) ([]byte, error) {
+func (p *Publisher) downloadContentWithRetry(downloadURL string, numberOfRetries int, waitInterval time.Duration) ([]byte, error) {
 	retryClient := retryablehttp.NewClient()
 	retryClient.RetryWaitMin = waitInterval
 	retryClient.RetryMax = numberOfRetries
