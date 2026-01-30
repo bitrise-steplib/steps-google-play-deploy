@@ -172,7 +172,7 @@ func main() {
 	stepconf.Print(configs)
 	logger = log.NewLogger(log.WithDebugLog(configs.IsDebugLog))
 	publisher = NewPublisher(logger)
-	configs.logger = logger
+	configs.Logger = logger
 	if err := configs.validate(); err != nil {
 		publisher.failf(err.Error())
 	}

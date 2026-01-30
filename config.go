@@ -28,7 +28,7 @@ type Configs struct {
 	AckBundleInstallationWarning bool            `env:"ack_bundle_installation_warning,opt[true,false]"`
 	DryRun                       bool            `env:"dry_run,opt[true,false]"`
 	IsDebugLog                   bool            `env:"verbose_log,opt[true,false]"`
-	logger                       log.Logger      `env:"-"`
+	Logger                       log.Logger
 }
 
 // validate validates the Configs.
@@ -75,7 +75,7 @@ func (c Configs) validateWhatsnewsDir() error {
 		return errors.New("what's new directory not exist at: " + c.WhatsnewsDir)
 	}
 
-	c.logger.Infof("Using what's new data from: %v", c.WhatsnewsDir)
+	c.Logger.Infof("Using what's new data from: %v", c.WhatsnewsDir)
 	return nil
 }
 
@@ -92,7 +92,7 @@ func (c Configs) validateMappingFile() error {
 			return errors.New("mapping file doesn't exist at: " + path)
 		}
 
-		c.logger.Infof("Using mapping file from: %v", path)
+		c.Logger.Infof("Using mapping file from: %v", path)
 	}
 	return nil
 }
@@ -105,7 +105,7 @@ func splitElements(list []string, sep string) (s []string) {
 }
 
 func (c Configs) parseInputList(list string) (elements []string) {
-	c.logger.Debugf("Parsing list input: '%v'", list)
+	c.Logger.Debugf("Parsing list input: '%v'", list)
 	list = strings.TrimSpace(list)
 	if len(list) == 0 {
 		return nil
@@ -120,7 +120,7 @@ func (c Configs) parseInputList(list string) (elements []string) {
 		element = strings.TrimSpace(element)
 		if len(element) > 0 {
 			elements = append(elements, element)
-			c.logger.Debugf("Found element: %v", element)
+			c.Logger.Debugf("Found element: %v", element)
 		}
 	}
 	return
@@ -168,7 +168,7 @@ func (c Configs) mappingPaths() []string {
 func (c Configs) validateApps() error {
 	apps, warnings := c.appPaths()
 	for _, warn := range warnings {
-		c.logger.Warnf(warn)
+		c.Logger.Warnf(warn)
 	}
 
 	if len(apps) == 0 {
@@ -181,7 +181,7 @@ func (c Configs) validateApps() error {
 		} else if !exist {
 			return errors.New("app not exist at: " + pth)
 		}
-		c.logger.Infof("Using app from: %v", pth)
+		c.Logger.Infof("Using app from: %v", pth)
 	}
 
 	return nil
@@ -199,9 +199,9 @@ func (c Configs) expansionFiles(appPaths []string) ([]string, error) {
 			return []string{}, fmt.Errorf("mismatching number of APKs(%d) and Expansionfiles(%d)", len(appPaths), len(expansionFileEntries))
 		}
 
-		c.logger.Infof("Found %v expansion file(s) to upload.", len(expansionFileEntries))
+		c.Logger.Infof("Found %v expansion file(s) to upload.", len(expansionFileEntries))
 		for i, expansionFile := range expansionFileEntries {
-			c.logger.Debugf("%v - %v", i+1, expansionFile)
+			c.Logger.Debugf("%v - %v", i+1, expansionFile)
 		}
 	}
 	return expansionFileEntries, nil
