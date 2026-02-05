@@ -215,6 +215,72 @@ func TestConfigs_mappingPaths(t *testing.T) {
 	}
 }
 
+func TestConfigs_nativeSymbolsPaths(t *testing.T) {
+	tmpDir := t.TempDir()
+	tests := []struct {
+		name        string
+		configs     Configs
+		wantErr     bool
+		createFiles []string
+	}{
+		{
+			name:    "no native symbols file",
+			configs: Configs{},
+			wantErr: false,
+		},
+		{
+			name:        "single native symbols file",
+			configs:     Configs{NativeSymbolsFile: filepath.Join(tmpDir, "single", "symbols.zip")},
+			wantErr:     false,
+			createFiles: []string{filepath.Join(tmpDir, "single", "symbols.zip")},
+		},
+		{
+			name:    "single non-existent native symbols file",
+			configs: Configs{NativeSymbolsFile: filepath.Join(tmpDir, "single_nonexistent", "symbols.zip")},
+			wantErr: true,
+		},
+		{
+			name:        "native symbols file with wrong extension",
+			configs:     Configs{NativeSymbolsFile: filepath.Join(tmpDir, "wrong_ext", "symbols.txt")},
+			wantErr:     true,
+			createFiles: []string{filepath.Join(tmpDir, "wrong_ext", "symbols.txt")},
+		},
+		{
+			name:        "multiple existing native symbols files",
+			configs:     Configs{NativeSymbolsFile: filepath.Join(tmpDir, "multiple", "symbols1.zip") + "|" + filepath.Join(tmpDir, "multiple", "symbols2.zip")},
+			wantErr:     false,
+			createFiles: []string{filepath.Join(tmpDir, "multiple", "symbols1.zip"), filepath.Join(tmpDir, "multiple", "symbols2.zip")},
+		},
+		{
+			name:        "1 existing 1 invalid native symbols file",
+			configs:     Configs{NativeSymbolsFile: filepath.Join(tmpDir, "multiple_nonexistent", "symbols1.zip") + "\n" + filepath.Join(tmpDir, "multiple_nonexistent", "symbols2.zip")},
+			wantErr:     true,
+			createFiles: []string{filepath.Join(tmpDir, "multiple_nonexistent", "symbols1.zip")},
+		},
+	}
+
+	for _, tt := range tests {
+		for _, path := range tt.createFiles {
+			err := os.MkdirAll(filepath.Dir(path), os.ModePerm)
+			if err != nil {
+				t.Errorf("failed to create path: %s", err)
+			}
+			_, err = os.Create(path)
+			if err != nil {
+				t.Errorf("failed to create file: %s", err)
+			}
+		}
+
+		gotErr := tt.configs.validateNativeSymbolsFile()
+
+		if tt.wantErr && gotErr == nil {
+			t.Errorf("%s: wanted error but result is nil", tt.name)
+		} else if !tt.wantErr && gotErr != nil {
+			t.Errorf("%s: wanted no error, got: %v", tt.name, gotErr)
+		}
+	}
+}
+
 func Test_expansionFiles(t *testing.T) {
 	tests := []struct {
 		name                    string

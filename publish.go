@@ -94,6 +94,26 @@ func (p *Publisher) uploadMappingFile(service *androidpublisher.Service, appEdit
 	return nil
 }
 
+// uploadNativeSymbols uploads a given native debug symbols file to a given app artifact (based on versionCode) to Google Play.
+func uploadNativeSymbols(service *androidpublisher.Service, appEditID string, versionCode int64, packageName string, filePath string) error {
+	log.Debugf("Getting native symbols file from %v", filePath)
+	nativeSymbolsFile, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read native symbols file (%s), error: %s", filePath, err)
+	}
+	log.Debugf("Uploading native symbols file %v with package name '%v', AppEditId '%v', version code '%v'", filePath, packageName, appEditID, versionCode)
+	editsDeobfuscationFilesService := androidpublisher.NewEditsDeobfuscationfilesService(service)
+	editsDeobfuscationFilesUploadCall := editsDeobfuscationFilesService.Upload(packageName, appEditID, versionCode, "nativeCode")
+	editsDeobfuscationFilesUploadCall.Media(nativeSymbolsFile, googleapi.ContentType("application/octet-stream"))
+
+	if _, err = editsDeobfuscationFilesUploadCall.Do(); err != nil {
+		return fmt.Errorf("failed to upload native symbols file, error: %s", err)
+	}
+
+	log.Printf(" uploaded native symbols file for apk version: %d", versionCode)
+	return nil
+}
+
 // uploadAppBundle uploads aab files to Google Play. Returns the uploaded bundle itself or an error.
 func (p *Publisher) uploadAppBundle(service *androidpublisher.Service, packageName string, appEditID string, appFile *os.File, ackBundleInstallationWarning bool) (*androidpublisher.Bundle, error) {
 	p.logger.Debugf("Uploading file %v with package name '%v', AppEditId '%v", appFile, packageName, appEditID)

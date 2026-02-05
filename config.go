@@ -22,6 +22,7 @@ type Configs struct {
 	UpdatePriority               int             `env:"update_priority,range[0..5]"`
 	WhatsnewsDir                 string          `env:"whatsnews_dir"`
 	MappingFile                  string          `env:"mapping_file"`
+	NativeSymbolsFile            string          `env:"native_symbols_file"`
 	ReleaseName                  string          `env:"release_name"`
 	Status                       string          `env:"status"`
 	RetryWithoutSendingToReview  bool            `env:"retry_without_sending_to_review,opt[true,false]"`
@@ -42,6 +43,10 @@ func (c Configs) validate() error {
 	}
 
 	if err := c.validateMappingFile(); err != nil {
+		return err
+	}
+
+	if err := c.validateNativeSymbolsFile(); err != nil {
 		return err
 	}
 
@@ -93,6 +98,29 @@ func (c Configs) validateMappingFile() error {
 		}
 
 		c.Logger.Infof("Using mapping file from: %v", path)
+	}
+	return nil
+}
+
+// validateNativeSymbolsFile validates if native_symbols_file input value exists if provided and has .zip extension.
+func (c Configs) validateNativeSymbolsFile() error {
+	if c.NativeSymbolsFile == "" {
+		return nil
+	}
+
+	for _, path := range parseInputList(c.NativeSymbolsFile) {
+		if exist, err := pathutil.IsPathExists(path); err != nil {
+			return fmt.Errorf("failed to check if native symbols file exist at: %s, error: %s", path, err)
+		} else if !exist {
+			return errors.New("native symbols file doesn't exist at: " + path)
+		}
+
+		// Validate .zip extension
+		if !strings.HasSuffix(strings.ToLower(path), ".zip") {
+			return fmt.Errorf("native symbols file must be a .zip file, got: %s", path)
+		}
+
+		log.Infof("Using native symbols file from: %v", path)
 	}
 	return nil
 }
@@ -161,6 +189,14 @@ func (c Configs) mappingPaths() []string {
 		}
 	}
 	return mappingPaths
+}
+
+func (c Configs) nativeSymbolsPaths() []string {
+	var nativeSymbolsPaths []string
+	for _, path := range parseInputList(c.NativeSymbolsFile) {
+		nativeSymbolsPaths = append(nativeSymbolsPaths, strings.TrimSpace(path))
+	}
+	return nativeSymbolsPaths
 }
 
 // validateApps validates if files provided via app_path are existing files,

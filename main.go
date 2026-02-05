@@ -38,6 +38,7 @@ func (p *Publisher) failf(format string, v ...interface{}) {
 func (p *Publisher) uploadApplications(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (map[int64]int, error) {
 	appPaths, _ := configs.appPaths()
 	mappingPaths := configs.mappingPaths()
+	nativeSymbolsPaths := configs.nativeSymbolsPaths()
 	versionCodes := make(map[int64]int)
 
 	var versionCodeListLog bytes.Buffer
@@ -82,9 +83,18 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 			if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
 				return nil, err
 			}
-			if appIndex < len(appPaths)-1 {
-				fmt.Println()
+		}
+
+		// Upload native symbols files
+		if len(nativeSymbolsPaths)-1 >= appIndex && versionCode != 0 {
+			filePath := nativeSymbolsPaths[appIndex]
+			if err := uploadNativeSymbols(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
+				return nil, err
 			}
+		}
+
+		if (len(mappingPaths)-1 >= appIndex || len(nativeSymbolsPaths)-1 >= appIndex) && appIndex < len(appPaths)-1 {
+			fmt.Println()
 		}
 
 		versionCodes[versionCode]++
