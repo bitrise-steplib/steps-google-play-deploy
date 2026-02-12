@@ -166,6 +166,17 @@ inputs:
       Uploading a mapping file is not required when deploying an AAB as the app bundle contains the mapping file itself.
 
       In case of deploying [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html), you can specify multiple mapping.txt files as a newline (`\n`) or pipe (`|`) separated list. The order of mapping files should match the list of APK or AAB files in the `app_path` input.
+- native_symbols_file:
+  opts:
+    title: Native debug symbols file path
+    description: |-
+      Path to the native debug symbols file (.zip) to upload for crash symbolication.
+
+      The native symbols archive should contain native libraries with debug symbols (.so files) for the app.
+
+      Uploading a native symbols file is optional but recommended for native crash analysis.
+
+      In case of deploying [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html), you can specify multiple .zip files as a newline (`\n`) or pipe (`|`) separated list. The order of native symbols files should match the list of APK or AAB files in the `app_path` input.
 - retry_without_sending_to_review: "false"
   opts:
     title: Retry changes without sending to review
