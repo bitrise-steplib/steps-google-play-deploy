@@ -108,7 +108,7 @@ func (c Configs) validateNativeSymbolsFile() error {
 		return nil
 	}
 
-	for _, path := range parseInputList(c.NativeSymbolsFile) {
+	for _, path := range c.parseInputList(c.NativeSymbolsFile) {
 		if exist, err := pathutil.IsPathExists(path); err != nil {
 			return fmt.Errorf("failed to check if native symbols file exist at: %s, error: %s", path, err)
 		} else if !exist {
@@ -120,7 +120,7 @@ func (c Configs) validateNativeSymbolsFile() error {
 			return fmt.Errorf("native symbols file must be a .zip file, got: %s", path)
 		}
 
-		log.Infof("Using native symbols file from: %v", path)
+		c.Logger.Infof("Using native symbols file from: %v", path)
 	}
 	return nil
 }
@@ -193,7 +193,7 @@ func (c Configs) mappingPaths() []string {
 
 func (c Configs) nativeSymbolsPaths() []string {
 	var nativeSymbolsPaths []string
-	for _, path := range parseInputList(c.NativeSymbolsFile) {
+	for _, path := range c.parseInputList(c.NativeSymbolsFile) {
 		nativeSymbolsPaths = append(nativeSymbolsPaths, strings.TrimSpace(path))
 	}
 	return nativeSymbolsPaths

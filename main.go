@@ -88,7 +88,7 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 		// Upload native symbols files
 		if len(nativeSymbolsPaths)-1 >= appIndex && versionCode != 0 {
 			filePath := nativeSymbolsPaths[appIndex]
-			if err := uploadNativeSymbols(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
+			if err := p.uploadNativeSymbols(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
 				return nil, err
 			}
 		}

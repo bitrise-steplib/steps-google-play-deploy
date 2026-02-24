@@ -225,35 +225,35 @@ func TestConfigs_nativeSymbolsPaths(t *testing.T) {
 	}{
 		{
 			name:    "no native symbols file",
-			configs: Configs{},
+			configs: Configs{Logger: log.NewLogger()},
 			wantErr: false,
 		},
 		{
 			name:        "single native symbols file",
-			configs:     Configs{NativeSymbolsFile: filepath.Join(tmpDir, "single", "symbols.zip")},
+			configs:     Configs{NativeSymbolsFile: filepath.Join(tmpDir, "single", "symbols.zip"), Logger: log.NewLogger()},
 			wantErr:     false,
 			createFiles: []string{filepath.Join(tmpDir, "single", "symbols.zip")},
 		},
 		{
 			name:    "single non-existent native symbols file",
-			configs: Configs{NativeSymbolsFile: filepath.Join(tmpDir, "single_nonexistent", "symbols.zip")},
+			configs: Configs{NativeSymbolsFile: filepath.Join(tmpDir, "single_nonexistent", "symbols.zip"), Logger: log.NewLogger()},
 			wantErr: true,
 		},
 		{
 			name:        "native symbols file with wrong extension",
-			configs:     Configs{NativeSymbolsFile: filepath.Join(tmpDir, "wrong_ext", "symbols.txt")},
+			configs:     Configs{NativeSymbolsFile: filepath.Join(tmpDir, "wrong_ext", "symbols.txt"), Logger: log.NewLogger()},
 			wantErr:     true,
 			createFiles: []string{filepath.Join(tmpDir, "wrong_ext", "symbols.txt")},
 		},
 		{
 			name:        "multiple existing native symbols files",
-			configs:     Configs{NativeSymbolsFile: filepath.Join(tmpDir, "multiple", "symbols1.zip") + "|" + filepath.Join(tmpDir, "multiple", "symbols2.zip")},
+			configs:     Configs{NativeSymbolsFile: filepath.Join(tmpDir, "multiple", "symbols1.zip") + "|" + filepath.Join(tmpDir, "multiple", "symbols2.zip"), Logger: log.NewLogger()},
 			wantErr:     false,
 			createFiles: []string{filepath.Join(tmpDir, "multiple", "symbols1.zip"), filepath.Join(tmpDir, "multiple", "symbols2.zip")},
 		},
 		{
 			name:        "1 existing 1 invalid native symbols file",
-			configs:     Configs{NativeSymbolsFile: filepath.Join(tmpDir, "multiple_nonexistent", "symbols1.zip") + "\n" + filepath.Join(tmpDir, "multiple_nonexistent", "symbols2.zip")},
+			configs:     Configs{NativeSymbolsFile: filepath.Join(tmpDir, "multiple_nonexistent", "symbols1.zip") + "\n" + filepath.Join(tmpDir, "multiple_nonexistent", "symbols2.zip"), Logger: log.NewLogger()},
 			wantErr:     true,
 			createFiles: []string{filepath.Join(tmpDir, "multiple_nonexistent", "symbols1.zip")},
 		},
