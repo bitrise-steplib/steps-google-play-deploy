@@ -88,7 +88,7 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 		}
 
 		versionCodes[versionCode]++
-		versionCodeListLog.WriteString(fmt.Sprintf("%d", versionCode))
+		fmt.Fprintf(&versionCodeListLog, "%d", versionCode)
 		if appIndex < len(appPaths)-1 {
 			versionCodeListLog.WriteString(", ")
 		}
