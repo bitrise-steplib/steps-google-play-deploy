@@ -130,9 +130,11 @@ func (p *Publisher) updateTracks(configs Configs, service *androidpublisher.Serv
 	return nil
 }
 
-// logEditDetails fetches and logs the current edit's ID and expiry time.
+// logEditState fetches and logs the current edit's ID and expiry time at the given stage.
 // Note: the Play API has no endpoint to list open edits, so only the active edit can be inspected.
-func (p *Publisher) logEditDetails(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) {
+func (p *Publisher) logEditState(stage string, configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) {
+	fmt.Println()
+	p.logger.Infof("Current edit (%s):", stage)
 	editsService := androidpublisher.NewEditsService(service)
 	edit, err := editsService.Get(configs.PackageName, appEdit.Id).Do()
 	if err != nil {
@@ -289,11 +291,9 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 	p.logger.Printf(" editID: %s", appEdit.Id)
 	p.logger.Donef("Edit insert created")
 
-	if configs.IsDebugLog {
-		fmt.Println()
-		p.logger.Infof("Current edit:")
-		p.logEditDetails(configs, service, appEdit)
+	p.logEditState("after insert", configs, service, appEdit)
 
+	if configs.IsDebugLog {
 		fmt.Println()
 		p.logger.Infof("Available tracks on Google Play:")
 		p.listTracks(configs, service, appEdit)
@@ -315,6 +315,8 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 	}
 	p.logger.Donef("Applications uploaded")
 
+	p.logEditState("after upload", configs, service, appEdit)
+
 	//
 	// List uploaded artifacts that are not assigned to any track
 	fmt.Println()
@@ -335,6 +337,8 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 		p.logger.Donef("Track updated")
 	}
 
+	p.logEditState("after track update", configs, service, appEdit)
+
 	if dryRun {
 		//
 		// Validate edit
@@ -345,6 +349,7 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 			return fmt.Sprintf("Failed to validate edit, error: %s", err)
 		}
 		p.logger.Donef("Edit validated")
+		p.logEditState("after validate", configs, service, appEdit)
 	} else {
 		//
 		// Commit edit
