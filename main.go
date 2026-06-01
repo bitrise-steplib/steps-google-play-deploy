@@ -229,12 +229,12 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 	p.logger.Printf(" editID: %s", appEdit.Id)
 	p.logger.Donef("Edit insert created")
 
-	//
-	// List tracks that are available in the Play Store
-	fmt.Println()
-	p.logger.Infof("Available tracks on Google Play:")
-	p.listTracks(configs, service, appEdit)
-	p.logger.Donef("Tracks listed")
+	if configs.IsDebugLog {
+		fmt.Println()
+		p.logger.Infof("Available tracks on Google Play:")
+		p.listTracks(configs, service, appEdit)
+		p.logger.Donef("Tracks listed")
+	}
 
 	//
 	// Upload applications
@@ -251,14 +251,18 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 	}
 	p.logger.Donef("Applications uploaded")
 
-	// Update track
-	fmt.Println()
-	p.logger.Infof("Update track")
-	versionCodeSlice := p.versionCodeMapToSlice(versionCodes)
-	if err := p.updateTracks(configs, service, appEdit, versionCodeSlice); err != nil {
-		return fmt.Sprintf("Failed to update track, reason: %v", err)
+	if strings.TrimSpace(configs.Track) == "" {
+		p.logger.Infof("Skipping track update")
+	} else {
+		// Update track
+		fmt.Println()
+		p.logger.Infof("Update track")
+		versionCodeSlice := p.versionCodeMapToSlice(versionCodes)
+		if err := p.updateTracks(configs, service, appEdit, versionCodeSlice); err != nil {
+			return fmt.Sprintf("Failed to update track, reason: %v", err)
+		}
+		p.logger.Donef("Track updated")
 	}
-	p.logger.Donef("Track updated")
 
 	if dryRun {
 		//
