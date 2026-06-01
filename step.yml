@@ -177,6 +177,15 @@ inputs:
     value_options:
     - "true"
     - "false"
+- retry_times: "0"
+  opts:
+    title: Retry times on expired edit
+    description: |-
+      Number of times to recreate the edit and retry the upload if the API fails because the edit
+      has expired (`FAILED_PRECONDITION`: `This edit has expired, please create a new Edit.`).
+
+      Set to `0` to disable retrying. Accepts values between 0 and 10.
+    is_required: false
 - ack_bundle_installation_warning: "false"
   opts:
     title: Acknowledge Bundle Installation Warning

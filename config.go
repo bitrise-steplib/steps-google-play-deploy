@@ -25,6 +25,7 @@ type Configs struct {
 	ReleaseName                  string          `env:"release_name"`
 	Status                       string          `env:"status"`
 	RetryWithoutSendingToReview  bool            `env:"retry_without_sending_to_review,opt[true,false]"`
+	RetryTimes                   int             `env:"retry_times,range[0..10]"`
 	AckBundleInstallationWarning bool            `env:"ack_bundle_installation_warning,opt[true,false]"`
 	DryRun                       bool            `env:"dry_run,opt[true,false]"`
 	IsDebugLog                   bool            `env:"verbose_log,opt[true,false]"`

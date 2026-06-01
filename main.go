@@ -17,6 +17,7 @@ import (
 
 const changesNotSentForReviewMessage = "Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true"
 const internalServerError = "googleapi: Error 500"
+const editExpiredMessage = "This edit has expired, please create a new Edit"
 
 // Publisher handles publishing to Google Play with integrated logging
 type Publisher struct {
@@ -260,7 +261,7 @@ func main() {
 	}
 	logger.Donef("Authenticated client created")
 
-	errorString := publisher.executeEdit(service, configs, false, configs.DryRun)
+	errorString := publisher.executeEditWithRetry(service, configs, false, configs.DryRun)
 	if errorString == "" {
 		return
 	}
@@ -268,7 +269,7 @@ func main() {
 		if configs.RetryWithoutSendingToReview {
 			logger.Warnf(errorString)
 			logger.Warnf("Trying to commit edit with setting changesNotSentForReview to true. Please make sure to send the changes to review from Google Play Console UI.")
-			errorString = publisher.executeEdit(service, configs, true, false)
+			errorString = publisher.executeEditWithRetry(service, configs, true, false)
 			if errorString == "" {
 				return
 			}
@@ -281,6 +282,18 @@ func main() {
 		logger.Warnf("Suggestion: create a release manually in Google Play Console because the UI has the capability to present the underlying error in certain cases")
 	}
 	publisher.failf(errorString)
+}
+
+// executeEditWithRetry runs executeEdit and, if it fails because the edit expired,
+// creates a brand new edit and retries the upload up to configs.RetryTimes times.
+func (p *Publisher) executeEditWithRetry(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool, dryRun bool) (errorString string) {
+	for attempt := 0; ; attempt++ {
+		errorString = p.executeEdit(service, configs, changesNotSentForReview, dryRun)
+		if errorString == "" || !strings.Contains(errorString, editExpiredMessage) || attempt >= configs.RetryTimes {
+			return errorString
+		}
+		p.logger.Warnf("Edit expired (retry %d/%d). Creating a new edit and retrying the upload.", attempt+1, configs.RetryTimes)
+	}
 }
 
 func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool, dryRun bool) (errorString string) {
