@@ -134,6 +134,9 @@ func (p *Publisher) updateTracks(configs Configs, service *androidpublisher.Serv
 // logEditState fetches and logs the current edit's ID and expiry time at the given stage.
 // Note: the Play API has no endpoint to list open edits, so only the active edit can be inspected.
 func (p *Publisher) logEditState(stage string, configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) {
+	if !configs.IsDebugLog {
+		return
+	}
 	fmt.Println()
 	p.logger.Infof("Current edit (%s):", stage)
 	editsService := androidpublisher.NewEditsService(service)
@@ -338,10 +341,12 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 
 	//
 	// List uploaded artifacts and their track assignment (flagging any without a track)
-	fmt.Println()
-	p.logger.Infof("Uploaded artifacts and their track(s):")
-	p.listUntrackedArtifacts(configs, service, appEdit)
-	p.logger.Donef("Uploaded artifacts listed")
+	if configs.IsDebugLog {
+		fmt.Println()
+		p.logger.Infof("Uploaded artifacts and their track(s):")
+		p.listUntrackedArtifacts(configs, service, appEdit)
+		p.logger.Donef("Uploaded artifacts listed")
+	}
 
 	if strings.TrimSpace(configs.Track) == "" {
 		p.logger.Infof("Skipping track update")
