@@ -145,38 +145,46 @@ func (p *Publisher) logEditState(stage string, configs Configs, service *android
 	p.logger.Printf("- expiryTimeSeconds: %s", edit.ExpiryTimeSeconds)
 }
 
-// trackedVersionCodes returns the set of version codes assigned to any track in the edit.
-func (p *Publisher) trackedVersionCodes(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) map[int64]bool {
-	tracked := map[int64]bool{}
+// versionCodeTracks returns a mapping of version code to the track(s) it is assigned to in the edit.
+// A version code can belong to more than one track (e.g. during promotion), so the value is a slice.
+func (p *Publisher) versionCodeTracks(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) map[int64][]string {
+	codeToTracks := map[int64][]string{}
 	editsTracksService := androidpublisher.NewEditsTracksService(service)
 	tracks, err := editsTracksService.List(configs.PackageName, appEdit.Id).Do()
 	if err != nil {
 		p.logger.Warnf("Unable to fetch track list, error: %s", err)
-		return tracked
+		return codeToTracks
 	}
 	for _, track := range tracks.Tracks {
 		for _, release := range track.Releases {
 			for _, versionCode := range release.VersionCodes {
-				tracked[versionCode] = true
+				codeToTracks[versionCode] = append(codeToTracks[versionCode], track.Track)
 			}
 		}
 	}
-	return tracked
+	return codeToTracks
 }
 
-// listUntrackedArtifacts fetches and logs the version codes of uploaded APKs and app bundles
-// that are not assigned to any track.
+// listUntrackedArtifacts fetches and logs the version codes of uploaded APKs and app bundles,
+// showing which track(s) each is assigned to (revealing multi-track assignments) and flagging
+// any artifact that is not assigned to any track.
 func (p *Publisher) listUntrackedArtifacts(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) {
-	tracked := p.trackedVersionCodes(configs, service, appEdit)
+	codeToTracks := p.versionCodeTracks(configs, service, appEdit)
+
+	logArtifact := func(kind string, versionCode int64) {
+		if tracks := codeToTracks[versionCode]; len(tracks) == 0 {
+			p.logger.Printf("- %s version code (no track): %d", kind, versionCode)
+		} else {
+			p.logger.Printf("- %s version code %d -> track(s): %s", kind, versionCode, strings.Join(tracks, ", "))
+		}
+	}
 
 	apksService := androidpublisher.NewEditsApksService(service)
 	if apksResponse, err := apksService.List(configs.PackageName, appEdit.Id).Do(); err != nil {
 		p.logger.Warnf("Unable to fetch uploaded APK list, error: %s", err)
 	} else {
 		for _, apk := range apksResponse.Apks {
-			if !tracked[apk.VersionCode] {
-				p.logger.Printf("- APK version code (no track): %d", apk.VersionCode)
-			}
+			logArtifact("APK", apk.VersionCode)
 		}
 	}
 
@@ -185,9 +193,7 @@ func (p *Publisher) listUntrackedArtifacts(configs Configs, service *androidpubl
 		p.logger.Warnf("Unable to fetch uploaded app bundle list, error: %s", err)
 	} else {
 		for _, bundle := range bundlesResponse.Bundles {
-			if !tracked[bundle.VersionCode] {
-				p.logger.Printf("- AAB version code (no track): %d", bundle.VersionCode)
-			}
+			logArtifact("AAB", bundle.VersionCode)
 		}
 	}
 }
@@ -318,11 +324,11 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 	p.logEditState("after upload", configs, service, appEdit)
 
 	//
-	// List uploaded artifacts that are not assigned to any track
+	// List uploaded artifacts and their track assignment (flagging any without a track)
 	fmt.Println()
-	p.logger.Infof("Uploaded artifacts without a track:")
+	p.logger.Infof("Uploaded artifacts and their track(s):")
 	p.listUntrackedArtifacts(configs, service, appEdit)
-	p.logger.Donef("Untracked artifacts listed")
+	p.logger.Donef("Uploaded artifacts listed")
 
 	if strings.TrimSpace(configs.Track) == "" {
 		p.logger.Infof("Skipping track update")
