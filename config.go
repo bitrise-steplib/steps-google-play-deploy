@@ -17,7 +17,7 @@ type Configs struct {
 	PackageName                  string          `env:"package_name,required"`
 	AppPath                      string          `env:"app_path,required"`
 	ExpansionfilePath            string          `env:"expansionfile_path"`
-	Track                        string          `env:"track,required"`
+	Track                        string          `env:"track"`
 	UserFraction                 float64         `env:"user_fraction,range]0.0..1.0["`
 	UpdatePriority               int             `env:"update_priority,range[0..5]"`
 	WhatsnewsDir                 string          `env:"whatsnews_dir"`
