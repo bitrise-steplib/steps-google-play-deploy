@@ -225,8 +225,8 @@ workflows:
         - retry_without_sending_to_review: true
         - verbose_log: true
 
-  test_dry_run_no_track:
-    summary: Tests an experimental trackless upload (no track assigned) with dry run validation
+  test_no_track:
+    summary: Tests an experimental trackless upload (no track assigned)
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
     - BRANCH: master
@@ -255,7 +255,7 @@ workflows:
         inputs:
         - build_gradle_path: ./app/build.gradle
         - new_version_code: $VERSION_CODE
-        - new_version_name: 0.2.5-notrack-dryrun
+        - new_version_name: 0.2.5-notrack
     - gradle-runner:
         inputs:
         - gradle_task: assembleRelease
@@ -274,7 +274,6 @@ workflows:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
         - app_path: $BITRISE_SIGNED_APK_PATH
-        - dry_run: true
         - track: ""
         - mapping_file: ""
         - user_fraction: ""
