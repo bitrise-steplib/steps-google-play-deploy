@@ -130,6 +130,66 @@ func (p *Publisher) updateTracks(configs Configs, service *androidpublisher.Serv
 	return nil
 }
 
+// logEditDetails fetches and logs the current edit's ID and expiry time.
+// Note: the Play API has no endpoint to list open edits, so only the active edit can be inspected.
+func (p *Publisher) logEditDetails(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) {
+	editsService := androidpublisher.NewEditsService(service)
+	edit, err := editsService.Get(configs.PackageName, appEdit.Id).Do()
+	if err != nil {
+		p.logger.Warnf("Unable to fetch edit details, error: %s", err)
+		return
+	}
+	p.logger.Printf("- editID: %s", edit.Id)
+	p.logger.Printf("- expiryTimeSeconds: %s", edit.ExpiryTimeSeconds)
+}
+
+// trackedVersionCodes returns the set of version codes assigned to any track in the edit.
+func (p *Publisher) trackedVersionCodes(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) map[int64]bool {
+	tracked := map[int64]bool{}
+	editsTracksService := androidpublisher.NewEditsTracksService(service)
+	tracks, err := editsTracksService.List(configs.PackageName, appEdit.Id).Do()
+	if err != nil {
+		p.logger.Warnf("Unable to fetch track list, error: %s", err)
+		return tracked
+	}
+	for _, track := range tracks.Tracks {
+		for _, release := range track.Releases {
+			for _, versionCode := range release.VersionCodes {
+				tracked[versionCode] = true
+			}
+		}
+	}
+	return tracked
+}
+
+// listUntrackedArtifacts fetches and logs the version codes of uploaded APKs and app bundles
+// that are not assigned to any track.
+func (p *Publisher) listUntrackedArtifacts(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) {
+	tracked := p.trackedVersionCodes(configs, service, appEdit)
+
+	apksService := androidpublisher.NewEditsApksService(service)
+	if apksResponse, err := apksService.List(configs.PackageName, appEdit.Id).Do(); err != nil {
+		p.logger.Warnf("Unable to fetch uploaded APK list, error: %s", err)
+	} else {
+		for _, apk := range apksResponse.Apks {
+			if !tracked[apk.VersionCode] {
+				p.logger.Printf("- APK version code (no track): %d", apk.VersionCode)
+			}
+		}
+	}
+
+	bundlesService := androidpublisher.NewEditsBundlesService(service)
+	if bundlesResponse, err := bundlesService.List(configs.PackageName, appEdit.Id).Do(); err != nil {
+		p.logger.Warnf("Unable to fetch uploaded app bundle list, error: %s", err)
+	} else {
+		for _, bundle := range bundlesResponse.Bundles {
+			if !tracked[bundle.VersionCode] {
+				p.logger.Printf("- AAB version code (no track): %d", bundle.VersionCode)
+			}
+		}
+	}
+}
+
 // listTracks lists the available tracks for an app
 func (p *Publisher) listTracks(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) {
 	editsTracksService := androidpublisher.NewEditsTracksService(service)
@@ -231,6 +291,10 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 
 	if configs.IsDebugLog {
 		fmt.Println()
+		p.logger.Infof("Current edit:")
+		p.logEditDetails(configs, service, appEdit)
+
+		fmt.Println()
 		p.logger.Infof("Available tracks on Google Play:")
 		p.listTracks(configs, service, appEdit)
 		p.logger.Donef("Tracks listed")
@@ -250,6 +314,13 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 		return fmt.Sprintf("Failed to upload application(s): %v", err)
 	}
 	p.logger.Donef("Applications uploaded")
+
+	//
+	// List uploaded artifacts that are not assigned to any track
+	fmt.Println()
+	p.logger.Infof("Uploaded artifacts without a track:")
+	p.listUntrackedArtifacts(configs, service, appEdit)
+	p.logger.Donef("Untracked artifacts listed")
 
 	if strings.TrimSpace(configs.Track) == "" {
 		p.logger.Infof("Skipping track update")

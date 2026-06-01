@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Google Play Deploy — Invalid Edit State Debugging</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --panel: #1a1d29;
+    --border: #2a2f3e;
+    --text: #e6e8ee;
+    --muted: #9aa3b2;
+    --accent: #6ea8fe;
+    --warn: #f0b429;
+    --danger: #f76d6d;
+    --ok: #4ade80;
+    --code-bg: #11141d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 40px 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin: 24px 0 8px; color: var(--accent); }
+  p { color: var(--text); }
+  .sub { color: var(--muted); margin-top: 0; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 16px 0;
+  }
+  .mermaid { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 16px 0; text-align: center; }
+  code, pre { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  code { background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; color: #d7dce8; }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    font-size: 13px;
+    color: #d7dce8;
+  }
+  .tag { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+  .tag.warn { background: rgba(240,180,41,0.15); color: var(--warn); }
+  .tag.danger { background: rgba(247,109,109,0.15); color: #f76d6d; }
+  .tag.ok { background: rgba(74,222,128,0.15); color: var(--ok); }
+  ul { padding-left: 22px; }
+  li { margin: 6px 0; }
+  .callout {
+    border-left: 3px solid var(--warn);
+    background: rgba(240,180,41,0.08);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+  }
+  .callout.danger { border-left-color: #f76d6d; background: rgba(247,109,109,0.08); }
+  .callout.ok { border-left-color: var(--ok); background: rgba(74,222,128,0.08); }
+  footer { margin-top: 48px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); padding-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Invalid Edit State — How it happens & how this branch helps debug it</h1>
+  <p class="sub">Step: <code>steps-google-play-deploy</code> · Branch: <code>debug-invalid-edit</code> · Experimental trackless upload</p>
+
+  <div class="panel">
+    <p>
+      The step talks to the <strong>Google Play Android Publisher API</strong> using a single transactional
+      <em>edit</em>. You <code>Insert</code> an edit, mutate it (upload artifacts, assign tracks), then
+      <code>Commit</code> it. The commit is the moment Google validates the whole transaction.
+    </p>
+    <p>
+      The <strong>experimental trackless feature</strong> makes <code>track</code> optional. When no track is
+      provided, the step uploads the APK/AAB but <strong>skips the track update</strong>. That can leave the edit
+      in a state Google rejects at commit time:
+      <span class="tag danger">Error 400 — The Edit is in an invalid state, and may not be committed</span>
+    </p>
+  </div>
+
+  <h2>How we get into an invalid edit state</h2>
+
+  <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant Step as Deploy Step
+    participant API as Google Play API
+    participant Edit as Edit (draft txn)
+
+    Step->>API: editsService.Insert(packageName)
+    API-->>Step: appEdit { id, expiryTimeSeconds }
+    Note over Edit: empty draft created
+
+    Step->>API: uploadApplications() — Apks/Bundles.Upload
+    API-->>Step: { versionCode }
+    Note over Edit: artifact added, NOT in any track
+
+    alt track input is empty (trackless)
+        Step--xAPI: updateTracks() SKIPPED
+        Note over Edit: version code belongs to no track
+    else track provided (normal)
+        Step->>API: editsTracksService.Update(track, versionCodes)
+        API-->>Step: track updated
+        Note over Edit: version code now assigned to a track
+    end
+
+    Step->>API: editsService.Commit(editId)
+    alt edit has untracked artifacts
+        API-->>Step: 400 — Edit is in an invalid state
+        Note over Step: deploy fails, hard to see why
+    else all artifacts assigned
+        API-->>Step: commit OK
+    end
+  </div>
+
+  <div class="callout danger">
+    <strong>Root cause:</strong> an uploaded APK/AAB that is not referenced by any track release makes the edit
+    incomplete. Google only surfaces this at <code>Commit</code> (or <code>Validate</code> in dry-run), with a
+    generic message that doesn't name the offending version code.
+  </div>
+
+  <h2>What this branch logs to help debug it</h2>
+  <p>
+    All extra logging is gated behind <code>verbose_log</code> (<code>IsDebugLog</code>) so normal runs stay quiet.
+    Three things were added to <code>executeEdit</code>:
+  </p>
+
+  <h3>1. Current edit details <span class="tag warn">verbose</span></h3>
+  <p><code>logEditDetails()</code> calls <code>editsService.Get</code> right after insert and logs the live edit:</p>
+  <pre>Current edit:
+- editID: 04faa1c2-...-9b3e
+- expiryTimeSeconds: 1735689600</pre>
+  <p class="sub">Confirms the edit exists and is still within its validity window (edits expire). Note: the Play API has
+    <strong>no endpoint to list open edits</strong> — only the active edit can be inspected.</p>
+
+  <h3>2. Available tracks <span class="tag warn">verbose</span></h3>
+  <p><code>listTracks()</code> logs the tracks visible on the edit, so you can see what assignment targets exist.</p>
+
+  <h3>3. Uploaded artifacts without a track <span class="tag danger">the key signal</span></h3>
+  <p>
+    <code>listUntrackedArtifacts()</code> cross-references uploaded artifacts against track assignments:
+  </p>
+  <ul>
+    <li><code>trackedVersionCodes()</code> — gathers every version code referenced by any track release
+      (<code>Tracks.List</code> → releases → <code>versionCodes</code>).</li>
+    <li><code>Apks.List</code> + <code>Bundles.List</code> — every artifact present in the edit.</li>
+    <li>The diff (uploaded ∖ tracked) is logged — these are exactly the artifacts that will fail the commit:</li>
+  </ul>
+  <pre>Uploaded artifacts without a track:
+- APK version code (no track): 4120
+- AAB version code (no track): 4121</pre>
+
+  <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant Step as Deploy Step (verbose)
+    participant API as Google Play API
+
+    Step->>API: Tracks.List(editId)
+    API-->>Step: tracks[].releases[].versionCodes
+    Note over Step: build "tracked" set
+
+    Step->>API: Apks.List(editId)
+    API-->>Step: apks[].versionCode
+    Step->>API: Bundles.List(editId)
+    API-->>Step: bundles[].versionCode
+
+    Note over Step: log every uploaded versionCode<br/>NOT present in "tracked" set<br/>→ the artifacts that break commit
+  </div>
+
+  <div class="callout ok">
+    <strong>Result:</strong> instead of a bare <em>"invalid state"</em> failure, the log now pinpoints which uploaded
+    version codes are orphaned (no track). In trackless mode that's expected and explains the rejection; in a normal
+    run a non-empty list reveals an artifact that <code>updateTracks</code> failed to cover.
+  </div>
+
+  <footer>
+    Generated for the <code>debug-invalid-edit</code> branch. Diagrams render with Mermaid (CDN). Open in any browser.
+  </footer>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "dark", sequence: { useMaxWidth: true } });
+</script>
+</body>
+</html>
