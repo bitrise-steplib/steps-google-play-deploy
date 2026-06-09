@@ -16,7 +16,7 @@ app:
   - GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
 
 workflows:
-  _test_wearos_deploy:
+  test_wearos_deploy:
     summary: Builds and deploys a main app and a wearable app as AAB
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-wear-os.git
@@ -73,7 +73,7 @@ workflows:
         - mapping_file: $BITRISE_DEPLOY_DIR/Wearable-mapping.txt
         - verbose_log: true
 
-  _test_aab_deploy:
+  test_aab_deploy:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
     - BRANCH: master
@@ -120,7 +120,7 @@ workflows:
         - release_name: Overwritten release name
         - verbose_log: true
 
-  _test_apk_deploy_custom_track:
+  test_apk_deploy_custom_track:
     summary: Tests deploying an APK to a user-defined track
     envs:
 
@@ -169,7 +169,7 @@ workflows:
         - user_fraction: ""
         - retry_without_sending_to_review: true
         - verbose_log: true
-  _test_dry_run:
+  test_dry_run:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
     - BRANCH: master
