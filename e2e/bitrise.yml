@@ -264,7 +264,7 @@ workflows:
         inputs:
         - android_app: $BITRISE_APK_PATH_LIST
         - use_apk_signer: true
-    - git::https://github.com/bitrise-steplib/steps-google-play-deploy.git@debug-invalid-edit:
+    - path::./:
         title: Execute step
         # Limit running this test to only one stack to avoid parallel testing issues
         # Running E2E tests on all stacks in parallel would cause conflicting deployments in Google Play to the same app
