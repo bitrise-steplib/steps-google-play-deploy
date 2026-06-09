@@ -105,35 +105,6 @@
   "protocol": "rest",
   "resources": {
     "applications": {
-      "methods": {
-        "dataSafety": {
-          "description": "Writes the Safety Labels declaration of an app.",
-          "flatPath": "androidpublisher/v3/applications/{packageName}/dataSafety",
-          "httpMethod": "POST",
-          "id": "androidpublisher.applications.dataSafety",
-          "parameterOrder": [
-            "packageName"
-          ],
-          "parameters": {
-            "packageName": {
-              "description": "Required. Package name of the app.",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            }
-          },
-          "path": "androidpublisher/v3/applications/{packageName}/dataSafety",
-          "request": {
-            "$ref": "SafetyLabelsUpdateRequest"
-          },
-          "response": {
-            "$ref": "SafetyLabelsUpdateResponse"
-          },
-          "scopes": [
-            "https://www.googleapis.com/auth/androidpublisher"
-          ]
-        }
-      },
       "resources": {
         "deviceTierConfigs": {
           "methods": {
@@ -237,172 +208,6 @@
               ]
             }
           }
-        }
-      }
-    },
-    "apprecovery": {
-      "methods": {
-        "addTargeting": {
-          "description": "Incrementally update targeting for a recovery action. Note that only the criteria selected during the creation of recovery action can be expanded.",
-          "flatPath": "androidpublisher/v3/applications/{packageName}/appRecoveries/{appRecoveryId}:addTargeting",
-          "httpMethod": "POST",
-          "id": "androidpublisher.apprecovery.addTargeting",
-          "parameterOrder": [
-            "packageName",
-            "appRecoveryId"
-          ],
-          "parameters": {
-            "appRecoveryId": {
-              "description": "Required. ID corresponding to the app recovery action.",
-              "format": "int64",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            },
-            "packageName": {
-              "description": "Required. Package name of the app for which recovery action is to be updated.",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            }
-          },
-          "path": "androidpublisher/v3/applications/{packageName}/appRecoveries/{appRecoveryId}:addTargeting",
-          "request": {
-            "$ref": "AddTargetingRequest"
-          },
-          "response": {
-            "$ref": "AddTargetingResponse"
-          },
-          "scopes": [
-            "https://www.googleapis.com/auth/androidpublisher"
-          ]
-        },
-        "cancel": {
-          "description": "Cancel an already executing app recovery action. Note that this action changes status of the recovery action to CANCELED.",
-          "flatPath": "androidpublisher/v3/applications/{packageName}/appRecoveries/{appRecoveryId}:cancel",
-          "httpMethod": "POST",
-          "id": "androidpublisher.apprecovery.cancel",
-          "parameterOrder": [
-            "packageName",
-            "appRecoveryId"
-          ],
-          "parameters": {
-            "appRecoveryId": {
-              "description": "Required. ID corresponding to the app recovery action.",
-              "format": "int64",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            },
-            "packageName": {
-              "description": "Required. Package name of the app for which recovery action cancellation is requested.",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            }
-          },
-          "path": "androidpublisher/v3/applications/{packageName}/appRecoveries/{appRecoveryId}:cancel",
-          "request": {
-            "$ref": "CancelAppRecoveryRequest"
-          },
-          "response": {
-            "$ref": "CancelAppRecoveryResponse"
-          },
-          "scopes": [
-            "https://www.googleapis.com/auth/androidpublisher"
-          ]
-        },
-        "create": {
-          "description": "Create an app recovery action with recovery status as DRAFT. Note that this action does not execute the recovery action.",
-          "flatPath": "androidpublisher/v3/applications/{packageName}/appRecoveries",
-          "httpMethod": "POST",
-          "id": "androidpublisher.apprecovery.create",
-          "parameterOrder": [
-            "packageName"
-          ],
-          "parameters": {
-            "packageName": {
-              "description": "Required. Package name of the app on which recovery action is performed.",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            }
-          },
-          "path": "androidpublisher/v3/applications/{packageName}/appRecoveries",
-          "request": {
-            "$ref": "CreateDraftAppRecoveryRequest"
-          },
-          "response": {
-            "$ref": "AppRecoveryAction"
-          },
-          "scopes": [
-            "https://www.googleapis.com/auth/androidpublisher"
-          ]
-        },
-        "deploy": {
-          "description": "Deploy an already created app recovery action with recovery status DRAFT. Note that this action activates the recovery action for all targeted users and changes its status to ACTIVE.",
-          "flatPath": "androidpublisher/v3/applications/{packageName}/appRecoveries/{appRecoveryId}:deploy",
-          "httpMethod": "POST",
-          "id": "androidpublisher.apprecovery.deploy",
-          "parameterOrder": [
-            "packageName",
-            "appRecoveryId"
-          ],
-          "parameters": {
-            "appRecoveryId": {
-              "description": "Required. ID corresponding to the app recovery action to deploy.",
-              "format": "int64",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            },
-            "packageName": {
-              "description": "Required. Package name of the app for which recovery action is deployed.",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            }
-          },
-          "path": "androidpublisher/v3/applications/{packageName}/appRecoveries/{appRecoveryId}:deploy",
-          "request": {
-            "$ref": "DeployAppRecoveryRequest"
-          },
-          "response": {
-            "$ref": "DeployAppRecoveryResponse"
-          },
-          "scopes": [
-            "https://www.googleapis.com/auth/androidpublisher"
-          ]
-        },
-        "list": {
-          "description": "List all app recovery action resources associated with a particular package name and app version.",
-          "flatPath": "androidpublisher/v3/applications/{packageName}/appRecoveries",
-          "httpMethod": "GET",
-          "id": "androidpublisher.apprecovery.list",
-          "parameterOrder": [
-            "packageName"
-          ],
-          "parameters": {
-            "packageName": {
-              "description": "Required. Package name of the app for which list of recovery actions is requested.",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            },
-            "versionCode": {
-              "description": "Required. Version code targeted by the list of recovery actions.",
-              "format": "int64",
-              "location": "query",
-              "type": "string"
-            }
-          },
-          "path": "androidpublisher/v3/applications/{packageName}/appRecoveries",
-          "response": {
-            "$ref": "ListAppRecoveriesResponse"
-          },
-          "scopes": [
-            "https://www.googleapis.com/auth/androidpublisher"
-          ]
         }
       }
     },
@@ -723,7 +528,7 @@
                 "accept": [
                   "application/octet-stream"
                 ],
-                "maxSize": "53687091200",
+                "maxSize": "10737418240",
                 "protocols": {
                   "resumable": {
                     "multipart": true,
@@ -741,8 +546,7 @@
               ],
               "parameters": {
                 "ackBundleInstallationWarning": {
-                  "deprecated": true,
-                  "description": "Deprecated. The installation warning has been removed, it's not necessary to set this field anymore.",
+                  "description": "Must be set to true if the app bundle installation may trigger a warning on user devices (for example, if installation size may be over a threshold, typically 100 MB).",
                   "location": "query",
                   "type": "boolean"
                 },
@@ -828,7 +632,7 @@
                 "accept": [
                   "application/octet-stream"
                 ],
-                "maxSize": "1677721600",
+                "maxSize": "1258291200",
                 "protocols": {
                   "resumable": {
                     "multipart": true,
@@ -1885,40 +1689,6 @@
         },
         "tracks": {
           "methods": {
-            "create": {
-              "description": "Creates a new track.",
-              "flatPath": "androidpublisher/v3/applications/{packageName}/edits/{editId}/tracks",
-              "httpMethod": "POST",
-              "id": "androidpublisher.edits.tracks.create",
-              "parameterOrder": [
-                "packageName",
-                "editId"
-              ],
-              "parameters": {
-                "editId": {
-                  "description": "Required. Identifier of the edit.",
-                  "location": "path",
-                  "required": true,
-                  "type": "string"
-                },
-                "packageName": {
-                  "description": "Required. Package name of the app.",
-                  "location": "path",
-                  "required": true,
-                  "type": "string"
-                }
-              },
-              "path": "androidpublisher/v3/applications/{packageName}/edits/{editId}/tracks",
-              "request": {
-                "$ref": "TrackConfig"
-              },
-              "response": {
-                "$ref": "Track"
-              },
-              "scopes": [
-                "https://www.googleapis.com/auth/androidpublisher"
-              ]
-            },
             "get": {
               "description": "Gets a track.",
               "flatPath": "androidpublisher/v3/applications/{packageName}/edits/{editId}/tracks/{track}",
@@ -2086,7 +1856,7 @@
           ],
           "parameters": {
             "externalTransactionId": {
-              "description": "Required. The id to use for the external transaction. Must be unique across all other transactions for the app. This value should be 1-63 characters and valid characters are /a-zA-Z0-9_-/. Do not use this field to store any Personally Identifiable Information (PII) such as emails. Attempting to store PII in this field may result in requests being blocked.",
+              "description": "Required. The id to use for the external transaction. Must be unique across all other transactions for the app. This value should be 1-63 characters and valid characters are /a-z0-9_-/. Do not use this field to store any Personally Identifiable Information (PII) such as emails. Attempting to store PII in this field may result in requests being blocked.",
               "location": "query",
               "type": "string"
             },
@@ -2328,87 +2098,6 @@
     },
     "inappproducts": {
       "methods": {
-        "batchDelete": {
-          "description": "Deletes in-app products (managed products or subscriptions). Set the latencyTolerance field on nested requests to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT to achieve maximum update throughput. This method should not be used to delete subscriptions. See [this article](https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html) for more information.",
-          "flatPath": "androidpublisher/v3/applications/{packageName}/inappproducts:batchDelete",
-          "httpMethod": "POST",
-          "id": "androidpublisher.inappproducts.batchDelete",
-          "parameterOrder": [
-            "packageName"
-          ],
-          "parameters": {
-            "packageName": {
-              "description": "Package name of the app.",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            }
-          },
-          "path": "androidpublisher/v3/applications/{packageName}/inappproducts:batchDelete",
-          "request": {
-            "$ref": "InappproductsBatchDeleteRequest"
-          },
-          "scopes": [
-            "https://www.googleapis.com/auth/androidpublisher"
-          ]
-        },
-        "batchGet": {
-          "description": "Reads multiple in-app products, which can be managed products or subscriptions. This method should not be used to retrieve subscriptions. See [this article](https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html) for more information.",
-          "flatPath": "androidpublisher/v3/applications/{packageName}/inappproducts:batchGet",
-          "httpMethod": "GET",
-          "id": "androidpublisher.inappproducts.batchGet",
-          "parameterOrder": [
-            "packageName"
-          ],
-          "parameters": {
-            "packageName": {
-              "description": "Package name of the app.",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            },
-            "sku": {
-              "description": "Unique identifier for the in-app products.",
-              "location": "query",
-              "repeated": true,
-              "type": "string"
-            }
-          },
-          "path": "androidpublisher/v3/applications/{packageName}/inappproducts:batchGet",
-          "response": {
-            "$ref": "InappproductsBatchGetResponse"
-          },
-          "scopes": [
-            "https://www.googleapis.com/auth/androidpublisher"
-          ]
-        },
-        "batchUpdate": {
-          "description": "Updates or inserts one or more in-app products (managed products or subscriptions). Set the latencyTolerance field on nested requests to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT to achieve maximum update throughput. This method should no longer be used to update subscriptions. See [this article](https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html) for more information.",
-          "flatPath": "androidpublisher/v3/applications/{packageName}/inappproducts:batchUpdate",
-          "httpMethod": "POST",
-          "id": "androidpublisher.inappproducts.batchUpdate",
-          "parameterOrder": [
-            "packageName"
-          ],
-          "parameters": {
-            "packageName": {
-              "description": "Package name of the app.",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            }
-          },
-          "path": "androidpublisher/v3/applications/{packageName}/inappproducts:batchUpdate",
-          "request": {
-            "$ref": "InappproductsBatchUpdateRequest"
-          },
-          "response": {
-            "$ref": "InappproductsBatchUpdateResponse"
-          },
-          "scopes": [
-            "https://www.googleapis.com/auth/androidpublisher"
-          ]
-        },
         "delete": {
           "description": "Deletes an in-app product (a managed product or a subscription). This method should no longer be used to delete subscriptions. See [this article](https://android-developers.googleblog.com/2023/06/changes-to-google-play-developer-api-june-2023.html) for more information.",
           "flatPath": "androidpublisher/v3/applications/{packageName}/inappproducts/{sku}",
@@ -2419,21 +2108,6 @@
             "sku"
           ],
           "parameters": {
-            "latencyTolerance": {
-              "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-              "enum": [
-                "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-                "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-                "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-              ],
-              "enumDescriptions": [
-                "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-                "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-                "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-              ],
-              "location": "query",
-              "type": "string"
-            },
             "packageName": {
               "description": "Package name of the app.",
               "location": "path",
@@ -2573,21 +2247,6 @@
               "location": "query",
               "type": "boolean"
             },
-            "latencyTolerance": {
-              "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-              "enum": [
-                "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-                "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-                "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-              ],
-              "enumDescriptions": [
-                "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-                "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-                "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-              ],
-              "location": "query",
-              "type": "string"
-            },
             "packageName": {
               "description": "Package name of the app.",
               "location": "path",
@@ -2631,21 +2290,6 @@
               "description": "If true the prices for all regions targeted by the parent app that don't have a price specified for this in-app product will be auto converted to the target currency based on the default price. Defaults to false.",
               "location": "query",
               "type": "boolean"
-            },
-            "latencyTolerance": {
-              "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-              "enum": [
-                "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-                "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-                "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-              ],
-              "enumDescriptions": [
-                "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-                "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-                "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-              ],
-              "location": "query",
-              "type": "string"
             },
             "packageName": {
               "description": "Package name of the app.",
@@ -2794,8 +2438,7 @@
         "subscriptions": {
           "methods": {
             "archive": {
-              "deprecated": true,
-              "description": "Deprecated: subscription archiving is not supported.",
+              "description": "Archives a subscription. Can only be done if at least one base plan was active in the past, and no base plan is available for new or existing subscribers currently. This action is irreversible, and the subscription ID will remain reserved.",
               "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}:archive",
               "httpMethod": "POST",
               "id": "androidpublisher.monetization.subscriptions.archive",
@@ -2828,63 +2471,6 @@
                 "https://www.googleapis.com/auth/androidpublisher"
               ]
             },
-            "batchGet": {
-              "description": "Reads one or more subscriptions.",
-              "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions:batchGet",
-              "httpMethod": "GET",
-              "id": "androidpublisher.monetization.subscriptions.batchGet",
-              "parameterOrder": [
-                "packageName"
-              ],
-              "parameters": {
-                "packageName": {
-                  "description": "Required. The parent app (package name) for which the subscriptions should be retrieved. Must be equal to the package_name field on all the requests.",
-                  "location": "path",
-                  "required": true,
-                  "type": "string"
-                },
-                "productIds": {
-                  "description": "Required. A list of up to 100 subscription product IDs to retrieve. All the IDs must be different.",
-                  "location": "query",
-                  "repeated": true,
-                  "type": "string"
-                }
-              },
-              "path": "androidpublisher/v3/applications/{packageName}/subscriptions:batchGet",
-              "response": {
-                "$ref": "BatchGetSubscriptionsResponse"
-              },
-              "scopes": [
-                "https://www.googleapis.com/auth/androidpublisher"
-              ]
-            },
-            "batchUpdate": {
-              "description": "Updates a batch of subscriptions. Set the latencyTolerance field on nested requests to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT to achieve maximum update throughput.",
-              "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions:batchUpdate",
-              "httpMethod": "POST",
-              "id": "androidpublisher.monetization.subscriptions.batchUpdate",
-              "parameterOrder": [
-                "packageName"
-              ],
-              "parameters": {
-                "packageName": {
-                  "description": "Required. The parent app (package name) for which the subscriptions should be updated. Must be equal to the package_name field on all the Subscription resources.",
-                  "location": "path",
-                  "required": true,
-                  "type": "string"
-                }
-              },
-              "path": "androidpublisher/v3/applications/{packageName}/subscriptions:batchUpdate",
-              "request": {
-                "$ref": "BatchUpdateSubscriptionsRequest"
-              },
-              "response": {
-                "$ref": "BatchUpdateSubscriptionsResponse"
-              },
-              "scopes": [
-                "https://www.googleapis.com/auth/androidpublisher"
-              ]
-            },
             "create": {
               "description": "Creates a new subscription. Newly added base plans will remain in draft state until activated.",
               "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions",
@@ -2906,7 +2492,7 @@
                   "type": "string"
                 },
                 "regionsVersion.version": {
-                  "description": "Required. A string representing the version of available regions being used for the specified resource. Regional prices for the resource have to be specified according to the information published in [this article](https://support.google.com/googleplay/android-developer/answer/10532353). Each time the supported locations substantially change, the version will be incremented. Using this field will ensure that creating and updating the resource with an older region's version and set of regional prices and currencies will succeed even though a new version is available. The latest version is 2022/02.",
+                  "description": "Required. The latest version is 2022/02.",
                   "location": "query",
                   "type": "string"
                 }
@@ -3008,8 +2594,7 @@
                   "type": "string"
                 },
                 "showArchived": {
-                  "deprecated": true,
-                  "description": "Deprecated: subscription archiving is not supported.",
+                  "description": "Whether archived subscriptions should be included in the response. Defaults to false.",
                   "location": "query",
                   "type": "boolean"
                 }
@@ -3032,26 +2617,6 @@
                 "productId"
               ],
               "parameters": {
-                "allowMissing": {
-                  "description": "Optional. If set to true, and the subscription with the given package_name and product_id doesn't exist, the subscription will be created. If a new subscription is created, update_mask is ignored.",
-                  "location": "query",
-                  "type": "boolean"
-                },
-                "latencyTolerance": {
-                  "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-                  "enum": [
-                    "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-                    "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-                    "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-                  ],
-                  "enumDescriptions": [
-                    "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-                    "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-                    "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-                  ],
-                  "location": "query",
-                  "type": "string"
-                },
                 "packageName": {
                   "description": "Immutable. Package name of the parent app.",
                   "location": "path",
@@ -3065,7 +2630,7 @@
                   "type": "string"
                 },
                 "regionsVersion.version": {
-                  "description": "Required. A string representing the version of available regions being used for the specified resource. Regional prices for the resource have to be specified according to the information published in [this article](https://support.google.com/googleplay/android-developer/answer/10532353). Each time the supported locations substantially change, the version will be incremented. Using this field will ensure that creating and updating the resource with an older region's version and set of regional prices and currencies will succeed even though a new version is available. The latest version is 2022/02.",
+                  "description": "Required. The latest version is 2022/02.",
                   "location": "query",
                   "type": "string"
                 },
@@ -3127,74 +2692,6 @@
                   },
                   "response": {
                     "$ref": "Subscription"
-                  },
-                  "scopes": [
-                    "https://www.googleapis.com/auth/androidpublisher"
-                  ]
-                },
-                "batchMigratePrices": {
-                  "description": "Batch variant of the MigrateBasePlanPrices endpoint. Set the latencyTolerance field on nested requests to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT to achieve maximum update throughput.",
-                  "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans:batchMigratePrices",
-                  "httpMethod": "POST",
-                  "id": "androidpublisher.monetization.subscriptions.basePlans.batchMigratePrices",
-                  "parameterOrder": [
-                    "packageName",
-                    "productId"
-                  ],
-                  "parameters": {
-                    "packageName": {
-                      "description": "Required. The parent app (package name) for which the subscriptions should be created or updated. Must be equal to the package_name field on all the Subscription resources.",
-                      "location": "path",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "productId": {
-                      "description": "Required. The product ID of the parent subscription, if all updated offers belong to the same subscription. If this batch update spans multiple subscriptions, set this field to \"-\". Must be set.",
-                      "location": "path",
-                      "required": true,
-                      "type": "string"
-                    }
-                  },
-                  "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans:batchMigratePrices",
-                  "request": {
-                    "$ref": "BatchMigrateBasePlanPricesRequest"
-                  },
-                  "response": {
-                    "$ref": "BatchMigrateBasePlanPricesResponse"
-                  },
-                  "scopes": [
-                    "https://www.googleapis.com/auth/androidpublisher"
-                  ]
-                },
-                "batchUpdateStates": {
-                  "description": "Activates or deactivates base plans across one or multiple subscriptions. Set the latencyTolerance field on nested requests to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT to achieve maximum update throughput.",
-                  "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans:batchUpdateStates",
-                  "httpMethod": "POST",
-                  "id": "androidpublisher.monetization.subscriptions.basePlans.batchUpdateStates",
-                  "parameterOrder": [
-                    "packageName",
-                    "productId"
-                  ],
-                  "parameters": {
-                    "packageName": {
-                      "description": "Required. The parent app (package name) of the updated base plans.",
-                      "location": "path",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "productId": {
-                      "description": "Required. The product ID of the parent subscription, if all updated base plans belong to the same subscription. If this batch update spans multiple subscriptions, set this field to \"-\". Must be set.",
-                      "location": "path",
-                      "required": true,
-                      "type": "string"
-                    }
-                  },
-                  "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans:batchUpdateStates",
-                  "request": {
-                    "$ref": "BatchUpdateBasePlanStatesRequest"
-                  },
-                  "response": {
-                    "$ref": "BatchUpdateBasePlanStatesResponse"
                   },
                   "scopes": [
                     "https://www.googleapis.com/auth/androidpublisher"
@@ -3277,7 +2774,7 @@
                   ]
                 },
                 "migratePrices": {
-                  "description": "Migrates subscribers from one or more legacy price cohorts to the current price. Requests result in Google Play notifying affected subscribers. Only up to 250 simultaneous legacy price cohorts are supported.",
+                  "description": "Migrates subscribers who are receiving an historical subscription price to the currently-offered price for the specified region. Requests will cause price change notifications to be sent to users who are currently receiving an historical price older than the supplied timestamp. Subscribers who do not agree to the new price will have their subscription ended at the next renewal.",
                   "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}:migratePrices",
                   "httpMethod": "POST",
                   "id": "androidpublisher.monetization.subscriptions.basePlans.migratePrices",
@@ -3369,129 +2866,6 @@
                         "https://www.googleapis.com/auth/androidpublisher"
                       ]
                     },
-                    "batchGet": {
-                      "description": "Reads one or more subscription offers.",
-                      "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers:batchGet",
-                      "httpMethod": "POST",
-                      "id": "androidpublisher.monetization.subscriptions.basePlans.offers.batchGet",
-                      "parameterOrder": [
-                        "packageName",
-                        "productId",
-                        "basePlanId"
-                      ],
-                      "parameters": {
-                        "basePlanId": {
-                          "description": "Required. The parent base plan (ID) for which the offers should be read. May be specified as '-' to read offers from multiple base plans.",
-                          "location": "path",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "packageName": {
-                          "description": "Required. The parent app (package name) for which the subscriptions should be created or updated. Must be equal to the package_name field on all the requests.",
-                          "location": "path",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "productId": {
-                          "description": "Required. The product ID of the parent subscription, if all updated offers belong to the same subscription. If this request spans multiple subscriptions, set this field to \"-\". Must be set.",
-                          "location": "path",
-                          "required": true,
-                          "type": "string"
-                        }
-                      },
-                      "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers:batchGet",
-                      "request": {
-                        "$ref": "BatchGetSubscriptionOffersRequest"
-                      },
-                      "response": {
-                        "$ref": "BatchGetSubscriptionOffersResponse"
-                      },
-                      "scopes": [
-                        "https://www.googleapis.com/auth/androidpublisher"
-                      ]
-                    },
-                    "batchUpdate": {
-                      "description": "Updates a batch of subscription offers. Set the latencyTolerance field on nested requests to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT to achieve maximum update throughput.",
-                      "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers:batchUpdate",
-                      "httpMethod": "POST",
-                      "id": "androidpublisher.monetization.subscriptions.basePlans.offers.batchUpdate",
-                      "parameterOrder": [
-                        "packageName",
-                        "productId",
-                        "basePlanId"
-                      ],
-                      "parameters": {
-                        "basePlanId": {
-                          "description": "Required. The parent base plan (ID) for which the offers should be updated. May be specified as '-' to update offers from multiple base plans.",
-                          "location": "path",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "packageName": {
-                          "description": "Required. The parent app (package name) of the updated subscription offers. Must be equal to the package_name field on all the updated SubscriptionOffer resources.",
-                          "location": "path",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "productId": {
-                          "description": "Required. The product ID of the parent subscription, if all updated offers belong to the same subscription. If this request spans multiple subscriptions, set this field to \"-\". Must be set.",
-                          "location": "path",
-                          "required": true,
-                          "type": "string"
-                        }
-                      },
-                      "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers:batchUpdate",
-                      "request": {
-                        "$ref": "BatchUpdateSubscriptionOffersRequest"
-                      },
-                      "response": {
-                        "$ref": "BatchUpdateSubscriptionOffersResponse"
-                      },
-                      "scopes": [
-                        "https://www.googleapis.com/auth/androidpublisher"
-                      ]
-                    },
-                    "batchUpdateStates": {
-                      "description": "Updates a batch of subscription offer states. Set the latencyTolerance field on nested requests to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT to achieve maximum update throughput.",
-                      "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers:batchUpdateStates",
-                      "httpMethod": "POST",
-                      "id": "androidpublisher.monetization.subscriptions.basePlans.offers.batchUpdateStates",
-                      "parameterOrder": [
-                        "packageName",
-                        "productId",
-                        "basePlanId"
-                      ],
-                      "parameters": {
-                        "basePlanId": {
-                          "description": "Required. The parent base plan (ID) for which the offers should be updated. May be specified as '-' to update offers from multiple base plans.",
-                          "location": "path",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "packageName": {
-                          "description": "Required. The parent app (package name) of the updated subscription offers. Must be equal to the package_name field on all the updated SubscriptionOffer resources.",
-                          "location": "path",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "productId": {
-                          "description": "Required. The product ID of the parent subscription, if all updated offers belong to the same subscription. If this request spans multiple subscriptions, set this field to \"-\". Must be set.",
-                          "location": "path",
-                          "required": true,
-                          "type": "string"
-                        }
-                      },
-                      "path": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers:batchUpdateStates",
-                      "request": {
-                        "$ref": "BatchUpdateSubscriptionOfferStatesRequest"
-                      },
-                      "response": {
-                        "$ref": "BatchUpdateSubscriptionOfferStatesResponse"
-                      },
-                      "scopes": [
-                        "https://www.googleapis.com/auth/androidpublisher"
-                      ]
-                    },
                     "create": {
                       "description": "Creates a new subscription offer. Only auto-renewing base plans can have subscription offers. The offer state will be DRAFT until it is activated.",
                       "flatPath": "androidpublisher/v3/applications/{packageName}/subscriptions/{productId}/basePlans/{basePlanId}/offers",
@@ -3527,7 +2901,7 @@
                           "type": "string"
                         },
                         "regionsVersion.version": {
-                          "description": "Required. A string representing the version of available regions being used for the specified resource. Regional prices for the resource have to be specified according to the information published in [this article](https://support.google.com/googleplay/android-developer/answer/10532353). Each time the supported locations substantially change, the version will be incremented. Using this field will ensure that creating and updating the resource with an older region's version and set of regional prices and currencies will succeed even though a new version is available. The latest version is 2022/02.",
+                          "description": "Required. The latest version is 2022/02.",
                           "location": "query",
                           "type": "string"
                         }
@@ -3739,30 +3113,10 @@
                         "offerId"
                       ],
                       "parameters": {
-                        "allowMissing": {
-                          "description": "Optional. If set to true, and the subscription offer with the given package_name, product_id, base_plan_id and offer_id doesn't exist, an offer will be created. If a new offer is created, update_mask is ignored.",
-                          "location": "query",
-                          "type": "boolean"
-                        },
                         "basePlanId": {
                           "description": "Required. Immutable. The ID of the base plan to which this offer is an extension.",
                           "location": "path",
                           "required": true,
-                          "type": "string"
-                        },
-                        "latencyTolerance": {
-                          "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-                          "enum": [
-                            "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-                            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-                            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-                          ],
-                          "enumDescriptions": [
-                            "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-                            "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-                            "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-                          ],
-                          "location": "query",
                           "type": "string"
                         },
                         "offerId": {
@@ -3784,7 +3138,7 @@
                           "type": "string"
                         },
                         "regionsVersion.version": {
-                          "description": "Required. A string representing the version of available regions being used for the specified resource. Regional prices for the resource have to be specified according to the information published in [this article](https://support.google.com/googleplay/android-developer/answer/10532353). Each time the supported locations substantially change, the version will be incremented. Using this field will ensure that creating and updating the resource with an older region's version and set of regional prices and currencies will succeed even though a new version is available. The latest version is 2022/02.",
+                          "description": "Required. The latest version is 2022/02.",
                           "location": "query",
                           "type": "string"
                         },
@@ -3817,7 +3171,7 @@
     "orders": {
       "methods": {
         "refund": {
-          "description": "Refunds a user's subscription or in-app purchase order. Orders older than 3 years cannot be refunded.",
+          "description": "Refunds a user's subscription or in-app purchase order. Orders older than 1 year cannot be refunded.",
           "flatPath": "androidpublisher/v3/applications/{packageName}/orders/{orderId}:refund",
           "httpMethod": "POST",
           "id": "androidpublisher.orders.refund",
@@ -4226,40 +3580,6 @@
               "scopes": [
                 "https://www.googleapis.com/auth/androidpublisher"
               ]
-            },
-            "revoke": {
-              "description": "Revoke a subscription purchase for the user.",
-              "flatPath": "androidpublisher/v3/applications/{packageName}/purchases/subscriptionsv2/tokens/{token}:revoke",
-              "httpMethod": "POST",
-              "id": "androidpublisher.purchases.subscriptionsv2.revoke",
-              "parameterOrder": [
-                "packageName",
-                "token"
-              ],
-              "parameters": {
-                "packageName": {
-                  "description": "Required. The package of the application for which this subscription was purchased (for example, 'com.some.thing').",
-                  "location": "path",
-                  "required": true,
-                  "type": "string"
-                },
-                "token": {
-                  "description": "Required. The token provided to the user's device when the subscription was purchased.",
-                  "location": "path",
-                  "required": true,
-                  "type": "string"
-                }
-              },
-              "path": "androidpublisher/v3/applications/{packageName}/purchases/subscriptionsv2/tokens/{token}:revoke",
-              "request": {
-                "$ref": "RevokeSubscriptionPurchaseRequest"
-              },
-              "response": {
-                "$ref": "RevokeSubscriptionPurchaseResponse"
-              },
-              "scopes": [
-                "https://www.googleapis.com/auth/androidpublisher"
-              ]
             }
           }
         },
@@ -4279,11 +3599,6 @@
                   "format": "int64",
                   "location": "query",
                   "type": "string"
-                },
-                "includeQuantityBasedPartialRefund": {
-                  "description": "Optional. Whether to include voided purchases of quantity-based partial refunds, which are applicable only to multi-quantity purchases. If true, additional voided purchases may be returned with voidedQuantity that indicates the refund quantity of a quantity-based partial refund. The default value is false.",
-                  "location": "query",
-                  "type": "boolean"
                 },
                 "maxResults": {
                   "description": "Defines how many results the list operation should return. The default number depends on the resource collection.",
@@ -4732,7 +4047,7 @@
       }
     }
   },
-  "revision": "20250102",
+  "revision": "20230907",
   "rootUrl": "https://androidpublisher.googleapis.com/",
   "schemas": {
     "Abi": {
@@ -4747,8 +4062,7 @@
             "ARMEABI_V7A",
             "ARM64_V8A",
             "X86",
-            "X86_64",
-            "RISCV64"
+            "X86_64"
           ],
           "enumDescriptions": [
             "Unspecified abi.",
@@ -4756,8 +4070,7 @@
             "ARMEABI_V7A abi.",
             "ARM64_V8A abi.",
             "X86 abi.",
-            "X86_64 abi.",
-            "RISCV64 abi."
+            "X86_64 abi."
           ],
           "type": "string"
         }
@@ -4799,114 +4112,13 @@
     "ActivateBasePlanRequest": {
       "description": "Request message for ActivateBasePlan.",
       "id": "ActivateBasePlanRequest",
-      "properties": {
-        "basePlanId": {
-          "description": "Required. The unique base plan ID of the base plan to activate.",
-          "type": "string"
-        },
-        "latencyTolerance": {
-          "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-          "enum": [
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-          ],
-          "enumDescriptions": [
-            "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-            "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-            "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-          ],
-          "type": "string"
-        },
-        "packageName": {
-          "description": "Required. The parent app (package name) of the base plan to activate.",
-          "type": "string"
-        },
-        "productId": {
-          "description": "Required. The parent subscription (ID) of the base plan to activate.",
-          "type": "string"
-        }
-      },
+      "properties": {},
       "type": "object"
     },
     "ActivateSubscriptionOfferRequest": {
       "description": "Request message for ActivateSubscriptionOffer.",
       "id": "ActivateSubscriptionOfferRequest",
-      "properties": {
-        "basePlanId": {
-          "description": "Required. The parent base plan (ID) of the offer to activate.",
-          "type": "string"
-        },
-        "latencyTolerance": {
-          "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-          "enum": [
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-          ],
-          "enumDescriptions": [
-            "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-            "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-            "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-          ],
-          "type": "string"
-        },
-        "offerId": {
-          "description": "Required. The unique offer ID of the offer to activate.",
-          "type": "string"
-        },
-        "packageName": {
-          "description": "Required. The parent app (package name) of the offer to activate.",
-          "type": "string"
-        },
-        "productId": {
-          "description": "Required. The parent subscription (ID) of the offer to activate.",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "AddTargetingRequest": {
-      "description": "Request message for AddTargeting.",
-      "id": "AddTargetingRequest",
-      "properties": {
-        "targetingUpdate": {
-          "$ref": "TargetingUpdate",
-          "description": "Specifies targeting updates such as regions, android sdk versions etc."
-        }
-      },
-      "type": "object"
-    },
-    "AddTargetingResponse": {
-      "description": "Response message for AddTargeting.",
-      "id": "AddTargetingResponse",
       "properties": {},
-      "type": "object"
-    },
-    "AllUsers": {
-      "description": "Object representation to describe all set of users.",
-      "id": "AllUsers",
-      "properties": {
-        "isAllUsersRequested": {
-          "description": "Required. Set to true if all set of users are needed.",
-          "type": "boolean"
-        }
-      },
-      "type": "object"
-    },
-    "AndroidSdks": {
-      "description": "Android api level targeting data for app recovery action targeting.",
-      "id": "AndroidSdks",
-      "properties": {
-        "sdkLevels": {
-          "description": "Android api levels of devices targeted by recovery action. See https://developer.android.com/guide/topics/manifest/uses-sdk-element#ApiLevels for different api levels in android.",
-          "items": {
-            "format": "int64",
-            "type": "string"
-          },
-          "type": "array"
-        }
-      },
       "type": "object"
     },
     "Apk": {
@@ -5100,101 +4312,8 @@
       },
       "type": "object"
     },
-    "AppRecoveryAction": {
-      "description": "Information about an app recovery action.",
-      "id": "AppRecoveryAction",
-      "properties": {
-        "appRecoveryId": {
-          "description": "ID corresponding to the app recovery action.",
-          "format": "int64",
-          "type": "string"
-        },
-        "cancelTime": {
-          "description": "Timestamp of when the app recovery action is canceled by the developer. Only set if the recovery action has been canceled.",
-          "format": "google-datetime",
-          "type": "string"
-        },
-        "createTime": {
-          "description": "Timestamp of when the app recovery action is created by the developer. It is always set after creation of the recovery action.",
-          "format": "google-datetime",
-          "type": "string"
-        },
-        "deployTime": {
-          "description": "Timestamp of when the app recovery action is deployed to the users. Only set if the recovery action has been deployed.",
-          "format": "google-datetime",
-          "type": "string"
-        },
-        "lastUpdateTime": {
-          "description": "Timestamp of when the developer last updated recovery action. In case the action is cancelled, it corresponds to cancellation time. It is always set after creation of the recovery action.",
-          "format": "google-datetime",
-          "type": "string"
-        },
-        "remoteInAppUpdateData": {
-          "$ref": "RemoteInAppUpdateData",
-          "description": "Data about the remote in-app update action such as such as recovered user base, recoverable user base etc. Set only if the recovery action type is Remote In-App Update."
-        },
-        "status": {
-          "description": "The status of the recovery action.",
-          "enum": [
-            "RECOVERY_STATUS_UNSPECIFIED",
-            "RECOVERY_STATUS_ACTIVE",
-            "RECOVERY_STATUS_CANCELED",
-            "RECOVERY_STATUS_DRAFT",
-            "RECOVERY_STATUS_GENERATION_IN_PROGRESS",
-            "RECOVERY_STATUS_GENERATION_FAILED"
-          ],
-          "enumDescriptions": [
-            "RecoveryStatus is unspecified.",
-            "The app recovery action has not been canceled since it has been created.",
-            "The recovery action has been canceled. The action cannot be resumed.",
-            "The recovery action is in the draft state and has not yet been deployed to users.",
-            "The recovery action is generating recovery apks.",
-            "The app recovery action generation has failed."
-          ],
-          "type": "string"
-        },
-        "targeting": {
-          "$ref": "Targeting",
-          "description": "Specifies targeting criteria for the recovery action such as regions, android sdk versions, app versions etc."
-        }
-      },
-      "type": "object"
-    },
-    "AppVersionList": {
-      "description": "Data format for a list of app versions.",
-      "id": "AppVersionList",
-      "properties": {
-        "versionCodes": {
-          "description": "List of app version codes.",
-          "items": {
-            "format": "int64",
-            "type": "string"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "AppVersionRange": {
-      "description": "Data format for a continuous range of app versions.",
-      "id": "AppVersionRange",
-      "properties": {
-        "versionCodeEnd": {
-          "description": "Highest app version in the range, inclusive.",
-          "format": "int64",
-          "type": "string"
-        },
-        "versionCodeStart": {
-          "description": "Lowest app version in the range, inclusive.",
-          "format": "int64",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
     "ArchiveSubscriptionRequest": {
-      "deprecated": true,
-      "description": "Deprecated: subscription archiving is not supported.",
+      "description": "Request message for ArchiveSubscription.",
       "id": "ArchiveSubscriptionRequest",
       "properties": {},
       "type": "object"
@@ -5248,16 +4367,12 @@
       "description": "Represents a base plan that automatically renews at the end of its subscription period.",
       "id": "AutoRenewingBasePlanType",
       "properties": {
-        "accountHoldDuration": {
-          "description": "Optional. Account hold period of the subscription, specified in ISO 8601 format. Acceptable values must be in days and between P0D and P60D. If not specified, the default value is P30D. The sum of gracePeriodDuration and accountHoldDuration must be between P30D and P60D days, inclusive.",
-          "type": "string"
-        },
         "billingPeriodDuration": {
-          "description": "Required. Immutable. Subscription period, specified in ISO 8601 format. For a list of acceptable billing periods, refer to the help center. The duration is immutable after the base plan is created.",
+          "description": "Required. Subscription period, specified in ISO 8601 format. For a list of acceptable billing periods, refer to the help center.",
           "type": "string"
         },
         "gracePeriodDuration": {
-          "description": "Grace period of the subscription, specified in ISO 8601 format. Acceptable values must be in days and between P0D and the lesser of 30D and base plan billing period. If not specified, a default value will be used based on the billing period. The sum of gracePeriodDuration and accountHoldDuration must be between P30D and P60D days, inclusive.",
+          "description": "Grace period of the subscription, specified in ISO 8601 format. Acceptable values are P0D (zero days), P3D (3 days), P7D (7 days), P14D (14 days), and P30D (30 days). If not specified, a default value will be used based on the recurring period duration.",
           "type": "string"
         },
         "legacyCompatible": {
@@ -5307,17 +4422,9 @@
           "description": "If the subscription is currently set to auto-renew, e.g. the user has not canceled the subscription",
           "type": "boolean"
         },
-        "installmentDetails": {
-          "$ref": "InstallmentPlan",
-          "description": "The installment plan commitment and state related info for the auto renewing plan."
-        },
         "priceChangeDetails": {
           "$ref": "SubscriptionItemPriceChangeDetails",
           "description": "The information of the last price change for the item since subscription signup."
-        },
-        "recurringPrice": {
-          "$ref": "Money",
-          "description": "The current recurring price of the auto renewing plan."
         }
       },
       "type": "object"
@@ -5333,10 +4440,6 @@
         "basePlanId": {
           "description": "Required. Immutable. The unique identifier of this base plan. Must be unique within the subscription, and conform with RFC-1034. That is, this ID can only contain lower-case letters (a-z), numbers (0-9), and hyphens (-), and be at most 63 characters.",
           "type": "string"
-        },
-        "installmentsBasePlanType": {
-          "$ref": "InstallmentsBasePlanType",
-          "description": "Set for installments base plans where a user is committed to a specified number of payments."
         },
         "offerTags": {
           "description": "List of up to 20 custom tags specified for this base plan, and returned to the app through the billing library. Subscription offers for this base plan will also receive these offer tags in the billing library.",
@@ -5380,187 +4483,6 @@
       },
       "type": "object"
     },
-    "BatchGetSubscriptionOffersRequest": {
-      "description": "Request message for BatchGetSubscriptionOffers endpoint.",
-      "id": "BatchGetSubscriptionOffersRequest",
-      "properties": {
-        "requests": {
-          "description": "Required. A list of update requests of up to 100 elements. All requests must update different subscriptions.",
-          "items": {
-            "$ref": "GetSubscriptionOfferRequest"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "BatchGetSubscriptionOffersResponse": {
-      "description": "Response message for BatchGetSubscriptionOffers endpoint.",
-      "id": "BatchGetSubscriptionOffersResponse",
-      "properties": {
-        "subscriptionOffers": {
-          "items": {
-            "$ref": "SubscriptionOffer"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "BatchGetSubscriptionsResponse": {
-      "description": "Response message for BatchGetSubscriptions endpoint.",
-      "id": "BatchGetSubscriptionsResponse",
-      "properties": {
-        "subscriptions": {
-          "description": "The list of requested subscriptions, in the same order as the request.",
-          "items": {
-            "$ref": "Subscription"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "BatchMigrateBasePlanPricesRequest": {
-      "description": "Request message for BatchMigrateBasePlanPrices.",
-      "id": "BatchMigrateBasePlanPricesRequest",
-      "properties": {
-        "requests": {
-          "description": "Required. Up to 100 price migration requests. All requests must update different base plans.",
-          "items": {
-            "$ref": "MigrateBasePlanPricesRequest"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "BatchMigrateBasePlanPricesResponse": {
-      "description": "Response message for BatchMigrateBasePlanPrices.",
-      "id": "BatchMigrateBasePlanPricesResponse",
-      "properties": {
-        "responses": {
-          "description": "Contains one response per requested price migration, in the same order as the request.",
-          "items": {
-            "$ref": "MigrateBasePlanPricesResponse"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "BatchUpdateBasePlanStatesRequest": {
-      "description": "Request message for BatchUpdateBasePlanStates.",
-      "id": "BatchUpdateBasePlanStatesRequest",
-      "properties": {
-        "requests": {
-          "description": "Required. The update request list of up to 100 elements. All requests must update different base plans.",
-          "items": {
-            "$ref": "UpdateBasePlanStateRequest"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "BatchUpdateBasePlanStatesResponse": {
-      "description": "Response message for BatchUpdateBasePlanStates.",
-      "id": "BatchUpdateBasePlanStatesResponse",
-      "properties": {
-        "subscriptions": {
-          "description": "The list of updated subscriptions. This list will match the requests one to one, in the same order.",
-          "items": {
-            "$ref": "Subscription"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "BatchUpdateSubscriptionOfferStatesRequest": {
-      "description": "Request message for BatchUpdateSubscriptionOfferStates.",
-      "id": "BatchUpdateSubscriptionOfferStatesRequest",
-      "properties": {
-        "requests": {
-          "description": "Required. The update request list of up to 100 elements. All requests must update different offers.",
-          "items": {
-            "$ref": "UpdateSubscriptionOfferStateRequest"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "BatchUpdateSubscriptionOfferStatesResponse": {
-      "description": "Response message for BatchUpdateSubscriptionOfferStates.",
-      "id": "BatchUpdateSubscriptionOfferStatesResponse",
-      "properties": {
-        "subscriptionOffers": {
-          "description": "The updated subscription offers list.",
-          "items": {
-            "$ref": "SubscriptionOffer"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "BatchUpdateSubscriptionOffersRequest": {
-      "description": "Request message for BatchUpdateSubscriptionOffers.",
-      "id": "BatchUpdateSubscriptionOffersRequest",
-      "properties": {
-        "requests": {
-          "description": "Required. A list of update requests of up to 100 elements. All requests must update different subscription offers.",
-          "items": {
-            "$ref": "UpdateSubscriptionOfferRequest"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "BatchUpdateSubscriptionOffersResponse": {
-      "description": "Response message for BatchUpdateSubscriptionOffers.",
-      "id": "BatchUpdateSubscriptionOffersResponse",
-      "properties": {
-        "subscriptionOffers": {
-          "description": "The updated subscription offers list.",
-          "items": {
-            "$ref": "SubscriptionOffer"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "BatchUpdateSubscriptionsRequest": {
-      "description": "Request message for BatchUpdateSubscription.",
-      "id": "BatchUpdateSubscriptionsRequest",
-      "properties": {
-        "requests": {
-          "description": "Required. A list of update requests of up to 100 elements. All requests must update different subscriptions.",
-          "items": {
-            "$ref": "UpdateSubscriptionRequest"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "BatchUpdateSubscriptionsResponse": {
-      "description": "Response message for BatchUpdateSubscription.",
-      "id": "BatchUpdateSubscriptionsResponse",
-      "properties": {
-        "subscriptions": {
-          "description": "The updated subscriptions list.",
-          "items": {
-            "$ref": "Subscription"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
     "Bundle": {
       "description": "Information about an app bundle. The resource for BundlesService.",
       "id": "Bundle",
@@ -5599,18 +4521,6 @@
       },
       "type": "object"
     },
-    "CancelAppRecoveryRequest": {
-      "description": "Request message for CancelAppRecovery.",
-      "id": "CancelAppRecoveryRequest",
-      "properties": {},
-      "type": "object"
-    },
-    "CancelAppRecoveryResponse": {
-      "description": "Response message for CancelAppRecovery.",
-      "id": "CancelAppRecoveryResponse",
-      "properties": {},
-      "type": "object"
-    },
     "CancelSurveyResult": {
       "description": "Result of the cancel survey when the subscription was canceled by the user.",
       "id": "CancelSurveyResult",
@@ -5643,7 +4553,7 @@
       "type": "object"
     },
     "CanceledStateContext": {
-      "description": "Information specific to a subscription in the SUBSCRIPTION_STATE_CANCELED or SUBSCRIPTION_STATE_EXPIRED state.",
+      "description": "Information specific to a subscription in canceled state.",
       "id": "CanceledStateContext",
       "properties": {
         "developerInitiatedCancellation": {
@@ -5761,89 +4671,16 @@
       },
       "type": "object"
     },
-    "CreateDraftAppRecoveryRequest": {
-      "description": "Request message for CreateDraftAppRecovery.",
-      "id": "CreateDraftAppRecoveryRequest",
-      "properties": {
-        "remoteInAppUpdate": {
-          "$ref": "RemoteInAppUpdate",
-          "description": "Action type is remote in-app update. As a consequence of this action, a downloadable recovery module is also created for testing purposes."
-        },
-        "targeting": {
-          "$ref": "Targeting",
-          "description": "Specifies targeting criteria for the recovery action such as regions, android sdk versions, app versions etc."
-        }
-      },
-      "type": "object"
-    },
     "DeactivateBasePlanRequest": {
       "description": "Request message for DeactivateBasePlan.",
       "id": "DeactivateBasePlanRequest",
-      "properties": {
-        "basePlanId": {
-          "description": "Required. The unique base plan ID of the base plan to deactivate.",
-          "type": "string"
-        },
-        "latencyTolerance": {
-          "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-          "enum": [
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-          ],
-          "enumDescriptions": [
-            "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-            "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-            "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-          ],
-          "type": "string"
-        },
-        "packageName": {
-          "description": "Required. The parent app (package name) of the base plan to deactivate.",
-          "type": "string"
-        },
-        "productId": {
-          "description": "Required. The parent subscription (ID) of the base plan to deactivate.",
-          "type": "string"
-        }
-      },
+      "properties": {},
       "type": "object"
     },
     "DeactivateSubscriptionOfferRequest": {
       "description": "Request message for DeactivateSubscriptionOffer.",
       "id": "DeactivateSubscriptionOfferRequest",
-      "properties": {
-        "basePlanId": {
-          "description": "Required. The parent base plan (ID) of the offer to deactivate.",
-          "type": "string"
-        },
-        "latencyTolerance": {
-          "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-          "enum": [
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-          ],
-          "enumDescriptions": [
-            "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-            "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-            "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-          ],
-          "type": "string"
-        },
-        "offerId": {
-          "description": "Required. The unique offer ID of the offer to deactivate.",
-          "type": "string"
-        },
-        "packageName": {
-          "description": "Required. The parent app (package name) of the offer to deactivate.",
-          "type": "string"
-        },
-        "productId": {
-          "description": "Required. The parent subscription (ID) of the offer to deactivate.",
-          "type": "string"
-        }
-      },
+      "properties": {},
       "type": "object"
     },
     "DeferredItemReplacement": {
@@ -5887,18 +4724,6 @@
           "description": "The uploaded Deobfuscation File configuration."
         }
       },
-      "type": "object"
-    },
-    "DeployAppRecoveryRequest": {
-      "description": "Request message for DeployAppRecovery.",
-      "id": "DeployAppRecoveryRequest",
-      "properties": {},
-      "type": "object"
-    },
-    "DeployAppRecoveryResponse": {
-      "description": "Response message for DeployAppRecovery.",
-      "id": "DeployAppRecoveryResponse",
-      "properties": {},
       "type": "object"
     },
     "DeveloperComment": {
@@ -6088,13 +4913,6 @@
           "description": "A device needs to have all these system features to be included by the selector.",
           "items": {
             "$ref": "SystemFeature"
-          },
-          "type": "array"
-        },
-        "systemOnChips": {
-          "description": "Optional. The SoCs included by this selector. Only works for Android S+ devices.",
-          "items": {
-            "$ref": "SystemOnChip"
           },
           "type": "array"
         }
@@ -6310,11 +5128,6 @@
           "description": "Output only. If set, this transaction was a test purchase. Google will not charge for a test transaction.",
           "readOnly": true
         },
-        "transactionProgramCode": {
-          "description": "Optional. The transaction program code, used to help determine service fee for eligible apps participating in partner programs. Developers participating in the Play Media Experience Program (https://play.google.com/console/about/programs/mediaprogram/) must provide the program code when reporting alternative billing transactions. If you are an eligible developer, please contact your BDM for more information on how to set this field. Note: this field can not be used for external offers transactions.",
-          "format": "int32",
-          "type": "integer"
-        },
         "transactionState": {
           "description": "Output only. The current state of the transaction.",
           "enum": [
@@ -6346,10 +5159,6 @@
       "description": "User's address for the external transaction.",
       "id": "ExternalTransactionAddress",
       "properties": {
-        "administrativeArea": {
-          "description": "Optional. Top-level administrative subdivision of the country/region. Only required for transactions in India. Valid values are \"ANDAMAN AND NICOBAR ISLANDS\", \"ANDHRA PRADESH\", \"ARUNACHAL PRADESH\", \"ASSAM\", \"BIHAR\", \"CHANDIGARH\", \"CHHATTISGARH\", \"DADRA AND NAGAR HAVELI\", \"DADRA AND NAGAR HAVELI AND DAMAN AND DIU\", \"DAMAN AND DIU\", \"DELHI\", \"GOA\", \"GUJARAT\", \"HARYANA\", \"HIMACHAL PRADESH\", \"JAMMU AND KASHMIR\", \"JHARKHAND\", \"KARNATAKA\", \"KERALA\", \"LADAKH\", \"LAKSHADWEEP\", \"MADHYA PRADESH\", \"MAHARASHTRA\", \"MANIPUR\", \"MEGHALAYA\", \"MIZORAM\", \"NAGALAND\", \"ODISHA\", \"PUDUCHERRY\", \"PUNJAB\", \"RAJASTHAN\", \"SIKKIM\", \"TAMIL NADU\", \"TELANGANA\", \"TRIPURA\", \"UTTAR PRADESH\", \"UTTARAKHAND\", and \"WEST BENGAL\".",
-          "type": "string"
-        },
         "regionCode": {
           "description": "Required. Two letter region code based on ISO-3166-1 Alpha-2 (UN region codes).",
           "type": "string"
@@ -6481,13 +5290,6 @@
           },
           "type": "array"
         },
-        "generatedRecoveryModules": {
-          "description": "Generated recovery apks for recovery actions signed with a key corresponding to certificate_sha256_hash. This includes all generated recovery APKs, also those in draft or cancelled state. This field is not set if no recovery actions were created for this signing key.",
-          "items": {
-            "$ref": "GeneratedRecoveryApk"
-          },
-          "type": "array"
-        },
         "generatedSplitApks": {
           "description": "List of generated split APKs, signed with a key corresponding to certificate_sha256_hash.",
           "items": {
@@ -6532,46 +5334,6 @@
         "version": {
           "description": "Asset module version.",
           "format": "int64",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "GeneratedRecoveryApk": {
-      "description": "Download metadata for an app recovery module.",
-      "id": "GeneratedRecoveryApk",
-      "properties": {
-        "downloadId": {
-          "description": "Download ID, which uniquely identifies the APK to download. Should be supplied to `generatedapks.download` method.",
-          "type": "string"
-        },
-        "moduleName": {
-          "description": "Name of the module which recovery apk belongs to.",
-          "type": "string"
-        },
-        "recoveryId": {
-          "description": "ID of the recovery action.",
-          "format": "int64",
-          "type": "string"
-        },
-        "recoveryStatus": {
-          "description": "The status of the recovery action corresponding to the recovery apk.",
-          "enum": [
-            "RECOVERY_STATUS_UNSPECIFIED",
-            "RECOVERY_STATUS_ACTIVE",
-            "RECOVERY_STATUS_CANCELED",
-            "RECOVERY_STATUS_DRAFT",
-            "RECOVERY_STATUS_GENERATION_IN_PROGRESS",
-            "RECOVERY_STATUS_GENERATION_FAILED"
-          ],
-          "enumDescriptions": [
-            "RecoveryStatus is unspecified.",
-            "The app recovery action has not been canceled since it has been created.",
-            "The recovery action has been canceled. The action cannot be resumed.",
-            "The recovery action is in the draft state and has not yet been deployed to users.",
-            "The recovery action is generating recovery apks.",
-            "The app recovery action generation has failed."
-          ],
           "type": "string"
         }
       },
@@ -6628,29 +5390,6 @@
       },
       "type": "object"
     },
-    "GetSubscriptionOfferRequest": {
-      "description": "Request message for GetSubscriptionOffer.",
-      "id": "GetSubscriptionOfferRequest",
-      "properties": {
-        "basePlanId": {
-          "description": "Required. The parent base plan (ID) of the offer to get.",
-          "type": "string"
-        },
-        "offerId": {
-          "description": "Required. The unique offer ID of the offer to get.",
-          "type": "string"
-        },
-        "packageName": {
-          "description": "Required. The parent app (package name) of the offer to get.",
-          "type": "string"
-        },
-        "productId": {
-          "description": "Required. The parent subscription (ID) of the offer to get.",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
     "Grant": {
       "description": "An access grant resource.",
       "id": "Grant",
@@ -6672,13 +5411,11 @@
               "CAN_MANAGE_ORDERS",
               "CAN_MANAGE_APP_CONTENT",
               "CAN_VIEW_NON_FINANCIAL_DATA",
-              "CAN_VIEW_APP_QUALITY",
-              "CAN_MANAGE_DEEPLINKS"
+              "CAN_VIEW_APP_QUALITY"
             ],
             "enumDeprecated": [
               false,
               true,
-              false,
               false,
               false,
               false,
@@ -6706,8 +5443,7 @@
               "Manage orders and subscriptions.",
               "Manage policy related pages.",
               "View app information (read-only).",
-              "View app quality data such as Vitals, Crashes etc.",
-              "Manage the deep links setup of an app."
+              "View app quality data such as Vitals, Crashes etc."
             ],
             "type": "string"
           },
@@ -6893,91 +5629,6 @@
       },
       "type": "object"
     },
-    "InappproductsBatchDeleteRequest": {
-      "description": "Request to delete multiple in-app products.",
-      "id": "InappproductsBatchDeleteRequest",
-      "properties": {
-        "requests": {
-          "description": "Individual delete requests. At least one request is required. Can contain up to 100 requests. All requests must correspond to different in-app products.",
-          "items": {
-            "$ref": "InappproductsDeleteRequest"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "InappproductsBatchGetResponse": {
-      "description": "Response message for BatchGetSubscriptions endpoint.",
-      "id": "InappproductsBatchGetResponse",
-      "properties": {
-        "inappproduct": {
-          "description": "The list of requested in-app products, in the same order as the request.",
-          "items": {
-            "$ref": "InAppProduct"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "InappproductsBatchUpdateRequest": {
-      "description": "Request to update or insert one or more in-app products.",
-      "id": "InappproductsBatchUpdateRequest",
-      "properties": {
-        "requests": {
-          "description": "Required. Individual update requests. At least one request is required. Can contain up to 100 requests. All requests must correspond to different in-app products.",
-          "items": {
-            "$ref": "InappproductsUpdateRequest"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "InappproductsBatchUpdateResponse": {
-      "description": "Response for a batch in-app product update.",
-      "id": "InappproductsBatchUpdateResponse",
-      "properties": {
-        "inappproducts": {
-          "description": "The updated or inserted in-app products.",
-          "items": {
-            "$ref": "InAppProduct"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "InappproductsDeleteRequest": {
-      "description": "Request to delete an in-app product.",
-      "id": "InappproductsDeleteRequest",
-      "properties": {
-        "latencyTolerance": {
-          "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-          "enum": [
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-          ],
-          "enumDescriptions": [
-            "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-            "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-            "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-          ],
-          "type": "string"
-        },
-        "packageName": {
-          "description": "Package name of the app.",
-          "type": "string"
-        },
-        "sku": {
-          "description": "Unique identifier for the in-app product.",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
     "InappproductsListResponse": {
       "description": "Response listing all in-app products.",
       "id": "InappproductsListResponse",
@@ -7001,139 +5652,6 @@
         "tokenPagination": {
           "$ref": "TokenPagination",
           "description": "Pagination token, to handle a number of products that is over one page."
-        }
-      },
-      "type": "object"
-    },
-    "InappproductsUpdateRequest": {
-      "description": "Request to update an in-app product.",
-      "id": "InappproductsUpdateRequest",
-      "properties": {
-        "allowMissing": {
-          "description": "If set to true, and the in-app product with the given package_name and sku doesn't exist, the in-app product will be created.",
-          "type": "boolean"
-        },
-        "autoConvertMissingPrices": {
-          "description": "If true the prices for all regions targeted by the parent app that don't have a price specified for this in-app product will be auto converted to the target currency based on the default price. Defaults to false.",
-          "type": "boolean"
-        },
-        "inappproduct": {
-          "$ref": "InAppProduct",
-          "description": "The new in-app product."
-        },
-        "latencyTolerance": {
-          "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-          "enum": [
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-          ],
-          "enumDescriptions": [
-            "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-            "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-            "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-          ],
-          "type": "string"
-        },
-        "packageName": {
-          "description": "Package name of the app.",
-          "type": "string"
-        },
-        "sku": {
-          "description": "Unique identifier for the in-app product.",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "InstallmentPlan": {
-      "description": "Information to a installment plan.",
-      "id": "InstallmentPlan",
-      "properties": {
-        "initialCommittedPaymentsCount": {
-          "description": "Total number of payments the user is initially committed for.",
-          "format": "int32",
-          "type": "integer"
-        },
-        "pendingCancellation": {
-          "$ref": "PendingCancellation",
-          "description": "If present, this installment plan is pending to be canceled. The cancellation will happen only after the user finished all committed payments."
-        },
-        "remainingCommittedPaymentsCount": {
-          "description": "Total number of committed payments remaining to be paid for in this renewal cycle.",
-          "format": "int32",
-          "type": "integer"
-        },
-        "subsequentCommittedPaymentsCount": {
-          "description": "Total number of payments the user will be committed for after each commitment period. Empty means the installment plan will fall back to a normal auto-renew subscription after initial commitment.",
-          "format": "int32",
-          "type": "integer"
-        }
-      },
-      "type": "object"
-    },
-    "InstallmentsBasePlanType": {
-      "description": "Represents an installments base plan where a user commits to a specified number of payments.",
-      "id": "InstallmentsBasePlanType",
-      "properties": {
-        "accountHoldDuration": {
-          "description": "Optional. Account hold period of the subscription, specified in ISO 8601 format. Acceptable values must be in days and between P0D and P60D. If not specified, the default value is P30D. The sum of gracePeriodDuration and accountHoldDuration must be between P30D and P60D days, inclusive.",
-          "type": "string"
-        },
-        "billingPeriodDuration": {
-          "description": "Required. Immutable. Subscription period, specified in ISO 8601 format. For a list of acceptable billing periods, refer to the help center. The duration is immutable after the base plan is created.",
-          "type": "string"
-        },
-        "committedPaymentsCount": {
-          "description": "Required. Immutable. The number of payments the user is committed to. It is immutable after the base plan is created.",
-          "format": "int32",
-          "type": "integer"
-        },
-        "gracePeriodDuration": {
-          "description": "Grace period of the subscription, specified in ISO 8601 format. Acceptable values must be in days and between P0D and the lesser of 30D and base plan billing period. If not specified, a default value will be used based on the billing period. The sum of gracePeriodDuration and accountHoldDuration must be between P30D and P60D days, inclusive.",
-          "type": "string"
-        },
-        "prorationMode": {
-          "description": "The proration mode for the base plan determines what happens when a user switches to this plan from another base plan. If unspecified, defaults to CHARGE_ON_NEXT_BILLING_DATE.",
-          "enum": [
-            "SUBSCRIPTION_PRORATION_MODE_UNSPECIFIED",
-            "SUBSCRIPTION_PRORATION_MODE_CHARGE_ON_NEXT_BILLING_DATE",
-            "SUBSCRIPTION_PRORATION_MODE_CHARGE_FULL_PRICE_IMMEDIATELY"
-          ],
-          "enumDescriptions": [
-            "Unspecified mode.",
-            "Users will be charged for their new base plan at the end of their current billing period.",
-            "Users will be charged for their new base plan immediately and in full. Any remaining period of their existing subscription will be used to extend the duration of the new billing plan."
-          ],
-          "type": "string"
-        },
-        "renewalType": {
-          "description": "Required. Immutable. Installments base plan renewal type. Determines the behavior at the end of the initial commitment. The renewal type is immutable after the base plan is created.",
-          "enum": [
-            "RENEWAL_TYPE_UNSPECIFIED",
-            "RENEWAL_TYPE_RENEWS_WITHOUT_COMMITMENT",
-            "RENEWAL_TYPE_RENEWS_WITH_COMMITMENT"
-          ],
-          "enumDescriptions": [
-            "Unspecified state.",
-            "Renews periodically for the billing period duration without commitment.",
-            "Renews with the commitment of the same duration as the initial one."
-          ],
-          "type": "string"
-        },
-        "resubscribeState": {
-          "description": "Whether users should be able to resubscribe to this base plan in Google Play surfaces. Defaults to RESUBSCRIBE_STATE_ACTIVE if not specified.",
-          "enum": [
-            "RESUBSCRIBE_STATE_UNSPECIFIED",
-            "RESUBSCRIBE_STATE_ACTIVE",
-            "RESUBSCRIBE_STATE_INACTIVE"
-          ],
-          "enumDescriptions": [
-            "Unspecified state.",
-            "Resubscribe is active.",
-            "Resubscribe is inactive."
-          ],
-          "type": "string"
         }
       },
       "type": "object"
@@ -7197,20 +5715,6 @@
           "description": "ISO-639: 2 or 3 letter language code.",
           "items": {
             "type": "string"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "ListAppRecoveriesResponse": {
-      "description": "Response message for ListAppRecoveries. -- api-linter: core::0158::response-next-page-token-field=disabled",
-      "id": "ListAppRecoveriesResponse",
-      "properties": {
-        "recoveryActions": {
-          "description": "List of recovery actions associated with the requested package name.",
-          "items": {
-            "$ref": "AppRecoveryAction"
           },
           "type": "array"
         }
@@ -7385,32 +5889,6 @@
       "description": "Request message for MigrateBasePlanPrices.",
       "id": "MigrateBasePlanPricesRequest",
       "properties": {
-        "basePlanId": {
-          "description": "Required. The unique base plan ID of the base plan to update prices on.",
-          "type": "string"
-        },
-        "latencyTolerance": {
-          "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-          "enum": [
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-          ],
-          "enumDescriptions": [
-            "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-            "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-            "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-          ],
-          "type": "string"
-        },
-        "packageName": {
-          "description": "Required. Package name of the parent app. Must be equal to the package_name field on the Subscription resource.",
-          "type": "string"
-        },
-        "productId": {
-          "description": "Required. The ID of the subscription to update. Must be equal to the product_id field on the Subscription resource.",
-          "type": "string"
-        },
         "regionalPriceMigrations": {
           "description": "Required. The regional prices to update.",
           "items": {
@@ -7525,7 +6003,7 @@
       "type": "object"
     },
     "MultiAbi": {
-      "description": "Represents a list of ABIs.",
+      "description": "Represents a list of apis.",
       "id": "MultiAbi",
       "properties": {
         "abi": {
@@ -7582,7 +6060,7 @@
       "type": "object"
     },
     "OfferTag": {
-      "description": "Represents a custom tag specified for a product offer.",
+      "description": "Represents a custom tag specified for base plans and subscription offers.",
       "id": "OfferTag",
       "properties": {
         "tag": {
@@ -7590,12 +6068,6 @@
           "type": "string"
         }
       },
-      "type": "object"
-    },
-    "OneTimeCode": {
-      "description": "A single use promotion code.",
-      "id": "OneTimeCode",
-      "properties": {},
       "type": "object"
     },
     "OneTimeExternalTransaction": {
@@ -7607,12 +6079,6 @@
           "type": "string"
         }
       },
-      "type": "object"
-    },
-    "OtherRecurringProduct": {
-      "description": "Details of a recurring external transaction product which doesn't belong to any other more specific category.",
-      "id": "OtherRecurringProduct",
-      "properties": {},
       "type": "object"
     },
     "OtherRegionsBasePlanConfig": {
@@ -7653,10 +6119,6 @@
           "$ref": "OtherRegionsSubscriptionOfferPhasePrices",
           "description": "The absolute amount of money subtracted from the base plan price prorated over the phase duration that the user pays for this offer phase. For example, if the base plan price for this region is $12 for a period of 1 year, then a $1 absolute discount for a phase of a duration of 3 months would correspond to a price of $2. The resulting price may not be smaller than the minimum price allowed for any new locations Play may launch in."
         },
-        "free": {
-          "$ref": "OtherRegionsSubscriptionOfferPhaseFreePriceOverride",
-          "description": "Set to specify this offer is free to obtain."
-        },
         "otherRegionsPrices": {
           "$ref": "OtherRegionsSubscriptionOfferPhasePrices",
           "description": "The absolute price the user pays for this offer phase. The price must not be smaller than the minimum price allowed for any new locations Play may launch in."
@@ -7667,12 +6129,6 @@
           "type": "number"
         }
       },
-      "type": "object"
-    },
-    "OtherRegionsSubscriptionOfferPhaseFreePriceOverride": {
-      "description": "Represents the free price override configuration for any new locations Play may launch for a single offer phase.",
-      "id": "OtherRegionsSubscriptionOfferPhaseFreePriceOverride",
-      "properties": {},
       "type": "object"
     },
     "OtherRegionsSubscriptionOfferPhasePrices": {
@@ -7739,18 +6195,12 @@
       },
       "type": "object"
     },
-    "PendingCancellation": {
-      "description": "This is an indicator of whether there is a pending cancellation on the virtual installment plan. The cancellation will happen only after the user finished all committed payments.",
-      "id": "PendingCancellation",
-      "properties": {},
-      "type": "object"
-    },
     "PrepaidBasePlanType": {
       "description": "Represents a base plan that does not automatically renew at the end of the base plan, and must be manually renewed by the user.",
       "id": "PrepaidBasePlanType",
       "properties": {
         "billingPeriodDuration": {
-          "description": "Required. Immutable. Subscription period, specified in ISO 8601 format. For a list of acceptable billing periods, refer to the help center. The duration is immutable after the base plan is created.",
+          "description": "Required. Subscription period, specified in ISO 8601 format. For a list of acceptable billing periods, refer to the help center.",
           "type": "string"
         },
         "timeExtension": {
@@ -7850,17 +6300,12 @@
           "type": "string"
         },
         "purchaseType": {
-          "description": "The type of purchase of the inapp product. This field is only set if this purchase was not made using the standard in-app billing flow. Possible values are: 0. Test (i.e. purchased from a license testing account) 1. Promo (i.e. purchased using a promo code). Does not include Play Points purchases. 2. Rewarded (i.e. from watching a video ad instead of paying)",
+          "description": "The type of purchase of the inapp product. This field is only set if this purchase was not made using the standard in-app billing flow. Possible values are: 0. Test (i.e. purchased from a license testing account) 1. Promo (i.e. purchased using a promo code) 2. Rewarded (i.e. from watching a video ad instead of paying)",
           "format": "int32",
           "type": "integer"
         },
         "quantity": {
           "description": "The quantity associated with the purchase of the inapp product. If not present, the quantity is 1.",
-          "format": "int32",
-          "type": "integer"
-        },
-        "refundableQuantity": {
-          "description": "The quantity eligible for refund, i.e. quantity that hasn't been refunded. The value reflects quantity-based partial refunds and full refunds.",
           "format": "int32",
           "type": "integer"
         },
@@ -7897,24 +6342,6 @@
         "initialExternalTransactionId": {
           "description": "The external transaction id of the first transaction of this recurring series of transactions. For example, for a subscription this would be the transaction id of the first payment. Required when creating recurring external transactions.",
           "type": "string"
-        },
-        "migratedTransactionProgram": {
-          "description": "Input only. Provided during the call to Create. Must only be used when migrating a subscription from manual monthly reporting to automated reporting.",
-          "enum": [
-            "EXTERNAL_TRANSACTION_PROGRAM_UNSPECIFIED",
-            "USER_CHOICE_BILLING",
-            "ALTERNATIVE_BILLING_ONLY"
-          ],
-          "enumDescriptions": [
-            "Unspecified transaction program. Not used.",
-            "User choice billing, where a user may choose between Google Play Billing developer-managed billing.",
-            "Alternative billing only, where users may only use developer-manager billing."
-          ],
-          "type": "string"
-        },
-        "otherRecurringProduct": {
-          "$ref": "OtherRecurringProduct",
-          "description": "Details of a recurring external transaction product which doesn't belong to any other specific category."
         }
       },
       "type": "object"
@@ -7959,16 +6386,16 @@
       "type": "object"
     },
     "RegionalPriceMigrationConfig": {
-      "description": "Configuration for migration of a legacy price cohort.",
+      "description": "Configuration for a price migration.",
       "id": "RegionalPriceMigrationConfig",
       "properties": {
         "oldestAllowedPriceVersionTime": {
-          "description": "Required. Subscribers in all legacy price cohorts before this time will be migrated to the current price. Subscribers in any newer price cohorts are unaffected. Affected subscribers will receive one or more notifications from Google Play about the price change. Price decreases occur at the subscriber's next billing date. Price increases occur at the subscriber's next billing date following a notification period that varies by region and price increase type.",
+          "description": "Required. The cutoff time for historical prices that subscribers can remain paying. Subscribers who are on a price that was created before this cutoff time will be migrated to the currently-offered price. These subscribers will receive a notification that they will be paying a different price. Subscribers who do not agree to the new price will have their subscription ended at the next renewal.",
           "format": "google-datetime",
           "type": "string"
         },
         "priceIncreaseType": {
-          "description": "Optional. The requested type of price increase",
+          "description": "Optional. The behavior the caller wants users to see when there is a price increase during migration. If left unset, the behavior defaults to PRICE_INCREASE_TYPE_OPT_IN. Note that the first opt-out price increase migration for each app must be initiated in Play Console.",
           "enum": [
             "PRICE_INCREASE_TYPE_UNSPECIFIED",
             "PRICE_INCREASE_TYPE_OPT_IN",
@@ -7976,8 +6403,8 @@
           ],
           "enumDescriptions": [
             "Unspecified state.",
-            "Subscribers must accept the price increase or their subscription is canceled.",
-            "Subscribers are notified but do not have to accept the price increase. Opt-out price increases not meeting regional, frequency, and amount limits will proceed as opt-in price increase. The first opt-out price increase for each app must be initiated in the Google Play Console."
+            "Price increase will be presented to users on an opt-in basis.",
+            "Price increase will be presented to users on an opt-out basis."
           ],
           "type": "string"
         },
@@ -8011,10 +6438,6 @@
           "$ref": "Money",
           "description": "The absolute amount of money subtracted from the base plan price prorated over the phase duration that the user pays for this offer phase. For example, if the base plan price for this region is $12 for a period of 1 year, then a $1 absolute discount for a phase of a duration of 3 months would correspond to a price of $2. The resulting price may not be smaller than the minimum price allowed for this region."
         },
-        "free": {
-          "$ref": "RegionalSubscriptionOfferPhaseFreePriceOverride",
-          "description": "Set to specify this offer is free to obtain."
-        },
         "price": {
           "$ref": "Money",
           "description": "The absolute price the user pays for this offer phase. The price must not be smaller than the minimum price allowed for this region."
@@ -8031,18 +6454,12 @@
       },
       "type": "object"
     },
-    "RegionalSubscriptionOfferPhaseFreePriceOverride": {
-      "description": "Represents the free price override configuration for a single phase of a subscription offer",
-      "id": "RegionalSubscriptionOfferPhaseFreePriceOverride",
-      "properties": {},
-      "type": "object"
-    },
     "RegionalTaxRateInfo": {
       "description": "Specified details about taxation in a given geographical region.",
       "id": "RegionalTaxRateInfo",
       "properties": {
         "eligibleForStreamingServiceTaxRate": {
-          "description": "You must tell us if your app contains streaming products to correctly charge US state and local sales tax. Field only supported in the United States.",
+          "description": "You must tell us if your app contains streaming products to correctly charge US state and local sales tax. Field only supported in United States.",
           "type": "boolean"
         },
         "streamingTaxType": {
@@ -8090,73 +6507,12 @@
       },
       "type": "object"
     },
-    "Regions": {
-      "description": "Region targeting data for app recovery action targeting.",
-      "id": "Regions",
-      "properties": {
-        "regionCode": {
-          "description": "Regions targeted by the recovery action. Region codes are ISO 3166 Alpha-2 country codes. For example, US stands for United States of America. See https://www.iso.org/iso-3166-country-codes.html for the complete list of country codes.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
     "RegionsVersion": {
-      "description": "The version of the available regions being used for the specified resource.",
+      "description": "The version of the available regions being used for the specified resource. A string representing the version of available regions being used for the specified resource. Regional prices for the resource have to be specified according to the information published in [this article](https://support.google.com/googleplay/android-developer/answer/10532353).",
       "id": "RegionsVersion",
       "properties": {
         "version": {
-          "description": "Required. A string representing the version of available regions being used for the specified resource. Regional prices for the resource have to be specified according to the information published in [this article](https://support.google.com/googleplay/android-developer/answer/10532353). Each time the supported locations substantially change, the version will be incremented. Using this field will ensure that creating and updating the resource with an older region's version and set of regional prices and currencies will succeed even though a new version is available. The latest version is 2022/02.",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "RemoteInAppUpdate": {
-      "description": "Object representation for Remote in-app update action type.",
-      "id": "RemoteInAppUpdate",
-      "properties": {
-        "isRemoteInAppUpdateRequested": {
-          "description": "Required. Set to true if Remote In-App Update action type is needed.",
-          "type": "boolean"
-        }
-      },
-      "type": "object"
-    },
-    "RemoteInAppUpdateData": {
-      "description": "Data related to Remote In-App Update action such as recovered user count, affected user count etc.",
-      "id": "RemoteInAppUpdateData",
-      "properties": {
-        "remoteAppUpdateDataPerBundle": {
-          "description": "Data related to the recovery action at bundle level.",
-          "items": {
-            "$ref": "RemoteInAppUpdateDataPerBundle"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "RemoteInAppUpdateDataPerBundle": {
-      "description": "Data related to the recovery action at bundle level.",
-      "id": "RemoteInAppUpdateDataPerBundle",
-      "properties": {
-        "recoveredDeviceCount": {
-          "description": "Total number of devices which have been rescued.",
-          "format": "int64",
-          "type": "string"
-        },
-        "totalDeviceCount": {
-          "description": "Total number of devices affected by this recovery action associated with bundle of the app.",
-          "format": "int64",
-          "type": "string"
-        },
-        "versionCode": {
-          "description": "Version Code corresponding to the target bundle.",
-          "format": "int64",
+          "description": "Required. The latest version is 2022/02.",
           "type": "string"
         }
       },
@@ -8166,20 +6522,6 @@
       "description": "Information specific to cancellations caused by subscription replacement.",
       "id": "ReplacementCancellation",
       "properties": {},
-      "type": "object"
-    },
-    "RestrictedPaymentCountries": {
-      "description": "Countries where the purchase of this product is restricted to payment methods registered in the same country. If empty, no payment location restrictions are imposed.",
-      "id": "RestrictedPaymentCountries",
-      "properties": {
-        "regionCodes": {
-          "description": "Required. Region codes to impose payment restrictions on, as defined by ISO 3166-2, e.g. \"US\".",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        }
-      },
       "type": "object"
     },
     "Review": {
@@ -8261,67 +6603,6 @@
           "description": "The result of replying/updating a reply to review."
         }
       },
-      "type": "object"
-    },
-    "RevocationContext": {
-      "description": "Revocation context of the purchases.subscriptionsv2.revoke API.",
-      "id": "RevocationContext",
-      "properties": {
-        "fullRefund": {
-          "$ref": "RevocationContextFullRefund",
-          "description": "Optional. Used when users should be refunded the full amount of the latest order of the subscription."
-        },
-        "proratedRefund": {
-          "$ref": "RevocationContextProratedRefund",
-          "description": "Optional. Used when users should be refunded a prorated amount they paid for their subscription based on the amount of time remaining in a subscription."
-        }
-      },
-      "type": "object"
-    },
-    "RevocationContextFullRefund": {
-      "description": "Used to determine if the refund type in the RevocationContext is a full refund.",
-      "id": "RevocationContextFullRefund",
-      "properties": {},
-      "type": "object"
-    },
-    "RevocationContextProratedRefund": {
-      "description": "Used to determine if the refund type in the RevocationContext is a prorated refund.",
-      "id": "RevocationContextProratedRefund",
-      "properties": {},
-      "type": "object"
-    },
-    "RevokeSubscriptionPurchaseRequest": {
-      "description": "Request for the purchases.subscriptionsv2.revoke API.",
-      "id": "RevokeSubscriptionPurchaseRequest",
-      "properties": {
-        "revocationContext": {
-          "$ref": "RevocationContext",
-          "description": "Required. Additional details around the subscription revocation."
-        }
-      },
-      "type": "object"
-    },
-    "RevokeSubscriptionPurchaseResponse": {
-      "description": "Response for the purchases.subscriptionsv2.revoke API.",
-      "id": "RevokeSubscriptionPurchaseResponse",
-      "properties": {},
-      "type": "object"
-    },
-    "SafetyLabelsUpdateRequest": {
-      "description": "Request to update Safety Labels of an app.",
-      "id": "SafetyLabelsUpdateRequest",
-      "properties": {
-        "safetyLabels": {
-          "description": "Required. Contents of the CSV file containing Data Safety responses. For the format of this file, see the Help Center documentation at https://support.google.com/googleplay/android-developer/answer/10787469?#zippy=%2Cunderstand-the-csv-format To download an up to date template, follow the steps at https://support.google.com/googleplay/android-developer/answer/10787469?#zippy=%2Cexport-to-a-csv-file",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "SafetyLabelsUpdateResponse": {
-      "description": "Response for SafetyLabelsUpdate rpc.",
-      "id": "SafetyLabelsUpdateResponse",
-      "properties": {},
       "type": "object"
     },
     "ScreenDensity": {
@@ -8416,21 +6697,6 @@
       },
       "type": "object"
     },
-    "SignupPromotion": {
-      "description": "The promotion applied on this item when purchased.",
-      "id": "SignupPromotion",
-      "properties": {
-        "oneTimeCode": {
-          "$ref": "OneTimeCode",
-          "description": "A one-time code was applied."
-        },
-        "vanityCode": {
-          "$ref": "VanityCode",
-          "description": "A vanity code was applied."
-        }
-      },
-      "type": "object"
-    },
     "SplitApkMetadata": {
       "description": "Holds data specific to Split APKs.",
       "id": "SplitApkMetadata",
@@ -8515,8 +6781,7 @@
       "id": "Subscription",
       "properties": {
         "archived": {
-          "deprecated": true,
-          "description": "Output only. Deprecated: subscription archiving is not supported.",
+          "description": "Output only. Whether this subscription is archived. Archived subscriptions are not available to any subscriber any longer, cannot be updated, and are not returned in list requests unless the show archived flag is passed in.",
           "readOnly": true,
           "type": "boolean"
         },
@@ -8541,10 +6806,6 @@
         "productId": {
           "description": "Immutable. Unique product ID of the product. Unique within the parent app. Product IDs must be composed of lower-case letters (a-z), numbers (0-9), underscores (_) and dots (.). It must start with a lower-case letter or number, and be between 1 and 40 (inclusive) characters in length.",
           "type": "string"
-        },
-        "restrictedPaymentCountries": {
-          "$ref": "RestrictedPaymentCountries",
-          "description": "Optional. Countries where the purchase of this subscription is restricted to payment methods registered in the same country. If empty, no payment location restrictions are imposed."
         },
         "taxAndComplianceSettings": {
           "$ref": "SubscriptionTaxAndComplianceSettings",
@@ -8591,7 +6852,7 @@
       "id": "SubscriptionItemPriceChangeDetails",
       "properties": {
         "expectedNewPriceChargeTime": {
-          "description": "The renewal time at which the price change will become effective for the user. This is subject to change(to a future time) due to cases where the renewal time shifts like pause. This field is only populated if the price change has not taken effect.",
+          "description": "The renewal time at which the price change will become effective for the user. This is subject to change(to a future time) due to cases where the renewal time shifts like pause.",
           "format": "google-datetime",
           "type": "string"
         },
@@ -8688,7 +6949,7 @@
           "type": "string"
         },
         "phases": {
-          "description": "Required. The phases of this subscription offer. Must contain at least one and at most two entries. Users will always receive all these phases in the specified order.",
+          "description": "Required. The phases of this subscription offer. Must contain at least one entry, and may contain at most five. Users will always receive all these phases in the specified order. Phases may not be added, removed, or reordered after initial creation.",
           "items": {
             "$ref": "SubscriptionOfferPhase"
           },
@@ -8948,10 +7209,6 @@
         "productId": {
           "description": "The purchased product ID (for example, 'monthly001').",
           "type": "string"
-        },
-        "signupPromotion": {
-          "$ref": "SignupPromotion",
-          "description": "Promotion details about this item. Only set if a promotion was applied during signup."
         }
       },
       "type": "object"
@@ -8976,7 +7233,7 @@
         },
         "canceledStateContext": {
           "$ref": "CanceledStateContext",
-          "description": "Additional context around canceled subscriptions. Only present if the subscription currently has subscription_state SUBSCRIPTION_STATE_CANCELED or SUBSCRIPTION_STATE_EXPIRED."
+          "description": "Additional context around canceled subscriptions. Only present if the subscription currently has subscription_state SUBSCRIPTION_STATE_CANCELED."
         },
         "externalAccountIdentifiers": {
           "$ref": "ExternalAccountIdentifiers",
@@ -9028,8 +7285,7 @@
             "SUBSCRIPTION_STATE_IN_GRACE_PERIOD",
             "SUBSCRIPTION_STATE_ON_HOLD",
             "SUBSCRIPTION_STATE_CANCELED",
-            "SUBSCRIPTION_STATE_EXPIRED",
-            "SUBSCRIPTION_STATE_PENDING_PURCHASE_CANCELED"
+            "SUBSCRIPTION_STATE_EXPIRED"
           ],
           "enumDescriptions": [
             "Unspecified subscription state.",
@@ -9039,8 +7295,7 @@
             "Subscription is in grace period. The state is only available when the subscription is an auto renewing plan. In this state, all items are in grace period.",
             "Subscription is on hold (suspended). The state is only available when the subscription is an auto renewing plan. In this state, all items are on hold.",
             "Subscription is canceled but not expired yet. The state is only available when the subscription is an auto renewing plan. All items have auto_renew_enabled set to false.",
-            "Subscription is expired. All items have expiry_time in the past.",
-            "Pending transaction for subscription is canceled. If this pending purchase was for an existing subscription, use linked_purchase_token to get the current state of that subscription."
+            "Subscription is expired. All items have expiry_time in the past."
           ],
           "type": "string"
         },
@@ -9167,48 +7422,6 @@
       "properties": {},
       "type": "object"
     },
-    "SystemOnChip": {
-      "description": "Representation of a System-on-Chip (SoC) of an Android device. Can be used to target S+ devices.",
-      "id": "SystemOnChip",
-      "properties": {
-        "manufacturer": {
-          "description": "Required. The designer of the SoC, eg. \"Google\" Value of build property \"ro.soc.manufacturer\" https://developer.android.com/reference/android/os/Build#SOC_MANUFACTURER Required.",
-          "type": "string"
-        },
-        "model": {
-          "description": "Required. The model of the SoC, eg. \"Tensor\" Value of build property \"ro.soc.model\" https://developer.android.com/reference/android/os/Build#SOC_MODEL Required.",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "Targeting": {
-      "description": "Targeting details for a recovery action such as regions, android sdk levels, app versions etc.",
-      "id": "Targeting",
-      "properties": {
-        "allUsers": {
-          "$ref": "AllUsers",
-          "description": "All users are targeted."
-        },
-        "androidSdks": {
-          "$ref": "AndroidSdks",
-          "description": "Targeting is based on android api levels of devices."
-        },
-        "regions": {
-          "$ref": "Regions",
-          "description": "Targeting is based on the user account region."
-        },
-        "versionList": {
-          "$ref": "AppVersionList",
-          "description": "Target version codes as a list."
-        },
-        "versionRange": {
-          "$ref": "AppVersionRange",
-          "description": "Target version codes as a range."
-        }
-      },
-      "type": "object"
-    },
     "TargetingInfo": {
       "description": "Targeting information about the generated apks.",
       "id": "TargetingInfo",
@@ -9238,48 +7451,9 @@
       "description": "Defines the scope of subscriptions which a targeting rule can match to target offers to users based on past or current entitlement.",
       "id": "TargetingRuleScope",
       "properties": {
-        "anySubscriptionInApp": {
-          "$ref": "TargetingRuleScopeAnySubscriptionInApp",
-          "description": "The scope of the current targeting rule is any subscription in the parent app."
-        },
         "specificSubscriptionInApp": {
           "description": "The scope of the current targeting rule is the subscription with the specified subscription ID. Must be a subscription within the same parent app.",
           "type": "string"
-        },
-        "thisSubscription": {
-          "$ref": "TargetingRuleScopeThisSubscription",
-          "description": "The scope of the current targeting rule is the subscription in which this offer is defined."
-        }
-      },
-      "type": "object"
-    },
-    "TargetingRuleScopeAnySubscriptionInApp": {
-      "description": "Represents the targeting rule scope corresponding to any subscription in the parent app.",
-      "id": "TargetingRuleScopeAnySubscriptionInApp",
-      "properties": {},
-      "type": "object"
-    },
-    "TargetingRuleScopeThisSubscription": {
-      "description": "Represents the targeting rule scope corresponding to the subscriptions in which this offer is defined.",
-      "id": "TargetingRuleScopeThisSubscription",
-      "properties": {},
-      "type": "object"
-    },
-    "TargetingUpdate": {
-      "description": "Update type for targeting. Note it is always a subset Targeting.",
-      "id": "TargetingUpdate",
-      "properties": {
-        "allUsers": {
-          "$ref": "AllUsers",
-          "description": "All users are targeted."
-        },
-        "androidSdks": {
-          "$ref": "AndroidSdks",
-          "description": "Additional android sdk levels are targeted by the recovery action."
-        },
-        "regions": {
-          "$ref": "Regions",
-          "description": "Additional regions are targeted by the recovery action."
         }
       },
       "type": "object"
@@ -9411,45 +7585,6 @@
       },
       "type": "object"
     },
-    "TrackConfig": {
-      "description": "Configurations of the new track.",
-      "id": "TrackConfig",
-      "properties": {
-        "formFactor": {
-          "description": "Required. Form factor of the new track. Defaults to the default track.",
-          "enum": [
-            "FORM_FACTOR_UNSPECIFIED",
-            "DEFAULT",
-            "WEAR",
-            "AUTOMOTIVE"
-          ],
-          "enumDescriptions": [
-            "Fallback value, do not use.",
-            "Default track.",
-            "Wear form factor track.",
-            "Automotive form factor track."
-          ],
-          "type": "string"
-        },
-        "track": {
-          "description": "Required. Identifier of the new track. For default tracks, this field consists of the track alias only. Form factor tracks have a special prefix as an identifier, for example `wear:production`, `automotive:production`. This prefix must match the value of the `form_factor` field, if it is not a default track. [More on track name](https://developers.google.com/android-publisher/tracks#ff-track-name)",
-          "type": "string"
-        },
-        "type": {
-          "description": "Required. Type of the new track. Currently, the only supported value is closedTesting.",
-          "enum": [
-            "TRACK_TYPE_UNSPECIFIED",
-            "CLOSED_TESTING"
-          ],
-          "enumDescriptions": [
-            "Fallback value, do not use.",
-            "Closed testing track."
-          ],
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
     "TrackCountryAvailability": {
       "description": "Resource for per-track country availability information.",
       "id": "TrackCountryAvailability",
@@ -9550,117 +7685,11 @@
           "type": "string"
         },
         "tracks": {
-          "description": "All tracks (including tracks with no releases).",
+          "description": "All tracks.",
           "items": {
             "$ref": "Track"
           },
           "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "UpdateBasePlanStateRequest": {
-      "description": "Request message to update the state of a subscription base plan.",
-      "id": "UpdateBasePlanStateRequest",
-      "properties": {
-        "activateBasePlanRequest": {
-          "$ref": "ActivateBasePlanRequest",
-          "description": "Activates a base plan. Once activated, base plans will be available to new subscribers."
-        },
-        "deactivateBasePlanRequest": {
-          "$ref": "DeactivateBasePlanRequest",
-          "description": "Deactivates a base plan. Once deactivated, the base plan will become unavailable to new subscribers, but existing subscribers will maintain their subscription"
-        }
-      },
-      "type": "object"
-    },
-    "UpdateSubscriptionOfferRequest": {
-      "description": "Request message for UpdateSubscriptionOffer.",
-      "id": "UpdateSubscriptionOfferRequest",
-      "properties": {
-        "allowMissing": {
-          "description": "Optional. If set to true, and the subscription offer with the given package_name, product_id, base_plan_id and offer_id doesn't exist, an offer will be created. If a new offer is created, update_mask is ignored.",
-          "type": "boolean"
-        },
-        "latencyTolerance": {
-          "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-          "enum": [
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-          ],
-          "enumDescriptions": [
-            "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-            "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-            "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-          ],
-          "type": "string"
-        },
-        "regionsVersion": {
-          "$ref": "RegionsVersion",
-          "description": "Required. The version of the available regions being used for the subscription_offer."
-        },
-        "subscriptionOffer": {
-          "$ref": "SubscriptionOffer",
-          "description": "Required. The subscription offer to update."
-        },
-        "updateMask": {
-          "description": "Required. The list of fields to be updated.",
-          "format": "google-fieldmask",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "UpdateSubscriptionOfferStateRequest": {
-      "description": "Request message to update the state of a subscription offer.",
-      "id": "UpdateSubscriptionOfferStateRequest",
-      "properties": {
-        "activateSubscriptionOfferRequest": {
-          "$ref": "ActivateSubscriptionOfferRequest",
-          "description": "Activates an offer. Once activated, the offer will be available to new subscribers."
-        },
-        "deactivateSubscriptionOfferRequest": {
-          "$ref": "DeactivateSubscriptionOfferRequest",
-          "description": "Deactivates an offer. Once deactivated, the offer will become unavailable to new subscribers, but existing subscribers will maintain their subscription"
-        }
-      },
-      "type": "object"
-    },
-    "UpdateSubscriptionRequest": {
-      "description": "Request message for UpdateSubscription.",
-      "id": "UpdateSubscriptionRequest",
-      "properties": {
-        "allowMissing": {
-          "description": "Optional. If set to true, and the subscription with the given package_name and product_id doesn't exist, the subscription will be created. If a new subscription is created, update_mask is ignored.",
-          "type": "boolean"
-        },
-        "latencyTolerance": {
-          "description": "Optional. The latency tolerance for the propagation of this product update. Defaults to latency-sensitive.",
-          "enum": [
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_UNSPECIFIED",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE",
-            "PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_TOLERANT"
-          ],
-          "enumDescriptions": [
-            "Defaults to PRODUCT_UPDATE_LATENCY_TOLERANCE_LATENCY_SENSITIVE.",
-            "The update will propagate to clients within several minutes on average and up to a few hours in rare cases. Throughput is limited to 7,200 updates per app per hour.",
-            "The update will propagate to clients within 24 hours. Supports high throughput of up to 720,000 updates per app per hour using batch modification methods."
-          ],
-          "type": "string"
-        },
-        "regionsVersion": {
-          "$ref": "RegionsVersion",
-          "description": "Required. The version of the available regions being used for the subscription."
-        },
-        "subscription": {
-          "$ref": "Subscription",
-          "description": "Required. The subscription to update."
-        },
-        "updateMask": {
-          "description": "Required. The list of fields to be updated.",
-          "format": "google-fieldmask",
-          "type": "string"
         }
       },
       "type": "object"
@@ -9728,33 +7757,11 @@
               "CAN_MANAGE_ORDERS_GLOBAL",
               "CAN_MANAGE_APP_CONTENT_GLOBAL",
               "CAN_VIEW_NON_FINANCIAL_DATA_GLOBAL",
-              "CAN_VIEW_APP_QUALITY_GLOBAL",
-              "CAN_MANAGE_DEEPLINKS_GLOBAL"
-            ],
-            "enumDeprecated": [
-              false,
-              true,
-              false,
-              false,
-              false,
-              false,
-              false,
-              false,
-              false,
-              false,
-              false,
-              false,
-              false,
-              false,
-              false,
-              false,
-              false,
-              false,
-              false
+              "CAN_VIEW_APP_QUALITY_GLOBAL"
             ],
             "enumDescriptions": [
               "Unknown or unspecified permission.",
-              "View app information and download bulk reports (read-only). Deprecated: Check CAN_VIEW_NON_FINANCIAL_DATA_GLOBAL.",
+              "View app information and download bulk reports (read-only).",
               "View financial data, orders, and cancellation survey responses.",
               "Admin (all permissions).",
               "Edit Play Games Services projects.",
@@ -9770,8 +7777,7 @@
               "Manage orders and subscriptions.",
               "Manage policy related pages on all apps for the developer.",
               "View app information and download bulk reports (read-only).",
-              "View app quality information for all apps for the developer.",
-              "Manage the deep links setup for all apps for the developer."
+              "View app quality information for all apps for the developer."
             ],
             "type": "string"
           },
@@ -9934,17 +7940,6 @@
       },
       "type": "object"
     },
-    "VanityCode": {
-      "description": "A multiple use, predefined promotion code.",
-      "id": "VanityCode",
-      "properties": {
-        "promotionCode": {
-          "description": "The promotion code.",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
     "Variant": {
       "description": "APK that is suitable for inclusion in a system image. The resource of SystemApksService.",
       "id": "Variant",
@@ -10014,13 +8009,8 @@
           "description": "The token which uniquely identifies a one-time purchase or subscription. To uniquely identify subscription renewals use order_id (available starting from version 3 of the API).",
           "type": "string"
         },
-        "voidedQuantity": {
-          "description": "The voided quantity as the result of a quantity-based partial refund. Voided purchases of quantity-based partial refunds may only be returned when includeQuantityBasedPartialRefund is set to true.",
-          "format": "int32",
-          "type": "integer"
-        },
         "voidedReason": {
-          "description": "The reason why the purchase was voided, possible values are: 0. Other 1. Remorse 2. Not_received 3. Defective 4. Accidental_purchase 5. Fraud 6. Friendly_fraud 7. Chargeback 8. Unacknowledged_purchase",
+          "description": "The reason why the purchase was voided, possible values are: 0. Other 1. Remorse 2. Not_received 3. Defective 4. Accidental_purchase 5. Fraud 6. Friendly_fraud 7. Chargeback",
           "format": "int32",
           "type": "integer"
         },

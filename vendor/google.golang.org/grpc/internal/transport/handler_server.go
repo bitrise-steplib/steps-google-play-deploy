@@ -24,6 +24,7 @@
 package transport
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -34,27 +35,30 @@ import (
 	"sync"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/internal/grpclog"
 	"google.golang.org/grpc/internal/grpcutil"
-	"google.golang.org/grpc/mem"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
 )
 
 // NewServerHandlerTransport returns a ServerTransport handling gRPC from
 // inside an http.Handler, or writes an HTTP error to w and returns an error.
 // It requires that the http Server supports HTTP/2.
-func NewServerHandlerTransport(w http.ResponseWriter, r *http.Request, stats []stats.Handler, bufferPool mem.BufferPool) (ServerTransport, error) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
+func NewServerHandlerTransport(w http.ResponseWriter, r *http.Request, stats []stats.Handler) (ServerTransport, error) {
+	if r.ProtoMajor != 2 {
+		msg := "gRPC requires HTTP/2"
+		http.Error(w, msg, http.StatusBadRequest)
+		return nil, errors.New(msg)
+	}
+	if r.Method != "POST" {
 		msg := fmt.Sprintf("invalid gRPC request method %q", r.Method)
-		http.Error(w, msg, http.StatusMethodNotAllowed)
+		http.Error(w, msg, http.StatusBadRequest)
 		return nil, errors.New(msg)
 	}
 	contentType := r.Header.Get("Content-Type")
@@ -65,40 +69,20 @@ func NewServerHandlerTransport(w http.ResponseWriter, r *http.Request, stats []s
 		http.Error(w, msg, http.StatusUnsupportedMediaType)
 		return nil, errors.New(msg)
 	}
-	if r.ProtoMajor != 2 {
-		msg := "gRPC requires HTTP/2"
-		http.Error(w, msg, http.StatusHTTPVersionNotSupported)
-		return nil, errors.New(msg)
-	}
 	if _, ok := w.(http.Flusher); !ok {
 		msg := "gRPC requires a ResponseWriter supporting http.Flusher"
 		http.Error(w, msg, http.StatusInternalServerError)
 		return nil, errors.New(msg)
 	}
 
-	var localAddr net.Addr
-	if la := r.Context().Value(http.LocalAddrContextKey); la != nil {
-		localAddr, _ = la.(net.Addr)
-	}
-	var authInfo credentials.AuthInfo
-	if r.TLS != nil {
-		authInfo = credentials.TLSInfo{State: *r.TLS, CommonAuthInfo: credentials.CommonAuthInfo{SecurityLevel: credentials.PrivacyAndIntegrity}}
-	}
-	p := peer.Peer{
-		Addr:      strAddr(r.RemoteAddr),
-		LocalAddr: localAddr,
-		AuthInfo:  authInfo,
-	}
 	st := &serverHandlerTransport{
 		rw:             w,
 		req:            r,
 		closedCh:       make(chan struct{}),
 		writes:         make(chan func()),
-		peer:           p,
 		contentType:    contentType,
 		contentSubtype: contentSubtype,
 		stats:          stats,
-		bufferPool:     bufferPool,
 	}
 	st.logger = prefixLoggerForServerHandlerTransport(st)
 
@@ -150,8 +134,6 @@ type serverHandlerTransport struct {
 
 	headerMD metadata.MD
 
-	peer peer.Peer
-
 	closeOnce sync.Once
 	closedCh  chan struct{} // closed on Close
 
@@ -172,8 +154,6 @@ type serverHandlerTransport struct {
 
 	stats  []stats.Handler
 	logger *grpclog.PrefixLogger
-
-	bufferPool mem.BufferPool
 }
 
 func (ht *serverHandlerTransport) Close(err error) {
@@ -185,13 +165,7 @@ func (ht *serverHandlerTransport) Close(err error) {
 	})
 }
 
-func (ht *serverHandlerTransport) Peer() *peer.Peer {
-	return &peer.Peer{
-		Addr:      ht.peer.Addr,
-		LocalAddr: ht.peer.LocalAddr,
-		AuthInfo:  ht.peer.AuthInfo,
-	}
-}
+func (ht *serverHandlerTransport) RemoteAddr() net.Addr { return strAddr(ht.req.RemoteAddr) }
 
 // strAddr is a net.Addr backed by either a TCP "ip:port" string, or
 // the empty string if unknown.
@@ -225,7 +199,7 @@ func (ht *serverHandlerTransport) do(fn func()) error {
 	}
 }
 
-func (ht *serverHandlerTransport) writeStatus(s *ServerStream, st *status.Status) error {
+func (ht *serverHandlerTransport) WriteStatus(s *Stream, st *status.Status) error {
 	ht.writeStatusMu.Lock()
 	defer ht.writeStatusMu.Unlock()
 
@@ -246,21 +220,18 @@ func (ht *serverHandlerTransport) writeStatus(s *ServerStream, st *status.Status
 			h.Set("Grpc-Message", encodeGrpcMessage(m))
 		}
 
-		s.hdrMu.Lock()
-		defer s.hdrMu.Unlock()
 		if p := st.Proto(); p != nil && len(p.Details) > 0 {
-			delete(s.trailer, grpcStatusDetailsBinHeader)
 			stBytes, err := proto.Marshal(p)
 			if err != nil {
 				// TODO: return error instead, when callers are able to handle it.
 				panic(err)
 			}
 
-			h.Set(grpcStatusDetailsBinHeader, encodeBinHeader(stBytes))
+			h.Set("Grpc-Status-Details-Bin", encodeBinHeader(stBytes))
 		}
 
-		if len(s.trailer) > 0 {
-			for k, vv := range s.trailer {
+		if md := s.Trailer(); len(md) > 0 {
+			for k, vv := range md {
 				// Clients don't tolerate reading restricted headers after some non restricted ones were sent.
 				if isReservedHeader(k) {
 					continue
@@ -289,14 +260,14 @@ func (ht *serverHandlerTransport) writeStatus(s *ServerStream, st *status.Status
 
 // writePendingHeaders sets common and custom headers on the first
 // write call (Write, WriteHeader, or WriteStatus)
-func (ht *serverHandlerTransport) writePendingHeaders(s *ServerStream) {
+func (ht *serverHandlerTransport) writePendingHeaders(s *Stream) {
 	ht.writeCommonHeaders(s)
 	ht.writeCustomHeaders(s)
 }
 
 // writeCommonHeaders sets common headers on the first write
 // call (Write, WriteHeader, or WriteStatus).
-func (ht *serverHandlerTransport) writeCommonHeaders(s *ServerStream) {
+func (ht *serverHandlerTransport) writeCommonHeaders(s *Stream) {
 	h := ht.rw.Header()
 	h["Date"] = nil // suppress Date to make tests happy; TODO: restore
 	h.Set("Content-Type", ht.contentType)
@@ -316,8 +287,8 @@ func (ht *serverHandlerTransport) writeCommonHeaders(s *ServerStream) {
 }
 
 // writeCustomHeaders sets custom headers set on the stream via SetHeader
-// on the first write call (Write, WriteHeader, or WriteStatus)
-func (ht *serverHandlerTransport) writeCustomHeaders(s *ServerStream) {
+// on the first write call (Write, WriteHeader, or WriteStatus).
+func (ht *serverHandlerTransport) writeCustomHeaders(s *Stream) {
 	h := ht.rw.Header()
 
 	s.hdrMu.Lock()
@@ -333,31 +304,19 @@ func (ht *serverHandlerTransport) writeCustomHeaders(s *ServerStream) {
 	s.hdrMu.Unlock()
 }
 
-func (ht *serverHandlerTransport) write(s *ServerStream, hdr []byte, data mem.BufferSlice, _ *WriteOptions) error {
-	// Always take a reference because otherwise there is no guarantee the data will
-	// be available after this function returns. This is what callers to Write
-	// expect.
-	data.Ref()
+func (ht *serverHandlerTransport) Write(s *Stream, hdr []byte, data []byte, opts *Options) error {
 	headersWritten := s.updateHeaderSent()
-	err := ht.do(func() {
-		defer data.Free()
+	return ht.do(func() {
 		if !headersWritten {
 			ht.writePendingHeaders(s)
 		}
 		ht.rw.Write(hdr)
-		for _, b := range data {
-			_, _ = ht.rw.Write(b.ReadOnlyData())
-		}
+		ht.rw.Write(data)
 		ht.rw.(http.Flusher).Flush()
 	})
-	if err != nil {
-		data.Free()
-		return err
-	}
-	return nil
 }
 
-func (ht *serverHandlerTransport) writeHeader(s *ServerStream, md metadata.MD) error {
+func (ht *serverHandlerTransport) WriteHeader(s *Stream, md metadata.MD) error {
 	if err := s.SetHeader(md); err != nil {
 		return err
 	}
@@ -385,8 +344,10 @@ func (ht *serverHandlerTransport) writeHeader(s *ServerStream, md metadata.MD) e
 	return err
 }
 
-func (ht *serverHandlerTransport) HandleStreams(ctx context.Context, startStream func(*ServerStream)) {
+func (ht *serverHandlerTransport) HandleStreams(startStream func(*Stream), traceCtx func(context.Context, string) context.Context) {
 	// With this transport type there will be exactly 1 stream: this HTTP request.
+
+	ctx := ht.req.Context()
 	var cancel context.CancelFunc
 	if ht.timeoutSet {
 		ctx, cancel = context.WithTimeout(ctx, ht.timeout)
@@ -406,24 +367,37 @@ func (ht *serverHandlerTransport) HandleStreams(ctx context.Context, startStream
 		ht.Close(errors.New("request is done processing"))
 	}()
 
-	ctx = metadata.NewIncomingContext(ctx, ht.headerMD)
 	req := ht.req
-	s := &ServerStream{
-		Stream: &Stream{
-			id:             0, // irrelevant
-			ctx:            ctx,
-			requestRead:    func(int) {},
-			buf:            newRecvBuffer(),
-			method:         req.URL.Path,
-			recvCompress:   req.Header.Get("grpc-encoding"),
-			contentSubtype: ht.contentSubtype,
-		},
-		cancel:           cancel,
-		st:               ht,
-		headerWireLength: 0, // won't have access to header wire length until golang/go#18997.
+
+	s := &Stream{
+		id:             0, // irrelevant
+		requestRead:    func(int) {},
+		cancel:         cancel,
+		buf:            newRecvBuffer(),
+		st:             ht,
+		method:         req.URL.Path,
+		recvCompress:   req.Header.Get("grpc-encoding"),
+		contentSubtype: ht.contentSubtype,
+	}
+	pr := &peer.Peer{
+		Addr: ht.RemoteAddr(),
+	}
+	if req.TLS != nil {
+		pr.AuthInfo = credentials.TLSInfo{State: *req.TLS, CommonAuthInfo: credentials.CommonAuthInfo{SecurityLevel: credentials.PrivacyAndIntegrity}}
+	}
+	ctx = metadata.NewIncomingContext(ctx, ht.headerMD)
+	s.ctx = peer.NewContext(ctx, pr)
+	for _, sh := range ht.stats {
+		s.ctx = sh.TagRPC(s.ctx, &stats.RPCTagInfo{FullMethodName: s.method})
+		inHeader := &stats.InHeader{
+			FullMethod:  s.method,
+			RemoteAddr:  ht.RemoteAddr(),
+			Compression: s.recvCompress,
+		}
+		sh.HandleRPC(s.ctx, inHeader)
 	}
 	s.trReader = &transportReader{
-		reader:        &recvBufferReader{ctx: s.ctx, ctxDone: s.ctx.Done(), recv: s.buf},
+		reader:        &recvBufferReader{ctx: s.ctx, ctxDone: s.ctx.Done(), recv: s.buf, freeBuffer: func(*bytes.Buffer) {}},
 		windowHandler: func(int) {},
 	}
 
@@ -432,18 +406,20 @@ func (ht *serverHandlerTransport) HandleStreams(ctx context.Context, startStream
 	go func() {
 		defer close(readerDone)
 
-		for {
-			buf := ht.bufferPool.Get(http2MaxFrameLen)
-			n, err := req.Body.Read(*buf)
+		// TODO: minimize garbage, optimize recvBuffer code/ownership
+		const readSize = 8196
+		for buf := make([]byte, readSize); ; {
+			n, err := req.Body.Read(buf)
 			if n > 0 {
-				*buf = (*buf)[:n]
-				s.buf.put(recvMsg{buffer: mem.NewBuffer(buf, ht.bufferPool)})
-			} else {
-				ht.bufferPool.Put(buf)
+				s.buf.put(recvMsg{buffer: bytes.NewBuffer(buf[:n:n])})
+				buf = buf[n:]
 			}
 			if err != nil {
 				s.buf.put(recvMsg{err: mapRecvMsgError(err)})
 				return
+			}
+			if len(buf) == 0 {
+				buf = make([]byte, readSize)
 			}
 		}
 	}()
@@ -473,9 +449,11 @@ func (ht *serverHandlerTransport) runStream() {
 	}
 }
 
-func (ht *serverHandlerTransport) incrMsgRecv() {}
+func (ht *serverHandlerTransport) IncrMsgSent() {}
 
-func (ht *serverHandlerTransport) Drain(string) {
+func (ht *serverHandlerTransport) IncrMsgRecv() {}
+
+func (ht *serverHandlerTransport) Drain(debugData string) {
 	panic("Drain() is not implemented")
 }
 
@@ -498,5 +476,5 @@ func mapRecvMsgError(err error) error {
 	if strings.Contains(err.Error(), "body closed by handler") {
 		return status.Error(codes.Canceled, err.Error())
 	}
-	return connectionErrorf(true, err, "%s", err.Error())
+	return connectionErrorf(true, err, err.Error())
 }
