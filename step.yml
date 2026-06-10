@@ -101,12 +101,14 @@ inputs:
 - track: alpha
   opts:
     title: Track
-    summary: The track in which you want to assign the uploaded app.
+    summary: The track in which you want to assign the uploaded app. Optional - leave empty to upload without assigning to a track.
     description: |-
       The track to which you want to assign the uploaded app.
 
       Can be one of the built-in tracks (internal, alpha, beta, production), or a custom track name you added in Google Play Developer Console.
-    is_required: true
+
+      This input is optional: if left empty, the app is uploaded to Google Play without being assigned to any track.
+    is_required: false
 - user_fraction:
   opts:
     title: User Fraction
