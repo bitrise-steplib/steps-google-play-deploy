@@ -2,10 +2,27 @@ package main
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/bitrise-io/go-utils/v2/log"
 )
+
+func TestConfigs_appsToDeploy_warnsWhenMoreMappingsThanApps(t *testing.T) {
+	c := Configs{AppPath: "a.aab|b.aab", MappingFile: "m1|m2|m3", Logger: log.NewLogger()}
+
+	_, warnings := c.appsToDeploy()
+
+	found := false
+	for _, w := range warnings {
+		if strings.Contains(w, "More mapping files") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected a warning about more mapping files than app files, got %v", warnings)
+	}
+}
 
 func TestConfigs_appsToDeploy_pairsMappingsByPosition(t *testing.T) {
 	tests := []struct {

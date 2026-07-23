@@ -163,6 +163,10 @@ func (c Configs) appsToDeploy() ([]appArtifact, []string) {
 		}
 	}
 
+	if len(mappings) > len(apps) {
+		warnings = append(warnings, fmt.Sprintf("More mapping files (%d) provided than app files (%d); the extra mapping files are ignored. Check that the mapping_file list is aligned with the app_path list.", len(mappings), len(apps)))
+	}
+
 	if len(aabs) > 0 && len(apks) > 0 {
 		var aabPaths []string
 		for _, a := range aabs {

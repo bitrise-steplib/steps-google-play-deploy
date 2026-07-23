@@ -155,7 +155,7 @@ func TestConfigs_appPaths(t *testing.T) {
 	}
 }
 
-func TestConfigs_mappingPaths(t *testing.T) {
+func TestConfigs_validateMappingFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	tests := []struct {
 		name        string

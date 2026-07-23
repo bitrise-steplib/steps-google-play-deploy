@@ -89,6 +89,8 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 			if appIndex < len(apps)-1 {
 				fmt.Println()
 			}
+		} else if app.mappingPath != "" {
+			p.logger.Warnf("Skipping mapping file %s: no version code available for %s", app.mappingPath, appPath)
 		}
 
 		versionCodes[versionCode]++
