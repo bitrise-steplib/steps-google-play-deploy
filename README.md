@@ -62,28 +62,6 @@ Add this step directly to your workflow in the [Bitrise Workflow Editor](https:/
 
 You can also run this step directly with [Bitrise CLI](https://github.com/bitrise-io/bitrise).
 
-### Example
-
-Build, sign and deploy your app to Google Play:
-
-```yaml
-steps:
-- android-build:
-    inputs:
-    - variant: release
-    - build_type: aab
-- sign-apk:
-    inputs:
-    - android_app: $BITRISE_AAB_PATH
-    # Make sure that the keystore file is uploaded in Code Signing settings
-- google-play-deploy:
-    inputs:
-    - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL # Upload this in Code Signing settings
-    - package_name: my.example.package
-    - app_path: $BITRISE_SIGNED_AAB_PATH
-    - track: alpha
-```
-
 ## ⚙️ Configuration
 
 <details>
@@ -101,7 +79,7 @@ steps:
 | `release_name` | The name of the release. By default Play Store generates the name from the APK's `versionName` value. |  |  |
 | `update_priority` | This allows your app to decide how strongly to recommend an update to the user. Accepts values between 0 and 5 with 0 being the lowest priority and 5 being the highest priority. By default this value is 0. For more information see here: https://developer.android.com/guide/playcore/in-app-updates#check-priority. |  | `0` |
 | `whatsnews_dir` | Use this input to specify localized 'what's new' files directory. This directory should contain 'whatsnew' files postfixed with the locale. what's new file name pattern: `whatsnew-LOCALE` Example:  ``` + - [PATH/TO/WHATSNEW]     \|     + - whatsnew-en-US     \|     + - whatsnew-de-DE ``` Format examples: - "./"         # what's new files are in the repo root directory - "./whatsnew" # what's new files are in the whatsnew directory |  |  |
-| `mapping_file` | The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names.  Uploading a mapping file is not required when deploying an AAB as the app bundle contains the mapping file itself.  In case of deploying [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html), you can specify multiple mapping.txt files as a newline (`\n`) or pipe (`\|`) separated list. The order of mapping files should match the list of APK or AAB files in the `app_path` input. |  | `$BITRISE_MAPPING_PATH` |
+| `mapping_file` | The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names.  Uploading a mapping file is not required when deploying an AAB as the app bundle contains the mapping file itself.  In case of deploying [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html), you can specify multiple mapping.txt files as a newline (`\n`) or pipe (`\|`) separated list. The order of mapping files must match the list of APK or AAB files in the `app_path` input: mapping file N is uploaded for app file N.  When building with the Gradle Runner or Android Build step, set this to `$BITRISE_MAPPING_PATH_LIST` (and `app_path` to the matching `$BITRISE_AAB_PATH_LIST` or `$BITRISE_APK_PATH_LIST`). Those lists are already aligned per variant. An empty entry (for example `a.txt\|\|c.txt`) means the app file at that position has no mapping file, and its slot is preserved so the alignment of the following mapping files is not shifted. |  | `$BITRISE_MAPPING_PATH` |
 | `retry_without_sending_to_review` | If set to `true` and the initial change request fails, the changes will not be reviewed until they are manually sent for review from the Google Play Console UI. If set to `false`, the step fails if the changes can't be automatically sent to review. | required | `false` |
 | `ack_bundle_installation_warning` | Must be set to `true` if the App Bundle installation may trigger a warning on user devices (for example, if installation size may be over a threshold, typically 100 MB). | required | `false` |
 | `dry_run` | If set to `true` then the changes will not be committed to create a real release in the Play Console. Use this flag to validate your configuration without triggering a new review. |  | `false` |
@@ -121,8 +99,6 @@ steps:
 We welcome [pull requests](https://github.com/bitrise-io/steps-google-play-deploy/pulls) and [issues](https://github.com/bitrise-io/steps-google-play-deploy/issues) against this repository.
 
 For pull requests, work on your changes in a forked repository and use the Bitrise CLI to [run step tests locally](https://docs.bitrise.io/en/bitrise-ci/bitrise-cli/running-your-first-local-build-with-the-cli.html).
-
-**Note:** this step's end-to-end tests (defined in `e2e/bitrise.yml`) are working with secrets which are intentionally not stored in this repo. External contributors won't be able to run those tests. Don't worry, if you open a PR with your contribution, we will help with running tests and make sure that they pass.
 
 Learn more about developing steps:
 
