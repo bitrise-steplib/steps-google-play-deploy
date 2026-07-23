@@ -1,11 +1,12 @@
 module github.com/bitrise-steplib/steps-google-play-deploy
 
-go 1.20
+go 1.22
 
 require (
+	github.com/bitrise-io/go-android/v2 v2.0.0-alpha.16.0.20260723184652-14233ef5e55d
 	github.com/bitrise-io/go-steputils v1.0.6
-	github.com/bitrise-io/go-utils v1.0.9
-	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.28
+	github.com/bitrise-io/go-utils v1.0.15
+	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.34
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/oauth2 v0.12.0
@@ -25,10 +26,10 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
+	golang.org/x/crypto v0.33.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230913181813-007df8e322eb // indirect
 	google.golang.org/grpc v1.58.3 // indirect

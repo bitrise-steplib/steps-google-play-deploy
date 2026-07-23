@@ -36,20 +36,24 @@ func (p *Publisher) failf(format string, v ...interface{}) {
 // uploadApplications uploads every application file (apk or aab) to the Google Play. Returns the version codes of
 // the uploaded apps.
 func (p *Publisher) uploadApplications(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (map[int64]int, error) {
-	appPaths, _ := configs.appPaths()
-	mappingPaths := configs.mappingPaths()
+	apps, _ := configs.appsToDeploy()
 	versionCodes := make(map[int64]int)
 
 	var versionCodeListLog bytes.Buffer
 	versionCodeListLog.WriteString("New version codes to upload: ")
 
+	appPaths := make([]string, len(apps))
+	for i, app := range apps {
+		appPaths[i] = app.path
+	}
 	expansionFilePaths, err := configs.expansionFiles(appPaths)
 	if err != nil {
 		return nil, err
 	}
 
-	for appIndex, appPath := range appPaths {
-		p.logger.Printf("Uploading %v %d/%d", appPath, appIndex+1, len(appPaths))
+	for appIndex, app := range apps {
+		appPath := app.path
+		p.logger.Printf("Uploading %v %d/%d", appPath, appIndex+1, len(apps))
 		versionCode := int64(0)
 		appFile, err := os.Open(appPath)
 		if err != nil {
@@ -76,24 +80,24 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 			}
 		}
 
-		// Upload mapping.txt files
-		if len(mappingPaths)-1 >= appIndex && versionCode != 0 {
-			filePath := mappingPaths[appIndex]
-			if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
+		// Upload the mapping.txt file paired with this app (empty when the app's
+		// variant produced no mapping file).
+		if app.mappingPath != "" && versionCode != 0 {
+			if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, app.mappingPath); err != nil {
 				return nil, err
 			}
-			if appIndex < len(appPaths)-1 {
+			if appIndex < len(apps)-1 {
 				fmt.Println()
 			}
 		}
 
 		versionCodes[versionCode]++
 		fmt.Fprintf(&versionCodeListLog, "%d", versionCode)
-		if appIndex < len(appPaths)-1 {
+		if appIndex < len(apps)-1 {
 			versionCodeListLog.WriteString(", ")
 		}
 	}
-	p.logger.Printf("Done uploading of %v apps", len(appPaths))
+	p.logger.Printf("Done uploading of %v apps", len(apps))
 	p.logger.Printf(versionCodeListLog.String())
 	return versionCodes, nil
 }

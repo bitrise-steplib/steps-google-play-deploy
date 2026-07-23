@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bitrise-io/go-android/v2/gradle/mappinglist"
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/v2/log"
@@ -126,24 +127,48 @@ func (c Configs) parseInputList(list string) (elements []string) {
 	return
 }
 
-// appPaths returns the app to deploy, by preferring .aab files.
-func (c Configs) appPaths() ([]string, []string) {
-	var apks, aabs, warnings []string
-	for _, pth := range c.parseInputList(c.AppPath) {
+// appArtifact is an app file to deploy together with the mapping file that
+// belongs to it (empty when the app has no mapping file).
+type appArtifact struct {
+	path        string
+	mappingPath string
+}
+
+// appsToDeploy pairs each app in app_path with the mapping file at the same
+// position in mapping_file, then selects the artifacts to deploy, preferring
+// .aab over .apk. Pairing is done BEFORE the .aab/.apk selection so that
+// dropping an .apk also drops its mapping file and never shifts the alignment
+// of the remaining app<->mapping pairs.
+func (c Configs) appsToDeploy() ([]appArtifact, []string) {
+	apps := c.parseInputList(c.AppPath)
+	mappings := mappinglist.Decode(c.MappingFile)
+
+	var apks, aabs []appArtifact
+	var warnings []string
+	for i, pth := range apps {
 		pth = strings.TrimSpace(pth)
-		ext := strings.ToLower(filepath.Ext(pth))
-		switch ext {
+		mapping := ""
+		if i < len(mappings) {
+			mapping = mappings[i]
+		}
+		artifact := appArtifact{path: pth, mappingPath: mapping}
+
+		switch strings.ToLower(filepath.Ext(pth)) {
 		case ".aab":
-			aabs = append(aabs, pth)
+			aabs = append(aabs, artifact)
 		case ".apk":
-			apks = append(apks, pth)
+			apks = append(apks, artifact)
 		default:
 			warnings = append(warnings, fmt.Sprintf("unknown app path extension in path: %s, supported extensions: .apk, .aab", pth))
 		}
 	}
 
 	if len(aabs) > 0 && len(apks) > 0 {
-		warnings = append(warnings, fmt.Sprintf("Both .aab and .apk files provided, using the .aab file(s): %s", strings.Join(aabs, ",")))
+		var aabPaths []string
+		for _, a := range aabs {
+			aabPaths = append(aabPaths, a.path)
+		}
+		warnings = append(warnings, fmt.Sprintf("Both .aab and .apk files provided, using the .aab file(s): %s", strings.Join(aabPaths, ",")))
 	}
 
 	if len(aabs) > 0 {
@@ -153,14 +178,14 @@ func (c Configs) appPaths() ([]string, []string) {
 	return apks, warnings
 }
 
-func (c Configs) mappingPaths() []string {
-	var mappingPaths []string
-	for _, path := range strings.Split(c.MappingFile, "|") {
-		if trimmed := strings.TrimSpace(path); trimmed != "" {
-			mappingPaths = append(mappingPaths, trimmed)
-		}
+// appPaths returns the paths of the apps to deploy, by preferring .aab files.
+func (c Configs) appPaths() ([]string, []string) {
+	apps, warnings := c.appsToDeploy()
+	var paths []string
+	for _, a := range apps {
+		paths = append(paths, a.path)
 	}
-	return mappingPaths
+	return paths, warnings
 }
 
 // validateApps validates if files provided via app_path are existing files,

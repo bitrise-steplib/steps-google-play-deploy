@@ -167,7 +167,9 @@ inputs:
 
       Uploading a mapping file is not required when deploying an AAB as the app bundle contains the mapping file itself.
 
-      In case of deploying [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html), you can specify multiple mapping.txt files as a newline (`\n`) or pipe (`|`) separated list. The order of mapping files should match the list of APK or AAB files in the `app_path` input.
+      In case of deploying [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html), you can specify multiple mapping.txt files as a newline (`\n`) or pipe (`|`) separated list. The order of mapping files must match the list of APK or AAB files in the `app_path` input: mapping file N is uploaded for app file N.
+
+      When building with the Gradle Runner or Android Build step, set this to `$BITRISE_MAPPING_PATH_LIST` (and `app_path` to the matching `$BITRISE_AAB_PATH_LIST` or `$BITRISE_APK_PATH_LIST`). Those lists are already aligned per variant. An empty entry (for example `a.txt||c.txt`) means the app file at that position has no mapping file, and its slot is preserved so the alignment of the following mapping files is not shifted.
 - retry_without_sending_to_review: "false"
   opts:
     title: Retry changes without sending to review
