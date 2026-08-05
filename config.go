@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bitrise-io/go-android/v2/gradle/artifactmap"
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/v2/log"
@@ -22,6 +23,7 @@ type Configs struct {
 	UpdatePriority               int             `env:"update_priority,range[0..5]"`
 	WhatsnewsDir                 string          `env:"whatsnews_dir"`
 	MappingFile                  string          `env:"mapping_file"`
+	ArtifactMapPath              string          `env:"artifact_map_path"`
 	ReleaseName                  string          `env:"release_name"`
 	Status                       string          `env:"status"`
 	RetryWithoutSendingToReview  bool            `env:"retry_without_sending_to_review,opt[true,false]"`
@@ -45,7 +47,36 @@ func (c Configs) validate() error {
 		return err
 	}
 
+	if err := c.validateArtifactMap(); err != nil {
+		return err
+	}
+
 	return c.validateApps()
+}
+
+// validateArtifactMap validates the artifact map file if the input points at
+// one. A missing file is not an error: the input defaults to
+// $BITRISE_ANDROID_ARTIFACT_MAP_PATH and an earlier build step may not export
+// it (older step versions). An existing but unparsable file is an error, so
+// producer/consumer mismatches surface instead of silently losing mappings.
+func (c Configs) validateArtifactMap() error {
+	if c.ArtifactMapPath == "" {
+		return nil
+	}
+
+	if exist, err := pathutil.IsPathExists(c.ArtifactMapPath); err != nil {
+		return fmt.Errorf("failed to check if artifact map exists at: %s, error: %s", c.ArtifactMapPath, err)
+	} else if !exist {
+		c.Logger.Debugf("No artifact map found at: %s", c.ArtifactMapPath)
+		return nil
+	}
+
+	if _, err := artifactmap.Read(c.ArtifactMapPath); err != nil {
+		return fmt.Errorf("invalid artifact map: %s", err)
+	}
+
+	c.Logger.Infof("Using artifact map from: %v", c.ArtifactMapPath)
+	return nil
 }
 
 // validateJSONKeyPath validates if service_account_json_key_path input value exists if defined and has file:// URL scheme.
@@ -153,14 +184,12 @@ func (c Configs) appPaths() ([]string, []string) {
 	return apks, warnings
 }
 
+// mappingPaths parses the mapping_file input with the same list syntax as
+// validateMappingFile validates it with (newline, literal `\n` and `|`
+// separators) — previously this only split on `|`, so a newline-separated
+// input passed validation but was uploaded as one bogus path.
 func (c Configs) mappingPaths() []string {
-	var mappingPaths []string
-	for _, path := range strings.Split(c.MappingFile, "|") {
-		if trimmed := strings.TrimSpace(path); trimmed != "" {
-			mappingPaths = append(mappingPaths, trimmed)
-		}
-	}
-	return mappingPaths
+	return c.parseInputList(c.MappingFile)
 }
 
 // validateApps validates if files provided via app_path are existing files,

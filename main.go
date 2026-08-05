@@ -37,7 +37,10 @@ func (p *Publisher) failf(format string, v ...interface{}) {
 // the uploaded apps.
 func (p *Publisher) uploadApplications(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (map[int64]int, error) {
 	appPaths, _ := configs.appPaths()
-	mappingPaths := configs.mappingPaths()
+	pairing, err := newMappingPairing(configs, p.logger)
+	if err != nil {
+		return nil, err
+	}
 	versionCodes := make(map[int64]int)
 
 	var versionCodeListLog bytes.Buffer
@@ -77,8 +80,7 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 		}
 
 		// Upload mapping.txt files
-		if len(mappingPaths)-1 >= appIndex && versionCode != 0 {
-			filePath := mappingPaths[appIndex]
+		if filePath := pairing.mappingFor(appIndex, appPath, p.logger); filePath != "" && versionCode != 0 {
 			if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
 				return nil, err
 			}

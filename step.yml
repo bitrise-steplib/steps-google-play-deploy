@@ -168,6 +168,26 @@ inputs:
       Uploading a mapping file is not required when deploying an AAB as the app bundle contains the mapping file itself.
 
       In case of deploying [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html), you can specify multiple mapping.txt files as a newline (`\n`) or pipe (`|`) separated list. The order of mapping files should match the list of APK or AAB files in the `app_path` input.
+
+      **Note**: when the **Artifact map file path** input points at an artifact map (exported by
+      recent Android build steps), the map's per-variant pairing takes precedence over this input
+      for every artifact the map knows — positional order is fragile with multiple variants.
+- artifact_map_path: $BITRISE_ANDROID_ARTIFACT_MAP_PATH
+  opts:
+    title: Artifact map file path
+    summary: Path of the variant-keyed artifact map (JSON) exported by the Android build steps, used to pair each app artifact with its own variant's mapping file.
+    description: |-
+      Path of the variant-keyed artifact map exported by the Android build steps
+      (Gradle Runner, Android Build) as `$BITRISE_ANDROID_ARTIFACT_MAP_PATH`. The JSON document
+      records which APK/AAB files and which R8/ProGuard mapping file belong to the same build
+      variant, so the step can upload the correct mapping file for each app artifact —
+      Google Play accepts exactly one mapping file per version code.
+
+      When the file exists, its pairing takes precedence over the `mapping_file` input for every
+      artifact it knows (the step logs each decision); artifacts not present in the map fall back
+      to the `mapping_file` input. When the input is empty or the file does not exist (for example
+      the build ran on an older step version), the step behaves as before, using `mapping_file` only.
+    is_required: false
 - retry_without_sending_to_review: "false"
   opts:
     title: Retry changes without sending to review
