@@ -183,10 +183,15 @@ inputs:
       variant, so the step can upload the correct mapping file for each app artifact —
       Google Play accepts exactly one mapping file per version code.
 
-      When the file exists, its pairing takes precedence over the `mapping_file` input for every
-      artifact it knows (the step logs each decision); artifacts not present in the map fall back
-      to the `mapping_file` input. When the input is empty or the file does not exist (for example
-      the build ran on an older step version), the step behaves as before, using `mapping_file` only.
+      When the map names a mapping file for an artifact, that pairing takes precedence over the
+      `mapping_file` input (the step logs each decision). The `mapping_file` input is used whenever
+      the map has nothing to say: no map, an artifact the map does not know, or a variant without
+      a mapping file. Artifacts renamed by the Android Sign step (`*-bitrise-signed.*`) are matched
+      back to their unsigned origin.
+
+      The map only ever improves pairing: when the input is empty, the file does not exist (for
+      example the build ran on an older step version), or the file cannot be parsed, the step
+      warns and behaves as before, using `mapping_file` only.
     is_required: false
 - retry_without_sending_to_review: "false"
   opts:

@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bitrise-io/go-android/v2/gradle/artifactmap"
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/v2/log"
@@ -47,36 +46,12 @@ func (c Configs) validate() error {
 		return err
 	}
 
-	if err := c.validateArtifactMap(); err != nil {
-		return err
-	}
+	// The artifact map input is deliberately NOT validated here: the map only
+	// ever upgrades mapping pairing, so load problems are handled (warn +
+	// fall back to mapping_file) where it is loaded, in newMappingPairing —
+	// a deploy must not fail over auxiliary deobfuscation data.
 
 	return c.validateApps()
-}
-
-// validateArtifactMap validates the artifact map file if the input points at
-// one. A missing file is not an error: the input defaults to
-// $BITRISE_ANDROID_ARTIFACT_MAP_PATH and an earlier build step may not export
-// it (older step versions). An existing but unparsable file is an error, so
-// producer/consumer mismatches surface instead of silently losing mappings.
-func (c Configs) validateArtifactMap() error {
-	if c.ArtifactMapPath == "" {
-		return nil
-	}
-
-	if exist, err := pathutil.IsPathExists(c.ArtifactMapPath); err != nil {
-		return fmt.Errorf("failed to check if artifact map exists at: %s, error: %s", c.ArtifactMapPath, err)
-	} else if !exist {
-		c.Logger.Debugf("No artifact map found at: %s", c.ArtifactMapPath)
-		return nil
-	}
-
-	if _, err := artifactmap.Read(c.ArtifactMapPath); err != nil {
-		return fmt.Errorf("invalid artifact map: %s", err)
-	}
-
-	c.Logger.Infof("Using artifact map from: %v", c.ArtifactMapPath)
-	return nil
 }
 
 // validateJSONKeyPath validates if service_account_json_key_path input value exists if defined and has file:// URL scheme.

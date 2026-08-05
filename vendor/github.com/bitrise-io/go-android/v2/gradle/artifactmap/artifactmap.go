@@ -24,15 +24,17 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 // Version is the schema version this package reads and writes.
 const Version = 1
 
 // DefaultFileName is the conventional name of the map file inside the deploy
-// directory. Producers overwrite any existing file at this name (the map is
-// regenerated authoritative metadata); consumers should use the exported path
-// rather than assuming the name.
+// directory. A producer finding an existing map at this name Merges its own
+// entries into it (several build steps in one workflow accumulate a single
+// document); an unreadable existing file is replaced. Consumers should use
+// the exported path rather than assuming the name.
 const DefaultFileName = "android-artifact-map.json"
 
 // EnvKey is the environment variable producers export the map file's path in
@@ -154,28 +156,190 @@ func Build(apks, aabs, mappings []File) (Map, []string) {
 		g.mappingIsCanonical = canonical
 	}
 
-	// Key by variant name; disambiguate as module/variant only on collision.
-	nameCount := map[string]int{}
+	entries := make([]keyedEntry, 0, len(ordered))
 	for _, g := range ordered {
-		nameCount[g.variant.Variant]++
-	}
-	variants := map[string]Entry{}
-	for _, g := range ordered {
-		key := g.variant.Variant
-		if nameCount[g.variant.Variant] > 1 {
-			key = g.variant.Module + "/" + g.variant.Variant
-		}
-		// The producers discover files in filesystem-walk order, which is not a
-		// meaningful contract; sort so the document is deterministic.
-		sort.Strings(g.entry.APK)
-		sort.Strings(g.entry.AAB)
-		variants[key] = g.entry
+		entries = append(entries, keyedEntry{variant: g.variant, entry: g.entry})
 	}
 	sort.Strings(unmatched.APK)
 	sort.Strings(unmatched.AAB)
 	sort.Strings(unmatched.Mapping)
 
-	return Map{Version: Version, Variants: variants, Unmatched: unmatched}, warnings
+	return Map{Version: Version, Variants: keyEntries(entries), Unmatched: unmatched}, warnings
+}
+
+// keyedEntry pairs an entry with the variant identity its key derives from.
+type keyedEntry struct {
+	variant ArtifactVariant
+	entry   Entry
+}
+
+// keyEntries builds the Variants map: keys are variant names, disambiguated as
+// module/variant only on collision. Entry file lists are sorted — producers
+// discover files in filesystem-walk order, which is not a meaningful contract.
+func keyEntries(entries []keyedEntry) map[string]Entry {
+	nameCount := map[string]int{}
+	for _, e := range entries {
+		nameCount[e.variant.Variant]++
+	}
+	variants := map[string]Entry{}
+	for _, e := range entries {
+		key := e.variant.Variant
+		if nameCount[e.variant.Variant] > 1 {
+			key = e.variant.Module + "/" + e.variant.Variant
+		}
+		sort.Strings(e.entry.APK)
+		sort.Strings(e.entry.AAB)
+		variants[key] = e.entry
+	}
+	return variants
+}
+
+// variantFromKey reconstructs the variant identity a Variants key encodes:
+// keys are either the bare variant name or module/variant when modules
+// collided, and the entry always carries the module.
+func variantFromKey(key string, entry Entry) ArtifactVariant {
+	if entry.Module != "" && strings.HasPrefix(key, entry.Module+"/") {
+		return ArtifactVariant{Module: entry.Module, Variant: key[len(entry.Module)+1:]}
+	}
+	return ArtifactVariant{Module: entry.Module, Variant: key}
+}
+
+// Merge combines the map written by an earlier step run (base) with the map of
+// the current run (overlay), so several producer steps in one workflow
+// accumulate a single document instead of the last one overwriting the rest.
+// Entries are matched by (module, variant) and merged field-wise: a field the
+// overlay produced replaces the base's (a rebuild — reported in warnings when
+// the values differ), fields the overlay didn't produce keep the base's. An
+// apk-building run and an aab-building run of the same variant therefore
+// accumulate one complete entry. Unmatched lists are unioned and deduped.
+func Merge(base, overlay Map) (Map, []string) {
+	var warnings []string
+
+	combined := map[ArtifactVariant]Entry{}
+	var order []ArtifactVariant
+	for _, key := range base.SortedVariantKeys() {
+		entry := base.Variants[key]
+		variant := variantFromKey(key, entry)
+		combined[variant] = entry
+		order = append(order, variant)
+	}
+	for _, key := range overlay.SortedVariantKeys() {
+		entry := overlay.Variants[key]
+		variant := variantFromKey(key, entry)
+		baseEntry, exists := combined[variant]
+		if !exists {
+			combined[variant] = entry
+			order = append(order, variant)
+			continue
+		}
+		merged, mergeWarnings := mergeEntries(baseEntry, entry, variant.Variant)
+		warnings = append(warnings, mergeWarnings...)
+		combined[variant] = merged
+	}
+
+	entries := make([]keyedEntry, 0, len(order))
+	for _, variant := range order {
+		entries = append(entries, keyedEntry{variant: variant, entry: combined[variant]})
+	}
+
+	unmatched := Unmatched{
+		APK:     unionSorted(base.Unmatched.APK, overlay.Unmatched.APK),
+		AAB:     unionSorted(base.Unmatched.AAB, overlay.Unmatched.AAB),
+		Mapping: unionSorted(base.Unmatched.Mapping, overlay.Unmatched.Mapping),
+	}
+
+	return Map{Version: Version, Variants: keyEntries(entries), Unmatched: unmatched}, warnings
+}
+
+// mergeEntries combines one variant's base and overlay entries field-wise:
+// what the overlay produced wins, what it didn't produce survives from the
+// base. Replacing a differing earlier value is reported.
+func mergeEntries(base, overlay Entry, variantName string) (Entry, []string) {
+	var warnings []string
+	merged := overlay
+	if merged.Module == "" {
+		merged.Module = base.Module
+	}
+
+	if len(overlay.APK) == 0 {
+		merged.APK = base.APK
+	} else if len(base.APK) != 0 && !stringSlicesEqual(base.APK, overlay.APK) {
+		warnings = append(warnings, fmt.Sprintf(
+			"variant %s: a later step rebuilt its APKs, the artifact map now references the newer files", variantName))
+	}
+
+	if len(overlay.AAB) == 0 {
+		merged.AAB = base.AAB
+	} else if len(base.AAB) != 0 && !stringSlicesEqual(base.AAB, overlay.AAB) {
+		warnings = append(warnings, fmt.Sprintf(
+			"variant %s: a later step rebuilt its AABs, the artifact map now references the newer files", variantName))
+	}
+
+	if overlay.Mapping == "" {
+		merged.Mapping = base.Mapping
+	} else if base.Mapping != "" && base.Mapping != overlay.Mapping {
+		warnings = append(warnings, fmt.Sprintf(
+			"variant %s: a later step rebuilt its mapping file, the artifact map now references %s instead of %s",
+			variantName, overlay.Mapping, base.Mapping))
+	}
+
+	return merged, warnings
+}
+
+func stringSlicesEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func unionSorted(a, b []string) []string {
+	seen := map[string]bool{}
+	union := []string{}
+	for _, list := range [][]string{a, b} {
+		for _, name := range list {
+			if !seen[name] {
+				seen[name] = true
+				union = append(union, name)
+			}
+		}
+	}
+	sort.Strings(union)
+	return union
+}
+
+// ReplaceFile renames a file reference wherever it appears — the variants'
+// APK/AAB lists and the unmatched lists — and reports whether anything was
+// replaced. A step that transforms an artifact in the deploy dir under a new
+// name (e.g. signing) uses it to keep the map pointing at the current file.
+// Mapping references are left alone: artifact transforms don't touch them.
+func (m *Map) ReplaceFile(oldName, newName string) bool {
+	replaced := false
+	replaceIn := func(list []string) {
+		changed := false
+		for i, name := range list {
+			if name == oldName {
+				list[i] = newName
+				changed = true
+			}
+		}
+		if changed {
+			sort.Strings(list)
+			replaced = true
+		}
+	}
+	for _, entry := range m.Variants {
+		replaceIn(entry.APK)
+		replaceIn(entry.AAB)
+	}
+	replaceIn(m.Unmatched.APK)
+	replaceIn(m.Unmatched.AAB)
+	return replaced
 }
 
 // IsEmpty reports whether the map carries no artifacts at all — producers can
@@ -206,14 +370,24 @@ func Resolve(mapPath, name string) string {
 	return filepath.Join(filepath.Dir(mapPath), name)
 }
 
+// Marshal renders the document exactly as Write persists it — indented, with
+// a trailing newline — so steps can also print it to the build log.
+func Marshal(m Map) ([]byte, error) {
+	data, err := json.MarshalIndent(m, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("marshal artifact map: %w", err)
+	}
+	return append(data, '\n'), nil
+}
+
 // Write marshals the map and writes it to path. The document is indented so
 // the exported build artifact stays human-readable.
 func Write(path string, m Map) error {
-	data, err := json.MarshalIndent(m, "", "  ")
+	data, err := Marshal(m)
 	if err != nil {
-		return fmt.Errorf("marshal artifact map: %w", err)
+		return err
 	}
-	if err := os.WriteFile(path, append(data, '\n'), 0644); err != nil {
+	if err := os.WriteFile(path, data, 0644); err != nil {
 		return fmt.Errorf("write artifact map: %w", err)
 	}
 	return nil

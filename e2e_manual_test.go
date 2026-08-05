@@ -14,7 +14,6 @@ package main
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/bitrise-io/go-utils/v2/log"
@@ -35,10 +34,7 @@ func Test_ManualE2E_PairingAgainstRealMap(t *testing.T) {
 		Logger:          logger,
 	}
 
-	pairing, err := newMappingPairing(configs, logger)
-	if err != nil {
-		t.Fatalf("newMappingPairing: %v", err)
-	}
+	pairing := newMappingPairing(configs, logger)
 	if !pairing.usesArtifactMap() {
 		t.Fatalf("expected the artifact map at %s to be loaded", mapPath)
 	}
@@ -52,13 +48,20 @@ func Test_ManualE2E_PairingAgainstRealMap(t *testing.T) {
 	}
 
 	paired := 0
+	variantsByMapping := map[string]map[string]bool{}
 	for i, app := range apps {
-		mapping := pairing.mappingFor(i, app, logger)
+		mapping := pairing.mappingFor(i, app)
 		t.Logf("app %-45s -> mapping %s", filepath.Base(app), mapping)
 		if mapping == "" {
 			continue
 		}
 		paired++
+		if vm, known := pairing.lookup(app); known {
+			if variantsByMapping[mapping] == nil {
+				variantsByMapping[mapping] = map[string]bool{}
+			}
+			variantsByMapping[mapping][vm.variant] = true
+		}
 		if _, err := os.Stat(mapping); err != nil {
 			t.Errorf("paired mapping does not exist: %v", err)
 		}
@@ -72,19 +75,11 @@ func Test_ManualE2E_PairingAgainstRealMap(t *testing.T) {
 		t.Error("no artifact got a mapping paired — expected at least the release variants")
 	}
 
-	// Distinct apps of different variants must not share a mapping file.
-	seen := map[string][]string{}
-	for i, app := range apps {
-		if m := pairing.mappingFor(i, app, logger); m != "" {
-			seen[m] = append(seen[m], filepath.Base(app))
-		}
-	}
-	for mapping, users := range seen {
-		base := strings.TrimSuffix(filepath.Base(users[0]), filepath.Ext(users[0]))
-		for _, u := range users[1:] {
-			if !strings.HasPrefix(strings.TrimSuffix(u, filepath.Ext(u)), strings.Split(base, "-")[0]) {
-				t.Errorf("mapping %s shared by artifacts that look like different variants: %v", mapping, users)
-			}
+	// Distinct variants must not share a mapping file (split APKs of ONE
+	// variant sharing theirs is legitimate).
+	for mapping, variants := range variantsByMapping {
+		if len(variants) > 1 {
+			t.Errorf("mapping %s shared by several variants: %v", mapping, variants)
 		}
 	}
 }

@@ -37,10 +37,7 @@ func (p *Publisher) failf(format string, v ...interface{}) {
 // the uploaded apps.
 func (p *Publisher) uploadApplications(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (map[int64]int, error) {
 	appPaths, _ := configs.appPaths()
-	pairing, err := newMappingPairing(configs, p.logger)
-	if err != nil {
-		return nil, err
-	}
+	pairing := newMappingPairing(configs, p.logger)
 	versionCodes := make(map[int64]int)
 
 	var versionCodeListLog bytes.Buffer
@@ -79,13 +76,17 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 			}
 		}
 
-		// Upload mapping.txt files
-		if filePath := pairing.mappingFor(appIndex, appPath, p.logger); filePath != "" && versionCode != 0 {
-			if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
-				return nil, err
-			}
-			if appIndex < len(appPaths)-1 {
-				fmt.Println()
+		// Upload mapping.txt files. The versionCode guard comes first so the
+		// pairing decision (and its logs) only happen for uploads that can
+		// actually take a mapping.
+		if versionCode != 0 {
+			if filePath := pairing.mappingFor(appIndex, appPath); filePath != "" {
+				if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
+					return nil, err
+				}
+				if appIndex < len(appPaths)-1 {
+					fmt.Println()
+				}
 			}
 		}
 
