@@ -12,23 +12,22 @@ import (
 
 const testArtifactMap = `{
   "version": 1,
-  "variants": {
-    "demoRelease": {
-      "module": "app",
-      "mapping": "mapping.txt",
-      "aab": ["app-demo-release.aab"],
-      "apk": ["app-demo-release.apk"]
-    },
-    "paidRelease": {
-      "module": "app",
-      "mapping": "mapping-20260805121530.txt",
-      "aab": ["app-paid-release.aab"],
-      "apk": []
-    },
-    "freeDebug": {
-      "module": "app",
-      "aab": [],
-      "apk": ["app-free-debug.apk"]
+  "modules": {
+    "app": {
+      "demoRelease": {
+        "mapping": "mapping.txt",
+        "aab": ["app-demo-release.aab"],
+        "apk": ["app-demo-release.apk"]
+      },
+      "paidRelease": {
+        "mapping": "mapping-20260805121530.txt",
+        "aab": ["app-paid-release.aab"],
+        "apk": []
+      },
+      "freeDebug": {
+        "aab": [],
+        "apk": ["app-free-debug.apk"]
+      }
     }
   },
   "unmatched": { "apk": [], "aab": [], "mapping": [] }

@@ -32,6 +32,7 @@ type mappingPairing struct {
 
 // variantMapping is what the artifact map knows about one app file.
 type variantMapping struct {
+	// variant is the module/variant display label, for logs only.
 	variant string
 	// mappingPath is empty when the variant produced no mapping file.
 	mappingPath string
@@ -61,22 +62,24 @@ func newMappingPairing(configs Configs, logger log.Logger) mappingPairing {
 	logger.Infof("Using artifact map from: %s", configs.ArtifactMapPath)
 	pairing.mapPath = configs.ArtifactMapPath
 	pairing.byAppPath = map[string]variantMapping{}
-	for _, key := range m.SortedVariantKeys() {
-		entry := m.Variants[key]
-		vm := variantMapping{
-			variant:     key,
-			mappingPath: artifactmap.Resolve(configs.ArtifactMapPath, entry.Mapping),
-		}
-		for _, list := range [][]string{entry.APK, entry.AAB} {
-			for _, name := range list {
-				pairing.byAppPath[canonicalPath(artifactmap.Resolve(configs.ArtifactMapPath, name))] = vm
+	for _, module := range m.SortedModules() {
+		for _, variant := range m.SortedVariants(module) {
+			entry := m.Modules[module][variant]
+			vm := variantMapping{
+				variant:     artifactmap.Label(module, variant),
+				mappingPath: artifactmap.Resolve(configs.ArtifactMapPath, entry.Mapping),
 			}
+			for _, list := range [][]string{entry.APK, entry.AAB} {
+				for _, name := range list {
+					pairing.byAppPath[canonicalPath(artifactmap.Resolve(configs.ArtifactMapPath, name))] = vm
+				}
+			}
+			mappingInfo := entry.Mapping
+			if mappingInfo == "" {
+				mappingInfo = "none"
+			}
+			logger.Printf("- %s: %d APK, %d AAB, mapping: %s", vm.variant, len(entry.APK), len(entry.AAB), mappingInfo)
 		}
-		mappingInfo := entry.Mapping
-		if mappingInfo == "" {
-			mappingInfo = "none"
-		}
-		logger.Printf("- %s: %d APK, %d AAB, mapping: %s", key, len(entry.APK), len(entry.AAB), mappingInfo)
 	}
 	// The full document for post-hoc debugging, without re-downloading the artifact.
 	if doc, err := artifactmap.Marshal(m); err == nil {
