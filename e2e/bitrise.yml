@@ -251,6 +251,128 @@ workflows:
         - retry_without_sending_to_review: true
         - verbose_log: true
 
+  test_duckduckgo_deploy:
+    description: |-
+      Full-scale artifact-map chain on the DuckDuckGo fixture (SSW-3065), against
+      the real Google Play API in dry-run mode: two minified Compose flavors
+      produce the complete customer layout (outputs + intermediates + Compose
+      mappings, collision renames), the play flavor's APK is signed and deployed,
+      and the mapping must be selected from the MULTI-variant map alone
+      (mapping_file is empty). Every step is gated to the latest Ubuntu stack —
+      the build is heavy. The first run doubles as the access probe for the
+      com.bitrise.ddgmobile Play app. Dry runs never commit, so the fixture's
+      constant version code is never consumed.
+    envs:
+    - BITRISEIO_ANDROID_KEYSTORE_URL: $SIMPLESAMPLE_ANDROID_KEYSTORE_URL
+    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $SIMPLESAMPLE_ANDROID_KEYSTORE_PASSWORD
+    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $SIMPLESAMPLE_ANDROID_KEY_ALIAS
+    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
+
+    - PACKAGE_NAME: com.bitrise.ddgmobile
+    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - TRACK: internal
+    # heavy real-world build: run on a single stack only
+    - RUN_IF_LATEST_UBUNTU: '{{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}'
+    steps:
+    - set-java-version:
+        run_if: $RUN_IF_LATEST_UBUNTU
+        inputs:
+        - set_java_version: "21"
+    - script:
+        title: recreate _tmp directory
+        run_if: $RUN_IF_LATEST_UBUNTU
+        inputs:
+        - content: rm -rf "./_tmp" && mkdir "./_tmp"
+    - change-workdir:
+        title: Switch working dir to _tmp
+        run_if: $RUN_IF_LATEST_UBUNTU
+        inputs:
+        - path: ./_tmp
+    # TODO: point at bitrise-io/DuckDuckGo-Android once the fixture patch
+    # (R8 on release + com.bitrise.ddgmobile application id) can live there
+    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
+        run_if: $RUN_IF_LATEST_UBUNTU
+        inputs:
+        - repository_url: https://github.com/lpusok/DuckDuckGo-Android.git
+        - clone_into_dir: .
+        - branch: SSW-3065-minified-fixture
+    - script:
+        title: Init git submodules (native bloom filter sources)
+        run_if: $RUN_IF_LATEST_UBUNTU
+        inputs:
+        - content: git submodule update --init --recursive --depth 1
+    - restore-gradle-cache@2:
+        run_if: $RUN_IF_LATEST_UBUNTU
+    - activate-build-cache-for-gradle@3:
+        # remote build cache is an add-on; a build without it must still pass
+        is_skippable: true
+        run_if: $RUN_IF_LATEST_UBUNTU
+    - install-missing-android-tools@3:
+        run_if: $RUN_IF_LATEST_UBUNTU
+        inputs:
+        - gradlew_path: ./gradlew
+        - ndk_version: 28.2.13676358
+    - git::https://github.com/bitrise-steplib/steps-gradle-runner.git@SSW-3065-variant-artifact-map:
+        title: gradle-runner (artifact map branch, two minified flavors)
+        run_if: $RUN_IF_LATEST_UBUNTU
+        inputs:
+        - build_root_directory: .
+        - gradle_task: assembleInternalRelease assemblePlayRelease
+        - gradlew_path: ./gradlew
+        - gradle_options: "-PuseProprietaryFont=false"
+        - mapping_file_include_filter: "*mapping.txt"
+    - script:
+        title: Pick the play flavor's APK from the multi-variant map
+        run_if: $RUN_IF_LATEST_UBUNTU
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            map="$BITRISE_ANDROID_ARTIFACT_MAP_PATH"
+            echo "--- artifact map ---"; cat "$map"; echo "---"
+            # the map must be genuinely multi-variant with distinct mappings
+            internal=$(jq -r '.modules.app.internalRelease.mapping // ""' "$map")
+            play=$(jq -r '.modules.app.playRelease.mapping // ""' "$map")
+            [ -n "$internal" ] && [ -n "$play" ] && [ "$internal" != "$play" ] \
+              || { echo "expected both flavors paired with distinct mappings"; exit 1; }
+            play_apk="$(dirname "$map")/$(jq -r '.modules.app.playRelease.apk[0]' "$map")"
+            [ -f "$play_apk" ] || { echo "play APK not found: $play_apk"; exit 1; }
+            envman add --key PLAY_APK_PATH --value "$play_apk"
+            echo "deploying: $play_apk"
+    - git::https://github.com/bitrise-steplib/steps-sign-apk.git@SSW-3065-update-artifact-map:
+        title: sign-apk (artifact map branch)
+        run_if: $RUN_IF_LATEST_UBUNTU
+        inputs:
+        - android_app: $PLAY_APK_PATH
+        - use_apk_signer: true
+    - script:
+        title: Check the signed artifact map before deploying
+        run_if: $RUN_IF_LATEST_UBUNTU
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            map="$BITRISE_ANDROID_ARTIFACT_MAP_PATH"
+            signed_name=$(basename "$BITRISE_SIGNED_APK_PATH")
+            jq -e --arg n "$signed_name" '.modules.app.playRelease.apk | index($n) != null' "$map" > /dev/null \
+              || { echo "expected the map's play entry to reference the signed APK ($signed_name)"; cat "$map"; exit 1; }
+            echo "OK: map references the signed play APK"
+    - path::./:
+        title: Execute step (multi-variant map, mapping from the map ONLY)
+        run_if: $RUN_IF_LATEST_UBUNTU
+        inputs:
+        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
+        - package_name: $PACKAGE_NAME
+        - app_path: $BITRISE_SIGNED_APK_PATH
+        - dry_run: true
+        - track: $TRACK
+        - mapping_file: ""
+        - user_fraction: ""
+        - retry_without_sending_to_review: true
+        - verbose_log: true
+    - save-gradle-cache@1:
+        run_if: $RUN_IF_LATEST_UBUNTU
+
   test_dry_run:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
