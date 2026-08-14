@@ -338,14 +338,14 @@ workflows:
             # R8 over the full app OOMs with the project's default -Xmx6g, while a
             # heap sized for a big machine OOM-kills the daemon on a small one; give
             # the daemons a share of the actual RAM so the same workflow fits medium
-            # (16GB -> 8g/2g/3) and large (32GB -> 15g/3g/6) workers alike
+            # (16GB -> 8g/4g/3) and large (32GB -> 15g/7g/6) workers alike
             if [ -r /proc/meminfo ]; then
               total_gb=$(awk '/MemTotal/ {printf "%.0f", $2/1024/1024}' /proc/meminfo)
             else
               total_gb=$(($(sysctl -n hw.memsize) / 1024 / 1024 / 1024))
             fi
             envman add --key GRADLE_DAEMON_HEAP --value "$((total_gb / 2))g"
-            envman add --key KOTLIN_DAEMON_HEAP --value "$((total_gb / 8))g"
+            envman add --key KOTLIN_DAEMON_HEAP --value "$((total_gb / 4))g"
             envman add --key GRADLE_MAX_WORKERS --value "$((total_gb / 5))"
     - git::https://github.com/bitrise-steplib/steps-gradle-runner.git@SSW-3065-variant-artifact-map:
         title: gradle-runner (artifact map branch, two minified flavors)
