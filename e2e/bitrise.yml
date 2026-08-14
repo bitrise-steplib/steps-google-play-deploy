@@ -328,6 +328,8 @@ workflows:
         - ndk_version: 28.2.13676358
     - git::https://github.com/bitrise-steplib/steps-gradle-runner.git@SSW-3065-variant-artifact-map:
         title: gradle-runner (artifact map branch, two minified flavors)
+        # R8 over the full app OOMs with the project's default -Xmx6g on the
+        # CI machine; gradle_options raises the daemon heap for this build only
         # heavy real-world build: run on a single stack only
         run_if: |-
           {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
@@ -335,7 +337,7 @@ workflows:
         - build_root_directory: .
         - gradle_task: assembleInternalRelease assemblePlayRelease
         - gradlew_path: ./gradlew
-        - gradle_options: "-PuseProprietaryFont=false"
+        - gradle_options: -PuseProprietaryFont=false "-Dorg.gradle.jvmargs=-Xmx10g -XX:+UseParallelGC"
         - mapping_file_include_filter: "*mapping.txt"
     - script:
         title: Pick the play flavor's APK from the multi-variant map
