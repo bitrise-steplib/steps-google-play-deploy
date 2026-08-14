@@ -271,50 +271,66 @@ workflows:
     - PACKAGE_NAME: com.bitrise.ddgmobile
     - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
     - TRACK: internal
-    # heavy real-world build: run on a single stack only
-    - RUN_IF_LATEST_UBUNTU: "{{ or (enveq \"IS_LATEST_STACK_UBUNTU\" \"true\") (not .IsCI) }}"
     steps:
     - set-java-version:
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - set_java_version: "21"
     - script:
         title: recreate _tmp directory
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - content: rm -rf "./_tmp" && mkdir "./_tmp"
     - change-workdir:
         title: Switch working dir to _tmp
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - path: ./_tmp
     # TODO: point at bitrise-io/DuckDuckGo-Android once the fixture patch
     # (R8 on release + com.bitrise.ddgmobile application id) can live there
     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - repository_url: https://github.com/lpusok/DuckDuckGo-Android.git
         - clone_into_dir: .
         - branch: SSW-3065-minified-fixture
     - script:
         title: Init git submodules (native bloom filter sources)
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - content: git submodule update --init --recursive --depth 1
     - restore-gradle-cache@2:
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
     - activate-build-cache-for-gradle@3:
         # remote build cache is an add-on; a build without it must still pass
         is_skippable: true
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
     - install-missing-android-tools@3:
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - gradlew_path: ./gradlew
         - ndk_version: 28.2.13676358
     - git::https://github.com/bitrise-steplib/steps-gradle-runner.git@SSW-3065-variant-artifact-map:
         title: gradle-runner (artifact map branch, two minified flavors)
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - build_root_directory: .
         - gradle_task: assembleInternalRelease assemblePlayRelease
@@ -323,7 +339,9 @@ workflows:
         - mapping_file_include_filter: "*mapping.txt"
     - script:
         title: Pick the play flavor's APK from the multi-variant map
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - content: |-
             #!/bin/bash
@@ -341,13 +359,17 @@ workflows:
             echo "deploying: $play_apk"
     - git::https://github.com/bitrise-steplib/steps-sign-apk.git@SSW-3065-update-artifact-map:
         title: sign-apk (artifact map branch)
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - android_app: $PLAY_APK_PATH
         - use_apk_signer: true
     - script:
         title: Check the signed artifact map before deploying
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - content: |-
             #!/bin/bash
@@ -359,7 +381,9 @@ workflows:
             echo "OK: map references the signed play APK"
     - path::./:
         title: Execute step (multi-variant map, mapping from the map ONLY)
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
@@ -371,7 +395,9 @@ workflows:
         - retry_without_sending_to_review: true
         - verbose_log: true
     - save-gradle-cache@1:
-        run_if: $RUN_IF_LATEST_UBUNTU
+        # heavy real-world build: run on a single stack only
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
 
   test_dry_run:
     envs:
