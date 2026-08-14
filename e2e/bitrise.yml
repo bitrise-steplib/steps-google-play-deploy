@@ -272,7 +272,7 @@ workflows:
     - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
     - TRACK: internal
     # heavy real-world build: run on a single stack only
-    - RUN_IF_LATEST_UBUNTU: '{{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}'
+    - RUN_IF_LATEST_UBUNTU: "{{ or (enveq \"IS_LATEST_STACK_UBUNTU\" \"true\") (not .IsCI) }}"
     steps:
     - set-java-version:
         run_if: $RUN_IF_LATEST_UBUNTU
