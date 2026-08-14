@@ -360,12 +360,13 @@ workflows:
           {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - build_root_directory: .
-        - gradle_task: assembleInternalRelease assemblePlayRelease
+        # bundles, not APKs: the Play app (created 2026) only accepts AABs
+        - gradle_task: bundleInternalRelease bundlePlayRelease
         - gradlew_path: ./gradlew
         - gradle_options: -PuseProprietaryFont=false "-Pkotlin.daemon.jvmargs=-Xmx$KOTLIN_DAEMON_HEAP" --max-workers=$GRADLE_MAX_WORKERS "-Dorg.gradle.jvmargs=-Xmx$GRADLE_DAEMON_HEAP -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC"
         - mapping_file_include_filter: "*mapping.txt"
     - script:
-        title: Pick the play flavor's APK from the multi-variant map
+        title: Pick the play flavor's AAB from the multi-variant map
         # heavy real-world build: run on a single stack only
         run_if: |-
           {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
@@ -380,17 +381,17 @@ workflows:
             play=$(jq -r '.modules.app.playRelease.mapping // ""' "$map")
             [ -n "$internal" ] && [ -n "$play" ] && [ "$internal" != "$play" ] \
               || { echo "expected both flavors paired with distinct mappings"; exit 1; }
-            play_apk="$(dirname "$map")/$(jq -r '.modules.app.playRelease.apk[0]' "$map")"
-            [ -f "$play_apk" ] || { echo "play APK not found: $play_apk"; exit 1; }
-            envman add --key PLAY_APK_PATH --value "$play_apk"
-            echo "deploying: $play_apk"
+            play_aab="$(dirname "$map")/$(jq -r '.modules.app.playRelease.aab[0]' "$map")"
+            [ -f "$play_aab" ] || { echo "play AAB not found: $play_aab"; exit 1; }
+            envman add --key PLAY_AAB_PATH --value "$play_aab"
+            echo "deploying: $play_aab"
     - git::https://github.com/bitrise-steplib/steps-sign-apk.git@SSW-3065-update-artifact-map:
         title: sign-apk (artifact map branch)
         # heavy real-world build: run on a single stack only
         run_if: |-
           {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
-        - android_app: $PLAY_APK_PATH
+        - android_app: $PLAY_AAB_PATH
         - use_apk_signer: true
     - script:
         title: Check the signed artifact map before deploying
@@ -402,10 +403,10 @@ workflows:
             #!/bin/bash
             set -e
             map="$BITRISE_ANDROID_ARTIFACT_MAP_PATH"
-            signed_name=$(basename "$BITRISE_SIGNED_APK_PATH")
-            jq -e --arg n "$signed_name" '.modules.app.playRelease.apk | index($n) != null' "$map" > /dev/null \
-              || { echo "expected the map's play entry to reference the signed APK ($signed_name)"; cat "$map"; exit 1; }
-            echo "OK: map references the signed play APK"
+            signed_name=$(basename "$BITRISE_SIGNED_AAB_PATH")
+            jq -e --arg n "$signed_name" '.modules.app.playRelease.aab | index($n) != null' "$map" > /dev/null \
+              || { echo "expected the map's play entry to reference the signed AAB ($signed_name)"; cat "$map"; exit 1; }
+            echo "OK: map references the signed play AAB"
     - path::./:
         title: Execute step (multi-variant map, mapping from the map ONLY)
         # heavy real-world build: run on a single stack only
@@ -414,7 +415,7 @@ workflows:
         inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
-        - app_path: $BITRISE_SIGNED_APK_PATH
+        - app_path: $BITRISE_SIGNED_AAB_PATH
         - dry_run: true
         - track: $TRACK
         - mapping_file: ""
