@@ -147,6 +147,10 @@ workflows:
         inputs:
         - build_gradle_path: ./app/build.gradle
         - new_version_code: $BITRISE_BUILD_NUMBER
+        # +1: this test shares the worker (and so the build number) with
+        # test_aab_deploy; Play refuses an APK at a version code that already
+        # holds a bundle (test_artifact_map_dry_run uses +2)
+        - version_code_offset: "1"
         - new_version_name: 0.2.4
     - gradle-runner:
         inputs:
