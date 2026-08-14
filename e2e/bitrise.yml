@@ -337,7 +337,7 @@ workflows:
         - build_root_directory: .
         - gradle_task: assembleInternalRelease assemblePlayRelease
         - gradlew_path: ./gradlew
-        - gradle_options: -PuseProprietaryFont=false "-Dorg.gradle.jvmargs=-Xmx10g -XX:+UseParallelGC"
+        - gradle_options: -PuseProprietaryFont=false "-Pkotlin.daemon.jvmargs=-Xmx2g" --max-workers=3 "-Dorg.gradle.jvmargs=-Xmx8g -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC"
         - mapping_file_include_filter: "*mapping.txt"
     - script:
         title: Pick the play flavor's APK from the multi-variant map
@@ -397,6 +397,7 @@ workflows:
         - retry_without_sending_to_review: true
         - verbose_log: true
     - save-gradle-cache@1:
+        is_always_run: true
         # heavy real-world build: run on a single stack only
         run_if: |-
           {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
