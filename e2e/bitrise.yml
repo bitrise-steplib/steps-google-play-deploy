@@ -298,14 +298,14 @@ workflows:
           {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - path: ./_tmp
-    # TODO: point at bitrise-io/DuckDuckGo-Android once the fixture patch
-    # (R8 on release + com.bitrise.ddgmobile2 application id) can live there
+    # the fixture branch enables R8 on release and uses a Bitrise-owned
+    # application id (com.bitrise.ddgmobile2)
     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         # heavy real-world build: run on a single stack only
         run_if: |-
           {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
-        - repository_url: https://github.com/lpusok/DuckDuckGo-Android.git
+        - repository_url: https://github.com/bitrise-io/DuckDuckGo-Android.git
         - clone_into_dir: .
         - branch: SSW-3065-minified-fixture
     - script:
