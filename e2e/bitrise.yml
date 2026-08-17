@@ -266,7 +266,7 @@ workflows:
       and the mapping must be selected from the MULTI-variant map alone
       (mapping_file is empty). Every step is gated to the latest Ubuntu stack —
       the build is heavy. The first run doubles as the access probe for the
-      com.bitrise.ddgmobile Play app. Dry runs never commit, so the fixture's
+      com.bitrise.ddgmobile2 Play app. Dry runs never commit, so the fixture's
       constant version code is never consumed.
     envs:
     - BITRISEIO_ANDROID_KEYSTORE_URL: $SIMPLESAMPLE_ANDROID_KEYSTORE_URL
@@ -274,7 +274,7 @@ workflows:
     - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $SIMPLESAMPLE_ANDROID_KEY_ALIAS
     - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
 
-    - PACKAGE_NAME: com.bitrise.ddgmobile
+    - PACKAGE_NAME: com.bitrise.ddgmobile2
     - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
     - TRACK: internal
     steps:
@@ -299,7 +299,7 @@ workflows:
         inputs:
         - path: ./_tmp
     # TODO: point at bitrise-io/DuckDuckGo-Android once the fixture patch
-    # (R8 on release + com.bitrise.ddgmobile application id) can live there
+    # (R8 on release + com.bitrise.ddgmobile2 application id) can live there
     - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         # heavy real-world build: run on a single stack only
         run_if: |-
