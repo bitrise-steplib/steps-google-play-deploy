@@ -15,7 +15,7 @@ require (
 require (
 	cloud.google.com/go/compute v1.23.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	github.com/bitrise-io/go-android/v2 v2.0.0-alpha.16.0.20260811092717-c278eadef180
+	github.com/bitrise-io/go-android/v2 v2.0.0-alpha.17.0.20260818111413-e5a94341c2ad
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
