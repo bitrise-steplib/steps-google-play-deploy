@@ -45,9 +45,20 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 	// same id into the header of the mapping file for that run, so the pairing holds
 	// even though the deploy directory has flattened the paths, collision-renamed the
 	// mapping files, and sign-apk has rewritten the artifacts.
-	mappingIndex := pairing.BuildIndex(configs.mappingPaths(), p.logger)
-	if len(mappingIndex) > 0 {
-		p.logger.Printf("Indexed %d mapping file id(s) to pair with the uploaded artifacts", len(mappingIndex))
+	mappingPaths := configs.mappingPaths()
+	mappingIndex := pairing.BuildIndex(mappingPaths, p.logger)
+
+	// Fall back to the previous positional behaviour when no candidate carries a
+	// pg_map_id at all. ProGuard without R8 writes no marker and no id, so those
+	// mapping files can only be matched by position; pairing by content would
+	// silently stop uploading them.
+	pairByContent := len(mappingIndex) > 0
+	switch {
+	case pairByContent:
+		p.logger.Printf("Indexed %d mapping file id(s) to pair with the uploaded artifacts by content", len(mappingIndex))
+	case len(mappingPaths) > 0:
+		p.logger.Warnf("None of the %d mapping file(s) has a '# pg_map_id:' header, so they cannot be matched to an artifact by content.", len(mappingPaths))
+		p.logger.Warnf("Falling back to matching them to the app_path list by position. This is what ProGuard (without R8) produces; with R8 it usually means the mapping files are not the ones the build published.")
 	}
 
 	var versionCodeListLog bytes.Buffer
@@ -86,18 +97,13 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 			}
 		}
 
-		// Upload the mapping file belonging to this artifact, identified by content.
-		if versionCode != 0 && len(mappingIndex) > 0 {
-			mappingPath, needsMapping, err := mappingIndex.ForArtifact(appPath, p.logger)
-			switch {
-			case err != nil:
+		// Upload the mapping file belonging to this artifact.
+		if versionCode != 0 && len(mappingPaths) > 0 {
+			mappingPath, err := p.mappingFor(appPath, appIndex, mappingPaths, mappingIndex, pairByContent)
+			if err != nil {
 				// Never fail a deploy that has already succeeded over a mapping file.
 				p.logger.Warnf("Could not determine the mapping file for %s: %s", filepath.Base(appPath), err)
-			case !needsMapping:
-				p.logger.Printf("  %s carries no R8 mapping id, so it is not minified; no mapping file to upload", filepath.Base(appPath))
-			case mappingPath == "":
-				p.logger.Warnf("  %s is minified but none of the %d mapping file(s) provided matches it. Crash reports for this version will not be deobfuscated.", filepath.Base(appPath), len(configs.mappingPaths()))
-			default:
+			} else if mappingPath != "" {
 				if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, mappingPath); err != nil {
 					return nil, err
 				}
@@ -116,6 +122,33 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 	p.logger.Printf("Done uploading of %v apps", len(appPaths))
 	p.logger.Printf(versionCodeListLog.String())
 	return versionCodes, nil
+}
+
+// mappingFor returns the mapping file to upload for the given app artifact, or ""
+// when there is none to upload.
+//
+// Content pairing is used whenever the candidates carry pg_map_ids; the positional
+// fallback exists only for mapping files that have no id to match on.
+func (p Publisher) mappingFor(appPath string, appIndex int, mappingPaths []string, index pairing.Index, pairByContent bool) (string, error) {
+	if !pairByContent {
+		if appIndex >= len(mappingPaths) {
+			return "", nil
+		}
+		return mappingPaths[appIndex], nil
+	}
+
+	mappingPath, needsMapping, err := index.ForArtifact(appPath, p.logger)
+	switch {
+	case err != nil:
+		return "", err
+	case !needsMapping:
+		// Either not minified, or ambiguous; ForArtifact has already logged which.
+		return "", nil
+	case mappingPath == "":
+		p.logger.Warnf("  %s is minified but none of the %d mapping file(s) provided matches it. Crash reports for this version will not be deobfuscated.", filepath.Base(appPath), len(mappingPaths))
+		return "", nil
+	}
+	return mappingPath, nil
 }
 
 // updateTracks updates the given track with a new release with the given version codes.
