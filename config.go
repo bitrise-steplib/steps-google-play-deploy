@@ -153,14 +153,18 @@ func (c Configs) appPaths() ([]string, []string) {
 	return apks, warnings
 }
 
+// mappingPaths returns the candidate mapping files.
+//
+// This is a pool of candidates, not a list positionally matched to app_path: each
+// artifact is paired with its own mapping by content, via the pg_map_id that R8
+// writes into both the artifact and the mapping file. The order is therefore
+// irrelevant, and so is the count.
+//
+// Uses parseInputList so newline-separated values work as step.yml documents.
+// Splitting on "|" alone silently produced a single element containing newlines,
+// which then failed to open.
 func (c Configs) mappingPaths() []string {
-	var mappingPaths []string
-	for _, path := range strings.Split(c.MappingFile, "|") {
-		if trimmed := strings.TrimSpace(path); trimmed != "" {
-			mappingPaths = append(mappingPaths, trimmed)
-		}
-	}
-	return mappingPaths
+	return c.parseInputList(c.MappingFile)
 }
 
 // validateApps validates if files provided via app_path are existing files,

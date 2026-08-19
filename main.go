@@ -11,6 +11,7 @@ import (
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-steplib/steps-google-play-deploy/pairing"
 	"google.golang.org/api/androidpublisher/v3"
 	"google.golang.org/api/option"
 )
@@ -37,8 +38,17 @@ func (p *Publisher) failf(format string, v ...interface{}) {
 // the uploaded apps.
 func (p *Publisher) uploadApplications(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (map[int64]int, error) {
 	appPaths, _ := configs.appPaths()
-	mappingPaths := configs.mappingPaths()
 	versionCodes := make(map[int64]int)
+
+	// Pair each artifact with its own mapping file by content rather than by list
+	// position. R8 stamps a pg_map_id into every artifact it minifies and writes the
+	// same id into the header of the mapping file for that run, so the pairing holds
+	// even though the deploy directory has flattened the paths, collision-renamed the
+	// mapping files, and sign-apk has rewritten the artifacts.
+	mappingIndex := pairing.BuildIndex(configs.mappingPaths(), p.logger)
+	if len(mappingIndex) > 0 {
+		p.logger.Printf("Indexed %d mapping file id(s) to pair with the uploaded artifacts", len(mappingIndex))
+	}
 
 	var versionCodeListLog bytes.Buffer
 	versionCodeListLog.WriteString("New version codes to upload: ")
@@ -76,11 +86,21 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 			}
 		}
 
-		// Upload mapping.txt files
-		if len(mappingPaths)-1 >= appIndex && versionCode != 0 {
-			filePath := mappingPaths[appIndex]
-			if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
-				return nil, err
+		// Upload the mapping file belonging to this artifact, identified by content.
+		if versionCode != 0 && len(mappingIndex) > 0 {
+			mappingPath, needsMapping, err := mappingIndex.ForArtifact(appPath, p.logger)
+			switch {
+			case err != nil:
+				// Never fail a deploy that has already succeeded over a mapping file.
+				p.logger.Warnf("Could not determine the mapping file for %s: %s", filepath.Base(appPath), err)
+			case !needsMapping:
+				p.logger.Printf("  %s carries no R8 mapping id, so it is not minified; no mapping file to upload", filepath.Base(appPath))
+			case mappingPath == "":
+				p.logger.Warnf("  %s is minified but none of the %d mapping file(s) provided matches it. Crash reports for this version will not be deobfuscated.", filepath.Base(appPath), len(configs.mappingPaths()))
+			default:
+				if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, mappingPath); err != nil {
+					return nil, err
+				}
 			}
 			if appIndex < len(appPaths)-1 {
 				fmt.Println()
