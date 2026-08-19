@@ -36,8 +36,8 @@ func (p *Publisher) failf(format string, v ...interface{}) {
 // uploadApplications uploads every application file (apk or aab) to the Google Play. Returns the version codes of
 // the uploaded apps.
 func (p *Publisher) uploadApplications(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (map[int64]int, error) {
-	appPaths, _ := configs.appPaths()
-	mappingPaths := configs.mappingPaths()
+	apps, _ := configs.appsToDeploy()
+	appPaths := appPathsOf(apps)
 	versionCodes := make(map[int64]int)
 
 	var versionCodeListLog bytes.Buffer
@@ -76,10 +76,9 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 			}
 		}
 
-		// Upload mapping.txt files
-		if len(mappingPaths)-1 >= appIndex && versionCode != 0 {
-			filePath := mappingPaths[appIndex]
-			if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
+		// Upload the mapping.txt file paired with this app
+		if mappingPath := apps[appIndex].mappingPath; mappingPath != "" && versionCode != 0 {
+			if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, mappingPath); err != nil {
 				return nil, err
 			}
 			if appIndex < len(appPaths)-1 {

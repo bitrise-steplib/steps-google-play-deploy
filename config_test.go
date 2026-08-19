@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
@@ -246,5 +247,116 @@ func Test_expansionFiles(t *testing.T) {
 				t.Errorf("expansionFiles() got1 = %v, want %v", got, tt.entries)
 			}
 		})
+	}
+}
+
+// The list syntax must match what validateMappingFile above accepts: the
+// upload path used to split on `|` only.
+func TestConfigs_mappingPaths_listSyntax(t *testing.T) {
+	tests := []struct {
+		name        string
+		mappingFile string
+		want        []string
+	}{
+		{
+			name: "empty",
+		},
+		{
+			name:        "single path",
+			mappingFile: "/deploy/mapping.txt",
+			want:        []string{"/deploy/mapping.txt"},
+		},
+		{
+			name:        "pipe separated",
+			mappingFile: "/deploy/mapping.txt|/deploy/mapping2.txt",
+			want:        []string{"/deploy/mapping.txt", "/deploy/mapping2.txt"},
+		},
+		{
+			name:        "newline separated",
+			mappingFile: "/deploy/mapping.txt\n/deploy/mapping2.txt",
+			want:        []string{"/deploy/mapping.txt", "/deploy/mapping2.txt"},
+		},
+		{
+			name:        `newline (\n) as a character`,
+			mappingFile: `/deploy/mapping.txt\n/deploy/mapping2.txt`,
+			want:        []string{"/deploy/mapping.txt", "/deploy/mapping2.txt"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := Configs{MappingFile: tt.mappingFile, Logger: log.NewLogger()}
+			if got := config.mappingPaths(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Configs.mappingPaths() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConfigs_appsToDeploy(t *testing.T) {
+	tests := []struct {
+		name        string
+		appPath     string
+		mappingFile string
+		want        []appArtifact
+	}{
+		{
+			name:        "pairs each app with the mapping file at the same position",
+			appPath:     "app-demo.aab\napp-full.aab",
+			mappingFile: "demo-mapping.txt\nfull-mapping.txt",
+			want: []appArtifact{
+				{path: "app-demo.aab", mappingPath: "demo-mapping.txt"},
+				{path: "app-full.aab", mappingPath: "full-mapping.txt"},
+			},
+		},
+		{
+			// dropping the .apk has to drop its mapping file too: pairing after
+			// the .aab/.apk selection would upload the .apk's mapping with the
+			// .aab, because the mapping list is still in its raw order
+			name:        "dropping an apk drops its mapping file",
+			appPath:     "app.apk\napp.aab",
+			mappingFile: "apk-mapping.txt\naab-mapping.txt",
+			want: []appArtifact{
+				{path: "app.aab", mappingPath: "aab-mapping.txt"},
+			},
+		},
+		{
+			name:    "apps without mapping files",
+			appPath: "app-demo.aab\napp-full.aab",
+			want: []appArtifact{
+				{path: "app-demo.aab"},
+				{path: "app-full.aab"},
+			},
+		},
+		{
+			name:        "fewer mapping files than apps",
+			appPath:     "app-demo.aab\napp-full.aab",
+			mappingFile: "demo-mapping.txt",
+			want: []appArtifact{
+				{path: "app-demo.aab", mappingPath: "demo-mapping.txt"},
+				{path: "app-full.aab"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := Configs{AppPath: tt.appPath, MappingFile: tt.mappingFile, Logger: log.NewLogger()}
+			got, _ := config.appsToDeploy()
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Configs.appsToDeploy() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConfigs_appsToDeploy_warnsOnExtraMappingFiles(t *testing.T) {
+	config := Configs{
+		AppPath:     "app.aab",
+		MappingFile: "mapping.txt\nmapping2.txt",
+		Logger:      log.NewLogger(),
+	}
+
+	_, warnings := config.appsToDeploy()
+	if len(warnings) != 1 || !strings.Contains(warnings[0], "More mapping files (2) provided than app files (1)") {
+		t.Errorf("Configs.appsToDeploy() warnings = %v, want a warning about the extra mapping file", warnings)
 	}
 }
