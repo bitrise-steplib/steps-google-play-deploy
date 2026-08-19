@@ -42,8 +42,9 @@ func VariantFromPath(path string) (variant ArtifactVariant, ok bool) {
 		// universal_apk is AGP 7's universal-APK output dir (Category.OUTPUTS);
 		// AGP 8 dropped the artifact type. AGP's other bundle-derived APK dirs
 		// (extracted_apks, apks_from_bundle) are intermediates, so they never
-		// reach here — see fromIntermediates.
-		case "apk", "bundle", "mapping", "aar", "universal_apk":
+		// reach here — see fromIntermediates. AARs have no variant directories
+		// at all — see AARVariantFromPath.
+		case "apk", "bundle", "mapping", "universal_apk":
 		default:
 			// some other outputs child (e.g. logs): keep scanning
 			continue
@@ -62,6 +63,81 @@ func VariantFromPath(path string) (variant ArtifactVariant, ok bool) {
 	}
 
 	return ArtifactVariant{}, false
+}
+
+// AARVariantFromPath reports the build variant of a library archive under
+// build/outputs/aar/. AGP puts every variant's archive in that one directory
+// and encodes the variant in the file name instead:
+//
+//	mylib/build/outputs/aar/mylib-free-release.aar   -> mylib, freeRelease
+//	mylib/build/outputs/aar/mylib-debug.aar          -> mylib, debug
+//
+// The name is <archivesName>-<flavors...>-<buildType>.aar, and archivesName
+// defaults to the module directory's name. Only that default is decoded, and
+// every remaining segment must look like a Gradle flavor or build type (a
+// valid identifier — they become generated accessors, so "1.0" cannot be one).
+// Anything else leaves no way to tell where the name ends and the variant
+// begins, so those archives report ok false and stay visible under Unmatched
+// rather than being filed under a made-up variant. A customised archivesName
+// that does parse as identifiers ("mylib-v2") is indistinguishable from a
+// flavor and will be read as one.
+//
+// A self-minifying library writes its mapping to the standard
+// outputs/mapping/<variant>/ tree, so a decoded archive pairs with its own
+// mapping file through the usual VariantFromPath.
+func AARVariantFromPath(path string) (variant ArtifactVariant, ok bool) {
+	slashed := filepath.ToSlash(path)
+	segments := strings.Split(slashed, "/")
+
+	for i := len(segments) - 2; i >= 0; i-- {
+		if segments[i] != "outputs" || segments[i+1] != "aar" {
+			continue
+		}
+		// the archive sits directly in outputs/aar/, nothing in between
+		if i+2 != len(segments)-1 {
+			continue
+		}
+
+		module, modulePath := moduleFromSegments(segments[:i])
+		name := strings.TrimSuffix(segments[len(segments)-1], filepath.Ext(segments[len(segments)-1]))
+		rest, matched := strings.CutPrefix(name, module+"-")
+		if module == "" || !matched || rest == "" {
+			return ArtifactVariant{}, false
+		}
+
+		variantSegments := strings.Split(rest, "-")
+		for _, segment := range variantSegments {
+			if !isGradleName(segment) {
+				return ArtifactVariant{}, false
+			}
+		}
+
+		return ArtifactVariant{
+			Module:     module,
+			ModulePath: modulePath,
+			Variant:    mergeVariantSegments(variantSegments),
+		}, true
+	}
+
+	return ArtifactVariant{}, false
+}
+
+// isGradleName reports whether the segment can be a Gradle flavor or build type
+// name: those are used to generate task and accessor names, so they are
+// identifiers — no leading digit, no dots.
+func isGradleName(segment string) bool {
+	if segment == "" {
+		return false
+	}
+	for i, r := range segment {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r == '_':
+		case r >= '0' && r <= '9' && i > 0:
+		default:
+			return false
+		}
+	}
+	return true
 }
 
 // moduleFromSegments returns the module directory's basename and full path

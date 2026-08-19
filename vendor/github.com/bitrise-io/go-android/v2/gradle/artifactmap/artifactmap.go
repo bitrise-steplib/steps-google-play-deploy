@@ -51,14 +51,12 @@ type Map struct {
 	Version int `json:"version"`
 	// Modules is keyed by the Gradle module ("app"), then by the merged
 	// variant name ("demoRelease") — build variants are a per-module concept
-	// in Gradle, and two modules can declare identical variant names. The
+	// in Gradle, and two modules can declare identical variant names.
+	// Application and library modules share the map: a module is one or the
+	// other, so its entries carry either apps (apk/aab) or archives (aar). The
 	// module key is "" when it could not be derived from the build-output
 	// path. Consumers pair artifacts by file identity, not by key.
 	Modules map[string]map[string]Entry `json:"modules"`
-	// ModuleAARs lists library archives per module, keyed like Modules. AGP's
-	// aar layout (outputs/aar/<name>.aar) encodes no variant, so AARs attach
-	// to their module — the path before /build/ — instead of a variant entry.
-	ModuleAARs map[string][]string `json:"module_aars,omitempty"`
 	// Unmatched lists exported files the map cannot attribute: unrecognised
 	// locations, and report files a widened mapping filter dragged in. Files
 	// from Gradle's build/intermediates/ tree are left out of the document
@@ -81,6 +79,10 @@ type Entry struct {
 	AAB []string `json:"aab"`
 	// APK lists the variant's APKs (several with ABI/density splits).
 	APK []string `json:"apk"`
+	// AAR lists the variant's library archives (in practice at most one).
+	// Empty for application modules, and omitted from the document when empty
+	// so app maps keep their previous shape.
+	AAR []string `json:"aar,omitempty"`
 }
 
 // Unmatched lists exported files that could not be attributed to a variant.
@@ -125,22 +127,6 @@ func fromIntermediates(f File) bool {
 	return strings.Contains(filepath.ToSlash(f.SourcePath), "/build/intermediates/")
 }
 
-// aarModulePath returns the module path of an official build/outputs/aar file.
-// AGP's aar layout encodes no variant, so unlike VariantFromPath only the
-// module is derived; the same right-to-left marker scan keeps a checkout
-// directory named "outputs" from hijacking parsing.
-func aarModulePath(path string) (modulePath string, ok bool) {
-	segments := strings.Split(filepath.ToSlash(path), "/")
-	for i := len(segments) - 2; i >= 0; i-- {
-		if segments[i] != "outputs" || segments[i+1] != "aar" {
-			continue
-		}
-		_, modulePath := moduleFromSegments(segments[:i])
-		return modulePath, true
-	}
-	return "", false
-}
-
 // Build assembles a Map from the files a step exported. Modules and variants
 // are derived from each file's SourcePath. Only official build/outputs/ paths
 // pair, and only a file literally named mapping.txt can be a variant's
@@ -155,17 +141,20 @@ func Build(apks, aabs, aars, mappings []File) (Map, []string) {
 	groups := map[ArtifactVariant]*group{}
 	var warnings []string
 
-	grab := func(f File) (*group, bool) {
-		variant, ok := VariantFromPath(f.SourcePath)
-		if !ok {
-			return nil, false
-		}
+	grabVariant := func(variant ArtifactVariant) *group {
 		g, ok := groups[variant]
 		if !ok {
 			g = &group{variant: variant, entry: Entry{AAB: []string{}, APK: []string{}}}
 			groups[variant] = g
 		}
-		return g, true
+		return g
+	}
+	grab := func(f File) (*group, bool) {
+		variant, ok := VariantFromPath(f.SourcePath)
+		if !ok {
+			return nil, false
+		}
+		return grabVariant(variant), true
 	}
 
 	sources := map[string]string{}
@@ -192,14 +181,14 @@ func Build(apks, aabs, aars, mappings []File) (Map, []string) {
 			unmatched.AAB = append(unmatched.AAB, filepath.Base(f.DeployPath))
 		}
 	}
-	moduleAARs := map[string][]string{}
 	for _, f := range aars {
 		if fromIntermediates(f) {
 			continue
 		}
 		sources[filepath.Base(f.DeployPath)] = f.SourcePath
-		if modulePath, ok := aarModulePath(f.SourcePath); ok {
-			moduleAARs[modulePath] = append(moduleAARs[modulePath], filepath.Base(f.DeployPath))
+		if variant, ok := AARVariantFromPath(f.SourcePath); ok {
+			g := grabVariant(variant)
+			g.entry.AAR = append(g.entry.AAR, filepath.Base(f.DeployPath))
 		} else {
 			unmatched.AAR = append(unmatched.AAR, filepath.Base(f.DeployPath))
 		}
@@ -238,9 +227,6 @@ func Build(apks, aabs, aars, mappings []File) (Map, []string) {
 	for variant := range groups {
 		notePath(variant.ModulePath)
 	}
-	for path := range moduleAARs {
-		notePath(path)
-	}
 	keyForPath := moduleKeys(modulePaths)
 
 	modules := map[string]map[string]Entry{}
@@ -249,30 +235,23 @@ func Build(apks, aabs, aars, mappings []File) (Map, []string) {
 		// a different variant name — e.g. unexpected nesting under outputs/
 		// turned "demoRelease" into a phantom "demoReleaseExtra" key — leaving
 		// the pair unpairable with no unmatched entry to show for it.
-		if g.entry.Mapping != "" && len(g.entry.APK) == 0 && len(g.entry.AAB) == 0 {
+		if g.entry.Mapping != "" && len(g.entry.APK) == 0 && len(g.entry.AAB) == 0 && len(g.entry.AAR) == 0 {
 			warnings = append(warnings, fmt.Sprintf(
-				"variant %s has a mapping but no app artifact: if an APK/AAB was exported for it, its output path may use unexpected nesting",
+				"variant %s has a mapping but no artifact: if an APK/AAB/AAR was exported for it, its output path may use unexpected nesting",
 				Label(variant.Module, variant.Variant)))
 		}
 		// filesystem-walk order is not a contract; sort for determinism
 		sort.Strings(g.entry.APK)
 		sort.Strings(g.entry.AAB)
+		sort.Strings(g.entry.AAR)
 		setEntry(modules, keyForPath[variant.ModulePath], variant.Variant, g.entry)
-	}
-	var keyedAARs map[string][]string
-	if len(moduleAARs) > 0 {
-		keyedAARs = map[string][]string{}
-		for path, names := range moduleAARs {
-			sort.Strings(names)
-			keyedAARs[keyForPath[path]] = names
-		}
 	}
 	sort.Strings(unmatched.APK)
 	sort.Strings(unmatched.AAB)
 	sort.Strings(unmatched.AAR)
 	sort.Strings(unmatched.Mapping)
 
-	m := Map{Version: Version, Modules: modules, ModuleAARs: keyedAARs, Unmatched: unmatched, Sources: sources}
+	m := Map{Version: Version, Modules: modules, Unmatched: unmatched, Sources: sources}
 	m.pruneSources()
 	return m, warnings
 }
@@ -291,11 +270,9 @@ func (m Map) referencedNames() map[string]bool {
 			for _, name := range entry.AAB {
 				names[name] = true
 			}
-		}
-	}
-	for _, moduleNames := range m.ModuleAARs {
-		for _, name := range moduleNames {
-			names[name] = true
+			for _, name := range entry.AAR {
+				names[name] = true
+			}
 		}
 	}
 	for _, name := range m.Unmatched.APK {
@@ -398,17 +375,6 @@ func Merge(base, overlay Map) (Map, []string) {
 		Mapping: unionSorted(base.Unmatched.Mapping, overlay.Unmatched.Mapping),
 	}
 
-	moduleAARs := map[string][]string{}
-	for module, names := range base.ModuleAARs {
-		moduleAARs[module] = names
-	}
-	for module, names := range overlay.ModuleAARs {
-		moduleAARs[module] = unionSorted(moduleAARs[module], names)
-	}
-	if len(moduleAARs) == 0 {
-		moduleAARs = nil
-	}
-
 	sources := map[string]string{}
 	for name, source := range base.Sources {
 		sources[name] = source
@@ -417,7 +383,7 @@ func Merge(base, overlay Map) (Map, []string) {
 		sources[name] = source
 	}
 
-	merged := Map{Version: Version, Modules: modules, ModuleAARs: moduleAARs, Unmatched: unmatched, Sources: sources}
+	merged := Map{Version: Version, Modules: modules, Unmatched: unmatched, Sources: sources}
 	merged.pruneSources()
 	return merged, warnings
 }
@@ -445,6 +411,14 @@ func mergeEntries(base, overlay Entry, label string) (Entry, []string) {
 		rebuiltApps = true
 		warnings = append(warnings, fmt.Sprintf(
 			"variant %s: a later step rebuilt its AABs, the artifact map now references the newer files", label))
+	}
+
+	if len(overlay.AAR) == 0 {
+		merged.AAR = base.AAR
+	} else if len(base.AAR) != 0 {
+		rebuiltApps = true
+		warnings = append(warnings, fmt.Sprintf(
+			"variant %s: a later step rebuilt its AARs, the artifact map now references the newer files", label))
 	}
 
 	if overlay.Mapping == "" {
@@ -506,11 +480,9 @@ func (m *Map) ReplaceFile(oldName, newName string) bool {
 		for variant, entry := range variants {
 			entry.APK = replaceIn(entry.APK)
 			entry.AAB = replaceIn(entry.AAB)
+			entry.AAR = replaceIn(entry.AAR)
 			m.Modules[module][variant] = entry
 		}
-	}
-	for module, names := range m.ModuleAARs {
-		m.ModuleAARs[module] = replaceIn(names)
 	}
 	m.Unmatched.APK = replaceIn(m.Unmatched.APK)
 	m.Unmatched.AAB = replaceIn(m.Unmatched.AAB)
@@ -531,9 +503,6 @@ func (m Map) IsEmpty() bool {
 		if len(variants) > 0 {
 			return false
 		}
-	}
-	if len(m.ModuleAARs) > 0 {
-		return false
 	}
 	return len(m.Unmatched.APK) == 0 && len(m.Unmatched.AAB) == 0 && len(m.Unmatched.AAR) == 0 && len(m.Unmatched.Mapping) == 0
 }
@@ -633,6 +602,10 @@ func (m *Map) normalize() {
 			}
 			if entry.AAB == nil {
 				entry.AAB = []string{}
+			}
+			// aar is omitempty: absent stays absent, an explicit null is dropped
+			if entry.AAR != nil && len(entry.AAR) == 0 {
+				entry.AAR = nil
 			}
 			m.Modules[module][variant] = entry
 		}
