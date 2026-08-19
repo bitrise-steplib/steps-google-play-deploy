@@ -3,6 +3,7 @@ package artifactmap
 import (
 	"path/filepath"
 	"strings"
+	"unicode/utf8"
 )
 
 // ArtifactVariant identifies the build variant an artifact belongs to. Values
@@ -38,9 +39,11 @@ func VariantFromPath(path string) (variant ArtifactVariant, ok bool) {
 			continue
 		}
 		switch segments[i+1] {
-		case "apk", "bundle", "mapping", "aar",
-			// universal/from-bundle APK locations, AGP 8 / AGP 4-7 / bundletool
-			"universal_apk", "apk_from_bundle", "extracted_apks":
+		// universal_apk is AGP 7's universal-APK output dir (Category.OUTPUTS);
+		// AGP 8 dropped the artifact type. AGP's other bundle-derived APK dirs
+		// (extracted_apks, apks_from_bundle) are intermediates, so they never
+		// reach here — see fromIntermediates.
+		case "apk", "bundle", "mapping", "aar", "universal_apk":
 		default:
 			// some other outputs child (e.g. logs): keep scanning
 			continue
@@ -92,5 +95,6 @@ func capitalizeFirst(s string) string {
 	if s == "" {
 		return s
 	}
-	return strings.ToUpper(s[:1]) + s[1:]
+	first, size := utf8.DecodeRuneInString(s)
+	return strings.ToUpper(string(first)) + s[size:]
 }

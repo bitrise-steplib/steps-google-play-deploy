@@ -118,9 +118,11 @@ func canonicalMapping(f File) bool {
 
 // fromIntermediates reports whether the file comes from Gradle's
 // build/intermediates/ tree — task-workdir duplicates of the official
-// outputs. Build leaves them out of the map entirely.
+// outputs. Build leaves them out of the map entirely. Anchored on the
+// build/ parent so a checkout or module directory that happens to be named
+// "intermediates" is not swallowed.
 func fromIntermediates(f File) bool {
-	return strings.Contains(filepath.ToSlash(f.SourcePath), "/intermediates/")
+	return strings.Contains(filepath.ToSlash(f.SourcePath), "/build/intermediates/")
 }
 
 // aarModulePath returns the module path of an official build/outputs/aar file.
@@ -243,6 +245,15 @@ func Build(apks, aabs, aars, mappings []File) (Map, []string) {
 
 	modules := map[string]map[string]Entry{}
 	for variant, g := range groups {
+		// A mapping with no app artifact usually means the APK/AAB resolved to
+		// a different variant name — e.g. unexpected nesting under outputs/
+		// turned "demoRelease" into a phantom "demoReleaseExtra" key — leaving
+		// the pair unpairable with no unmatched entry to show for it.
+		if g.entry.Mapping != "" && len(g.entry.APK) == 0 && len(g.entry.AAB) == 0 {
+			warnings = append(warnings, fmt.Sprintf(
+				"variant %s has a mapping but no app artifact: if an APK/AAB was exported for it, its output path may use unexpected nesting",
+				Label(variant.Module, variant.Variant)))
+		}
 		// filesystem-walk order is not a contract; sort for determinism
 		sort.Strings(g.entry.APK)
 		sort.Strings(g.entry.AAB)
@@ -419,9 +430,11 @@ func mergeEntries(base, overlay Entry, label string) (Entry, []string) {
 	var warnings []string
 	merged := overlay
 
+	rebuiltApps := false
 	if len(overlay.APK) == 0 {
 		merged.APK = base.APK
 	} else if len(base.APK) != 0 {
+		rebuiltApps = true
 		warnings = append(warnings, fmt.Sprintf(
 			"variant %s: a later step rebuilt its APKs, the artifact map now references the newer files", label))
 	}
@@ -429,12 +442,17 @@ func mergeEntries(base, overlay Entry, label string) (Entry, []string) {
 	if len(overlay.AAB) == 0 {
 		merged.AAB = base.AAB
 	} else if len(base.AAB) != 0 {
+		rebuiltApps = true
 		warnings = append(warnings, fmt.Sprintf(
 			"variant %s: a later step rebuilt its AABs, the artifact map now references the newer files", label))
 	}
 
 	if overlay.Mapping == "" {
 		merged.Mapping = base.Mapping
+		if rebuiltApps && base.Mapping != "" {
+			warnings = append(warnings, fmt.Sprintf(
+				"variant %s: the rebuilt app artifacts are paired with the earlier run's mapping file %s, which may be stale", label, base.Mapping))
+		}
 	} else if base.Mapping != "" && base.Mapping != overlay.Mapping {
 		warnings = append(warnings, fmt.Sprintf(
 			"variant %s: a later step rebuilt its mapping file, the artifact map now references %s instead of %s",
@@ -597,5 +615,38 @@ func Read(path string) (Map, error) {
 	if m.Version > Version {
 		return Map{}, fmt.Errorf("artifact map %s has schema version %d, this step understands up to %d: %w", path, m.Version, Version, ErrNewerVersion)
 	}
+	m.normalize()
 	return m, nil
+}
+
+// normalize replaces absent lists with empty ones: a foreign same-version
+// document may omit them, and nil round-trips as JSON null, which breaks
+// consumers indexing the lists (jq's .apk[] errors on null).
+func (m *Map) normalize() {
+	if m.Modules == nil {
+		m.Modules = map[string]map[string]Entry{}
+	}
+	for module, variants := range m.Modules {
+		for variant, entry := range variants {
+			if entry.APK == nil {
+				entry.APK = []string{}
+			}
+			if entry.AAB == nil {
+				entry.AAB = []string{}
+			}
+			m.Modules[module][variant] = entry
+		}
+	}
+	if m.Unmatched.APK == nil {
+		m.Unmatched.APK = []string{}
+	}
+	if m.Unmatched.AAB == nil {
+		m.Unmatched.AAB = []string{}
+	}
+	if m.Unmatched.AAR == nil {
+		m.Unmatched.AAR = []string{}
+	}
+	if m.Unmatched.Mapping == nil {
+		m.Unmatched.Mapping = []string{}
+	}
 }
