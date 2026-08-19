@@ -58,13 +58,18 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 	// ProGuard Gradle plugin, which is the supported way to run ProGuard on AGP 7+,
 	// and DexGuard. Their mapping files have no pg_map_id and their artifacts carry
 	// no R8 marker, so positional matching is the only thing available.
-	pairByContent := len(mappingIndex) > 0
+	pairByContent := mappingIndex.Len() > 0
 	switch {
+	case pairByContent && mappingIndex.WithoutID > 0:
+		// A mixed set. The ones with an id are paired by content; the ones without
+		// cannot be, and are not uploaded. Say so, rather than dropping them quietly.
+		p.logger.Printf("Pairing %d mapping file id(s) with the uploaded artifacts by content", mappingIndex.Len())
+		p.logger.Warnf("%d of the provided mapping file(s) have no '# pg_map_id:' header and will not be uploaded, because they cannot be matched to an artifact. Run with debug_mode to see which.", mappingIndex.WithoutID)
 	case pairByContent:
-		p.logger.Printf("Indexed %d mapping file id(s) to pair with the uploaded artifacts by content", len(mappingIndex))
+		p.logger.Printf("Pairing %d mapping file id(s) with the uploaded artifacts by content", mappingIndex.Len())
 	case len(mappingPaths) > 0:
-		p.logger.Warnf("None of the %d mapping file(s) has a '# pg_map_id:' header, so they cannot be matched to an artifact by content.", len(mappingPaths))
-		p.logger.Warnf("Falling back to matching them to the app_path list by position. This is expected from a non-R8 obfuscator such as the standalone ProGuard plugin or DexGuard; from an R8 build it usually means these are not the mapping files the build published.")
+		p.logger.Warnf("None of the %d mapping file(s) has a '# pg_map_id:' header, so they cannot be matched to an artifact by content. Falling back to matching them to the app_path list by position.", len(mappingPaths))
+		p.logger.Warnf("This is expected from a non-R8 obfuscator such as the standalone ProGuard plugin or DexGuard; from an R8 build it usually means these are not the mapping files the build published.")
 	}
 
 	var versionCodeListLog bytes.Buffer
@@ -105,7 +110,7 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 
 		// Upload the mapping file belonging to this artifact.
 		if versionCode != 0 && len(mappingPaths) > 0 {
-			mappingPath, err := p.mappingFor(appPath, appIndex, mappingPaths, mappingIndex, pairByContent)
+			mappingPath, err := p.mappingFor(appPath, appIndex, mappingPaths, mappingIndex)
 			if err != nil {
 				// Never fail a deploy that has already succeeded over a mapping file.
 				p.logger.Warnf("Could not determine the mapping file for %s: %s", filepath.Base(appPath), err)
@@ -133,28 +138,33 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 // mappingFor returns the mapping file to upload for the given app artifact, or ""
 // when there is none to upload.
 //
-// Content pairing is used whenever the candidates carry pg_map_ids; the positional
+// Content pairing is used whenever any candidate carries a pg_map_id; the positional
 // fallback exists only for mapping files that have no id to match on.
-func (p Publisher) mappingFor(appPath string, appIndex int, mappingPaths []string, index pairing.Index, pairByContent bool) (string, error) {
-	if !pairByContent {
+func (p *Publisher) mappingFor(appPath string, appIndex int, mappingPaths []string, index pairing.Index) (string, error) {
+	if index.Len() == 0 {
 		if appIndex >= len(mappingPaths) {
 			return "", nil
 		}
 		return mappingPaths[appIndex], nil
 	}
 
-	mappingPath, needsMapping, err := index.ForArtifact(appPath, p.logger)
-	switch {
-	case err != nil:
+	mappingPath, outcome, err := index.ForArtifact(appPath, p.logger)
+	if err != nil {
 		return "", err
-	case !needsMapping:
-		// Either not minified, or ambiguous; ForArtifact has already logged which.
-		return "", nil
-	case mappingPath == "":
-		p.logger.Warnf("  %s is minified but none of the %d mapping file(s) provided matches it. Crash reports for this version will not be deobfuscated.", filepath.Base(appPath), len(mappingPaths))
-		return "", nil
 	}
-	return mappingPath, nil
+
+	name := filepath.Base(appPath)
+	switch outcome {
+	case pairing.Paired:
+		return mappingPath, nil
+	case pairing.NotMinified:
+		p.logger.Printf("  %s carries no R8 mapping id, so it is not minified; no mapping file to upload", name)
+	case pairing.Unmatched:
+		p.logger.Warnf("  %s is minified but none of the %d mapping file(s) provided matches it. Crash reports for this version will not be deobfuscated.", name, len(mappingPaths))
+	case pairing.Ambiguous:
+		p.logger.Warnf("  %s carries several different R8 mapping ids, so which one describes the app is ambiguous; no mapping file uploaded. Crash reports for this version will not be deobfuscated. Please report this build.", name)
+	}
+	return "", nil
 }
 
 // updateTracks updates the given track with a new release with the given version codes.

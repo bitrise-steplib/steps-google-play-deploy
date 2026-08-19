@@ -10,6 +10,7 @@ package pairing
 import (
 	"archive/zip"
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -29,7 +30,12 @@ var mapIDHeader = regexp.MustCompile(`^#\s*pg_map_id:\s*([0-9a-fA-F]+)\s*$`)
 //	~~R8{"backend":"dex","pg-map-id":"8dbc20b3…","version":"8.12.22"}
 //
 // D8 writes the same shape with a ~~D8 prefix and no pg-map-id.
-var marker = regexp.MustCompile(`~~(R8|D8)(\{[^}]*\})`)
+var marker = regexp.MustCompile(`~~(R8|D8)(\{[^}]{0,512}\})`)
+
+// maxMarkerLen bounds the overlap kept between scan chunks, so a marker split
+// across a chunk boundary is still matched. It must exceed the longest marker the
+// regex above can match.
+const maxMarkerLen = 1024
 
 // markerFields is the subset of the marker we care about.
 type markerFields struct {
@@ -40,8 +46,11 @@ type markerFields struct {
 
 // Marker is one R8/D8 compilation that contributed to an artifact.
 type Marker struct {
-	Tool    string // "R8" or "D8"
-	Backend string // "dex" for an app's own compilation, "cf" for a minified library
+	Tool string // "R8" or "D8"
+	// Backend is "dex" for a compilation targeting an app, "cf" for one targeting
+	// class files. Nothing selects on it — see MapIDs — but it is recorded because
+	// it is what a report about an artifact carrying several ids would need.
+	Backend string
 	MapID   string
 	Version string
 }
@@ -49,18 +58,16 @@ type Marker struct {
 // MapIDs returns the distinct pg_map_ids of the R8 compilations that produced the
 // artifact, in the order they were found.
 //
-// Normally there is exactly one. R8 documentation and the R8 source allow an
-// artifact to carry more than one marker — one per R8 run that contributed to it,
-// so a minified library baked into an app could add its own — but that has not been
-// observed in practice: building an app against a minified library module, both
-// with and without minifying the app itself, produced only a single marker either
-// way, because R8 or D8 recompiles the library's classes and stamps its own.
+// Normally there is exactly one. R8 allows an artifact to carry more than one
+// marker — one per R8 run that contributed to it, so a minified library baked into
+// an app could add its own — but that could not be reproduced: building an app
+// against a minified library module produced a single marker whether or not the app
+// itself was minified, because R8 or D8 recompiles the library's classes and stamps
+// its own.
 //
-// Rather than guess which of several ids describes the app, callers treat more than
-// one as ambiguous and skip pairing. Uploading a library's mapping against an app's
-// version code would be silently and permanently wrong, whereas skipping is visible
-// and recoverable — and the warning tells us the case exists in the wild, which is
-// something we currently cannot confirm.
+// Callers treat more than one as ambiguous and skip pairing rather than guess.
+// Uploading a library's mapping against an app's version code would be silently and
+// permanently wrong, whereas skipping is visible and recoverable.
 func MapIDs(markers []Marker) []string {
 	var ids []string
 	seen := map[string]bool{}
@@ -97,22 +104,21 @@ func MapIDFromMapping(r io.Reader) (string, error) {
 	return "", nil
 }
 
-// MarkersFromArchive extracts the R8/D8 markers from an APK, AAB, or AAR.
+// MarkersFromArchive extracts the R8/D8 markers from an APK or AAB.
 //
-// Only the entries that can carry a marker are inflated, and only the first dex
-// is read for a dex-backed artifact: R8 writes its marker into the first one, so
-// inflating the rest would be wasted I/O on a large app.
+// Only the primary dex of the archive root or of each bundle module is read: R8
+// writes its marker into the first dex, so inflating the rest would be wasted I/O
+// on a large app.
 func MarkersFromArchive(zr *zip.Reader) ([]Marker, error) {
 	var candidates []*zip.File
 	for _, f := range zr.File {
-		switch {
-		case isFirstDex(f.Name):
-			candidates = append(candidates, f)
-		case strings.HasSuffix(f.Name, "classes.jar"): // AAR
+		if isPrimaryDex(f.Name) {
 			candidates = append(candidates, f)
 		}
 	}
-	// Deterministic order, and the shallowest dex first (base/dex/classes.dex).
+	// Deterministic order. Note this is byte order, not shallowest-first: for an AAB
+	// whose feature module sorts before "base" the feature dex is read first. That
+	// only affects the order of the returned markers.
 	sort.Slice(candidates, func(i, j int) bool { return candidates[i].Name < candidates[j].Name })
 
 	var out []Marker
@@ -133,10 +139,21 @@ func MarkersFromArchive(zr *zip.Reader) ([]Marker, error) {
 	return out, nil
 }
 
-// isFirstDex reports whether the entry is the primary classes.dex, at the archive
-// root (APK) or under a bundle module (AAB). classes2.dex and friends are skipped.
-func isFirstDex(name string) bool {
-	return path.Base(name) == "classes.dex"
+// isPrimaryDex reports whether the entry is a primary classes.dex that belongs to
+// the app itself: at the archive root for an APK, or directly under a bundle
+// module's dex/ directory for an AAB.
+//
+// Anchoring matters. A bare basename check would also match a dex shipped as an
+// asset — assets/patch/classes.dex, res/raw/classes.dex, as hot-patch frameworks
+// produce — whose markers belong to something other than this app and would make
+// the artifact look ambiguous. classes2.dex and friends are skipped either way.
+func isPrimaryDex(name string) bool {
+	if name == "classes.dex" {
+		return true // APK
+	}
+	// AAB: <module>/dex/classes.dex
+	parts := strings.Split(name, "/")
+	return len(parts) == 3 && parts[1] == "dex" && parts[2] == "classes.dex"
 }
 
 func markersFromEntry(f *zip.File) ([]Marker, error) {
@@ -144,51 +161,57 @@ func markersFromEntry(f *zip.File) ([]Marker, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open %s: %w", f.Name, err)
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 
-	// A nested classes.jar has to be searched entry by entry.
-	if strings.HasSuffix(f.Name, "classes.jar") {
-		buf, err := io.ReadAll(rc)
-		if err != nil {
-			return nil, fmt.Errorf("read %s: %w", f.Name, err)
-		}
-		return markersFromJar(buf)
-	}
-
-	data, err := io.ReadAll(rc)
+	ms, err := scanMarkers(rc)
 	if err != nil {
-		return nil, fmt.Errorf("read %s: %w", f.Name, err)
+		return nil, fmt.Errorf("scan %s: %w", f.Name, err)
 	}
-	return parseMarkers(data), nil
+	return ms, nil
 }
 
-func markersFromJar(buf []byte) ([]Marker, error) {
-	zr, err := zip.NewReader(newByteReaderAt(buf), int64(len(buf)))
-	if err != nil {
-		return nil, fmt.Errorf("open nested jar: %w", err)
-	}
-	var out []Marker
-	for _, f := range zr.File {
-		if !strings.HasSuffix(f.Name, ".class") {
-			continue
+// scanMarkers finds markers in a stream without materialising it. A dex is
+// routinely 10-20 MB and only a short marker string is needed, so the stream is
+// read in chunks with an overlap so a marker spanning a boundary is still matched.
+func scanMarkers(r io.Reader) ([]Marker, error) {
+	const chunk = 256 * 1024
+
+	var (
+		out  []Marker
+		seen = map[string]bool{}
+		buf  = make([]byte, 0, chunk+maxMarkerLen)
+		tmp  = make([]byte, chunk)
+	)
+
+	for {
+		n, err := r.Read(tmp)
+		if n > 0 {
+			buf = append(buf, tmp[:n]...)
+			for _, m := range parseMarkers(buf) {
+				key := m.Tool + "|" + m.Backend + "|" + m.MapID
+				if !seen[key] {
+					seen[key] = true
+					out = append(out, m)
+				}
+			}
+			// Keep a tail long enough to catch a marker split across the boundary.
+			if len(buf) > maxMarkerLen {
+				buf = append(buf[:0], buf[len(buf)-maxMarkerLen:]...)
+			}
 		}
-		rc, err := f.Open()
+		if err == io.EOF {
+			return out, nil
+		}
 		if err != nil {
 			return nil, err
 		}
-		data, err := io.ReadAll(rc)
-		_ = rc.Close()
-		if err != nil {
-			return nil, err
-		}
-		if ms := parseMarkers(data); len(ms) > 0 {
-			out = append(out, ms...)
-		}
 	}
-	return out, nil
 }
 
 func parseMarkers(data []byte) []Marker {
+	if !bytes.Contains(data, []byte("~~")) {
+		return nil // cheap reject for the overwhelming majority of chunks
+	}
 	var out []Marker
 	for _, m := range marker.FindAllSubmatch(data, -1) {
 		var f markerFields
@@ -204,3 +227,7 @@ func parseMarkers(data []byte) []Marker {
 	}
 	return out
 }
+
+// unusedPathImport keeps the path import honest if isPrimaryDex is ever rewritten
+// in terms of path.Base again.
+var _ = path.Base

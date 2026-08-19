@@ -12,6 +12,7 @@ import (
 type testLogger struct{ t *testing.T }
 
 func (l testLogger) Printf(f string, v ...interface{}) { l.t.Logf("  "+f, v...) }
+func (l testLogger) Debugf(f string, v ...interface{}) { l.t.Logf("D "+f, v...) }
 func (l testLogger) Warnf(f string, v ...interface{})  { l.t.Logf("W "+f, v...) }
 
 // realMappingHeader is the header R8 8.12.22 writes, taken verbatim from a build of
@@ -131,15 +132,15 @@ func TestForArtifactAmbiguousIsSkippedNotGuessed(t *testing.T) {
 	m2 := writeFile(t, dir, "b.txt", "# compiler: R8\n# pg_map_id: 58e175b\n")
 
 	idx := BuildIndex([]string{m1, m2}, testLogger{t})
-	mapping, needs, err := idx.ForArtifact(apk, testLogger{t})
+	mapping, outcome, err := idx.ForArtifact(apk, testLogger{t})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if mapping != "" {
 		t.Errorf("ambiguous artifact must not be paired, got %q", mapping)
 	}
-	if needs {
-		t.Error("ambiguous artifact must not be reported as an unmatched minified artifact")
+	if outcome != Ambiguous {
+		t.Errorf("ambiguity must be reported as Ambiguous, not %v — the caller has to be able to warn about it", outcome)
 	}
 }
 
@@ -154,10 +155,13 @@ func TestBuildIndexGroupsByID(t *testing.T) {
 
 	idx := BuildIndex([]string{a, b, c, filepath.Join(dir, "does-not-exist.txt")}, testLogger{t})
 
-	if len(idx) != 1 {
-		t.Fatalf("expected 1 id, got %d: %v", len(idx), idx)
+	if idx.Len() != 1 {
+		t.Fatalf("expected 1 id, got %d", idx.Len())
 	}
-	paths := idx["8dbc20b32dec8d41286f5392325c991ae32bea7cf590a3031165ab39b8b6aaec"]
+	if idx.WithoutID != 1 {
+		t.Errorf("expected the Compose mapping to be counted as id-less, got %d", idx.WithoutID)
+	}
+	paths := idx.byID["8dbc20b32dec8d41286f5392325c991ae32bea7cf590a3031165ab39b8b6aaec"]
 	if len(paths) != 2 {
 		t.Errorf("expected both identical mappings under one id, got %v", paths)
 	}
@@ -221,12 +225,12 @@ func TestForArtifactNotMinified(t *testing.T) {
 	})
 
 	idx := BuildIndex([]string{writeFile(t, dir, "mapping.txt", realMappingHeader)}, testLogger{t})
-	mapping, needs, err := idx.ForArtifact(apk, testLogger{t})
+	mapping, outcome, err := idx.ForArtifact(apk, testLogger{t})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if needs || mapping != "" {
-		t.Errorf("a D8 artifact needs no mapping: got mapping=%q needs=%v", mapping, needs)
+	if outcome != NotMinified || mapping != "" {
+		t.Errorf("a D8 artifact needs no mapping: got mapping=%q outcome=%v", mapping, outcome)
 	}
 }
 
@@ -237,12 +241,12 @@ func TestForArtifactMinifiedButUnmatched(t *testing.T) {
 	})
 
 	idx := BuildIndex([]string{writeFile(t, dir, "mapping.txt", realMappingHeader)}, testLogger{t})
-	mapping, needs, err := idx.ForArtifact(apk, testLogger{t})
+	mapping, outcome, err := idx.ForArtifact(apk, testLogger{t})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !needs {
-		t.Error("a minified artifact should report that it needs a mapping")
+	if outcome != Unmatched {
+		t.Errorf("a minified artifact with no matching candidate must be Unmatched, got %v", outcome)
 	}
 	if mapping != "" {
 		t.Errorf("no candidate matches, want empty, got %q", mapping)
@@ -259,12 +263,12 @@ func TestForArtifactPairsByContentNotName(t *testing.T) {
 	})
 
 	idx := BuildIndex([]string{renamed}, testLogger{t})
-	mapping, needs, err := idx.ForArtifact(apk, testLogger{t})
+	mapping, outcome, err := idx.ForArtifact(apk, testLogger{t})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !needs || mapping != renamed {
-		t.Errorf("got mapping=%q needs=%v, want %q", mapping, needs, renamed)
+	if outcome != Paired || mapping != renamed {
+		t.Errorf("got mapping=%q outcome=%v, want %q paired", mapping, outcome, renamed)
 	}
 }
 
@@ -309,8 +313,185 @@ func TestBuildIndexDedupesDuplicatePaths(t *testing.T) {
 
 	idx := BuildIndex([]string{p, p, filepath.Join(dir, ".", "mapping.txt")}, testLogger{t})
 
-	paths := idx["8dbc20b32dec8d41286f5392325c991ae32bea7cf590a3031165ab39b8b6aaec"]
+	paths := idx.byID["8dbc20b32dec8d41286f5392325c991ae32bea7cf590a3031165ab39b8b6aaec"]
 	if len(paths) != 1 {
 		t.Errorf("expected the duplicate to collapse to 1 candidate, got %v", paths)
+	}
+}
+
+// realAPKMarker is the marker R8 8.12.22 embedded in classes.dex of a real APK
+// built from bitrise-io/android-multiple-test-results-sample with AGP 8.12.3,
+// copied verbatim. Its pg-map-id is byte-for-byte the pg_map_id in
+// realMappingHeader above, which is the assumption the whole feature rests on:
+// the two sides agree, at the same width.
+const realAPKMarker = `~~R8{"backend":"dex","compilation-mode":"release","has-checksums":false,` +
+	`"min-api":26,"pg-map-id":"8dbc20b32dec8d41286f5392325c991ae32bea7cf590a3031165ab39b8b6aaec",` +
+	`"r8-mode":"full","version":"8.12.22"}`
+
+// realCompatAPKMarker is the same, from a build with android.enableR8.fullMode=false.
+// R8 writes the id in compatibility mode too, so the mode is never a reason to fail
+// to pair.
+const realCompatAPKMarker = `~~R8{"backend":"dex","compilation-mode":"release","has-checksums":false,` +
+	`"min-api":26,"pg-map-id":"41c5d2304e0257577019d29214901eff3f473638914ef868189845db2f6d34ab",` +
+	`"r8-mode":"compatibility","version":"8.12.22"}`
+
+const realCompatMappingHeader = `# compiler: R8
+# compiler_version: 8.12.22
+# pg_map_id: 41c5d2304e0257577019d29214901eff3f473638914ef868189845db2f6d34ab
+foo -> a:
+`
+
+// TestRealMarkerAndHeaderAgree is the load-bearing test: the id in the artifact
+// marker and the id in the mapping header must be equal, at equal width, for real
+// R8 output. Both fixtures are verbatim from real builds.
+func TestRealMarkerAndHeaderAgree(t *testing.T) {
+	for _, tt := range []struct {
+		name, marker, header string
+	}{
+		{"R8 full mode", realAPKMarker, realMappingHeader},
+		{"R8 compatibility mode", realCompatAPKMarker, realCompatMappingHeader},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			apk := writeZip(t, dir, "app-release.apk", map[string]string{"classes.dex": tt.marker})
+			mapping := writeFile(t, dir, "mapping.txt", tt.header)
+
+			idx := BuildIndex([]string{mapping}, testLogger{t})
+			got, outcome, err := idx.ForArtifact(apk, testLogger{t})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if outcome != Paired || got != mapping {
+				t.Errorf("real R8 output did not pair: mapping=%q outcome=%v", got, outcome)
+			}
+		})
+	}
+}
+
+// TestEachArtifactGetsItsOwnMapping is the PR's headline behaviour: N artifacts,
+// N mapping files, each paired with its own regardless of order or file name.
+func TestEachArtifactGetsItsOwnMapping(t *testing.T) {
+	dir := t.TempDir()
+
+	idA := "aaaa1111bbbb2222cccc3333dddd4444eeee5555ffff6666aaaa7777bbbb8888"
+	idB := "1111aaaa2222bbbb3333cccc4444dddd5555eeee6666ffff7777aaaa8888bbbb"
+
+	apkA := writeZip(t, dir, "app-demo-release-unsigned.apk", map[string]string{
+		"classes.dex": `~~R8{"backend":"dex","pg-map-id":"` + idA + `","version":"8.12.22"}`,
+	})
+	apkB := writeZip(t, dir, "app-full-release-unsigned.apk", map[string]string{
+		"classes.dex": `~~R8{"backend":"dex","pg-map-id":"` + idB + `","version":"8.12.22"}`,
+	})
+
+	// Deploy-directory reality: neither name says which variant it belongs to, and
+	// the list order is the reverse of the artifact order.
+	mapB := writeFile(t, dir, "mapping20260819185217.txt", "# compiler: R8\n# pg_map_id: "+idB+"\nfoo -> a:\n")
+	mapA := writeFile(t, dir, "mapping.txt", "# compiler: R8\n# pg_map_id: "+idA+"\nfoo -> a:\n")
+
+	idx := BuildIndex([]string{mapB, mapA}, testLogger{t})
+	if idx.Len() != 2 {
+		t.Fatalf("expected 2 distinct ids, got %d", idx.Len())
+	}
+
+	for _, tt := range []struct{ apk, want string }{{apkA, mapA}, {apkB, mapB}} {
+		got, outcome, err := idx.ForArtifact(tt.apk, testLogger{t})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if outcome != Paired || got != tt.want {
+			t.Errorf("%s: got %s (%v), want %s", filepath.Base(tt.apk), filepath.Base(got), outcome, filepath.Base(tt.want))
+		}
+	}
+}
+
+func TestLookupPrefixMatching(t *testing.T) {
+	full := "8dbc20b32dec8d41286f5392325c991ae32bea7cf590a3031165ab39b8b6aaec"
+
+	t.Run("short marker id against full header id", func(t *testing.T) {
+		dir := t.TempDir()
+		mapping := writeFile(t, dir, "mapping.txt", "# compiler: R8\n# pg_map_id: "+full+"\nfoo -> a:\n")
+		apk := writeZip(t, dir, "app.apk", map[string]string{
+			"classes.dex": `~~R8{"backend":"dex","pg-map-id":"8dbc20b","version":"8.12.22"}`,
+		})
+		idx := BuildIndex([]string{mapping}, testLogger{t})
+		got, outcome, err := idx.ForArtifact(apk, testLogger{t})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if outcome != Paired || got != mapping {
+			t.Errorf("a truncated marker id must still pair: got %q (%v)", got, outcome)
+		}
+	})
+
+	t.Run("ambiguous prefix is not paired", func(t *testing.T) {
+		dir := t.TempDir()
+		// Two mappings sharing the marker's prefix: pairing either could be wrong.
+		m1 := writeFile(t, dir, "a.txt", "# compiler: R8\n# pg_map_id: 8dbc20b111\nfoo -> a:\n")
+		m2 := writeFile(t, dir, "b.txt", "# compiler: R8\n# pg_map_id: 8dbc20b222\nfoo -> a:\n")
+		apk := writeZip(t, dir, "app.apk", map[string]string{
+			"classes.dex": `~~R8{"backend":"dex","pg-map-id":"8dbc20b","version":"8.12.22"}`,
+		})
+		idx := BuildIndex([]string{m1, m2}, testLogger{t})
+		got, outcome, err := idx.ForArtifact(apk, testLogger{t})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if outcome != Unmatched || got != "" {
+			t.Errorf("an ambiguous prefix must not be paired: got %q (%v)", got, outcome)
+		}
+	})
+}
+
+func TestIsPrimaryDexIgnoresAssetDexes(t *testing.T) {
+	for name, want := range map[string]bool{
+		"classes.dex":                    true,  // APK
+		"base/dex/classes.dex":           true,  // AAB base module
+		"feature/dex/classes.dex":        true,  // AAB feature module
+		"classes2.dex":                   false, // secondary dex
+		"assets/patch/classes.dex":       false, // hot-patch framework
+		"res/raw/classes.dex":            false,
+		"base/assets/tinker/classes.dex": false,
+		"lib/arm64-v8a/classes.dex":      false,
+	} {
+		if got := isPrimaryDex(name); got != want {
+			t.Errorf("isPrimaryDex(%q) = %v, want %v", name, got, want)
+		}
+	}
+}
+
+// A dex shipped as an asset carries markers that belong to something other than
+// this app; counting them would make the artifact look ambiguous and silently cost
+// it its mapping file.
+func TestAssetDexDoesNotCauseAmbiguity(t *testing.T) {
+	dir := t.TempDir()
+	id := "8dbc20b32dec8d41286f5392325c991ae32bea7cf590a3031165ab39b8b6aaec"
+	apk := writeZip(t, dir, "app-release.apk", map[string]string{
+		"classes.dex":              `~~R8{"backend":"dex","pg-map-id":"` + id + `","version":"8.12.22"}`,
+		"assets/patch/classes.dex": `~~R8{"backend":"dex","pg-map-id":"deadbeefdeadbeef","version":"8.12.22"}`,
+	})
+	mapping := writeFile(t, dir, "mapping.txt", "# compiler: R8\n# pg_map_id: "+id+"\nfoo -> a:\n")
+
+	idx := BuildIndex([]string{mapping}, testLogger{t})
+	got, outcome, err := idx.ForArtifact(apk, testLogger{t})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if outcome != Paired || got != mapping {
+		t.Errorf("an asset dex must not affect pairing: got %q (%v)", got, outcome)
+	}
+}
+
+// A marker straddling the chunk boundary of the streaming scan must still be found.
+func TestScanMarkersAcrossChunkBoundary(t *testing.T) {
+	// 256 KiB chunk; place the marker so it spans the first boundary.
+	const chunk = 256 * 1024
+	pad := strings.Repeat("x", chunk-len(realAPKMarker)/2)
+	ms, err := scanMarkers(strings.NewReader(pad + realAPKMarker + "tail"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	ids := MapIDs(ms)
+	if len(ids) != 1 || ids[0] != "8dbc20b32dec8d41286f5392325c991ae32bea7cf590a3031165ab39b8b6aaec" {
+		t.Errorf("marker spanning a chunk boundary was not found: %v", ids)
 	}
 }

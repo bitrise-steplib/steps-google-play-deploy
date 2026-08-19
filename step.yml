@@ -159,9 +159,7 @@ inputs:
       Format examples:
       - "./"         # what's new files are in the repo root directory
       - "./whatsnew" # what's new files are in the whatsnew directory
-- mapping_file: |-
-    $BITRISE_MAPPING_PATH_LIST
-    $BITRISE_MAPPING_PATH
+- mapping_file: $BITRISE_MAPPING_PATH_LIST|$BITRISE_MAPPING_PATH
   opts:
     title: Mapping txt file path
     description: |-
@@ -187,9 +185,10 @@ inputs:
       files has one, the Step falls back to matching them to `app_path` by position, as earlier versions
       did.
 
-      The default lists both `$BITRISE_MAPPING_PATH_LIST` and `$BITRISE_MAPPING_PATH`, so the Step works
-      whether or not the build Step that produced the mapping files is new enough to export the list.
-      Naming the same file twice is harmless: candidates are matched by content, and duplicates collapse.
+      The default lists both `$BITRISE_MAPPING_PATH_LIST` and `$BITRISE_MAPPING_PATH`, pipe-separated, so
+      the Step works whether or not the build Step that produced the mapping files is new enough to export
+      the list. Naming the same file twice is harmless: candidates are matched by content, and duplicates
+      collapse.
 - retry_without_sending_to_review: "false"
   opts:
     title: Retry changes without sending to review
