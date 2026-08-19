@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Index maps a pg_map_id to the mapping files carrying it.
@@ -82,20 +83,37 @@ func (idx Index) ForArtifact(artifactPath string, logger Logger) (mapping string
 		return "", false, fmt.Errorf("read compiler markers from %s: %w", artifactPath, err)
 	}
 
-	own, ok := OwnMarker(markers, BackendForArtifact(artifactPath))
-	if !ok {
+	ids := MapIDs(markers)
+	switch len(ids) {
+	case 0:
 		// No R8 marker with a map id: compiled by D8, or not minified at all.
+		return "", false, nil
+	case 1:
+		// The normal case.
+	default:
+		// Not observed in practice; see MapIDs. Refuse to guess rather than risk
+		// uploading a library's mapping against the app's version code.
+		logger.Warnf("  %s carries %d different R8 mapping ids (%s), so which one describes the app is ambiguous; skipping the mapping file. Please report this build.",
+			filepath.Base(artifactPath), len(ids), strings.Join(shortAll(ids), ", "))
 		return "", false, nil
 	}
 
-	paths := idx[own.MapID]
+	paths := idx[ids[0]]
 	if len(paths) == 0 {
 		return "", true, nil
 	}
 	if len(paths) > 1 {
-		logger.Printf("  %d mapping files share id %s; they are byte-identical for pairing purposes, using %s", len(paths), short(own.MapID), paths[0])
+		logger.Printf("  %d mapping files share id %s; they are byte-identical for pairing purposes, using %s", len(paths), short(ids[0]), paths[0])
 	}
 	return paths[0], true, nil
+}
+
+func shortAll(ids []string) []string {
+	out := make([]string, 0, len(ids))
+	for _, id := range ids {
+		out = append(out, short(id))
+	}
+	return out
 }
 
 func short(id string) string {

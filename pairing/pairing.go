@@ -46,33 +46,34 @@ type Marker struct {
 	Version string
 }
 
-// OwnMarker returns the marker describing the artifact's *own* compilation.
+// MapIDs returns the distinct pg_map_ids of the R8 compilations that produced the
+// artifact, in the order they were found.
 //
-// An artifact can carry several markers: its own, plus one for every minified
-// library baked into it. The own compilation is the one whose backend matches the
-// artifact's container format — "dex" for an APK or AAB, "cf" for an AAR. Library
-// markers must not be used, or an app would be paired with a library's mapping.
+// Normally there is exactly one. R8 documentation and the R8 source allow an
+// artifact to carry more than one marker — one per R8 run that contributed to it,
+// so a minified library baked into an app could add its own — but that has not been
+// observed in practice: building an app against a minified library module, both
+// with and without minifying the app itself, produced only a single marker either
+// way, because R8 or D8 recompiles the library's classes and stamps its own.
 //
-// Returns ok=false when the artifact carries no R8 marker with an id, which means
-// it was not minified and therefore has no mapping file to find.
-func OwnMarker(markers []Marker, wantBackend string) (Marker, bool) {
+// Rather than guess which of several ids describes the app, callers treat more than
+// one as ambiguous and skip pairing. Uploading a library's mapping against an app's
+// version code would be silently and permanently wrong, whereas skipping is visible
+// and recoverable — and the warning tells us the case exists in the wild, which is
+// something we currently cannot confirm.
+func MapIDs(markers []Marker) []string {
+	var ids []string
+	seen := map[string]bool{}
 	for _, m := range markers {
-		if m.Tool == "R8" && m.Backend == wantBackend && m.MapID != "" {
-			return m, true
+		if m.Tool != "R8" || m.MapID == "" {
+			continue // D8, or an R8 run that produced no mapping
+		}
+		if !seen[m.MapID] {
+			seen[m.MapID] = true
+			ids = append(ids, m.MapID)
 		}
 	}
-	return Marker{}, false
-}
-
-// BackendForArtifact returns the marker backend that denotes an artifact's own
-// compilation, given its file extension.
-func BackendForArtifact(name string) string {
-	switch strings.ToLower(path.Ext(name)) {
-	case ".aar", ".jar":
-		return "cf"
-	default: // .apk, .aab
-		return "dex"
-	}
+	return ids
 }
 
 // MapIDFromMapping reads the pg_map_id out of a mapping file's header. The header

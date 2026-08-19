@@ -79,59 +79,67 @@ func TestMapIDFromMapping(t *testing.T) {
 	}
 }
 
-func TestBackendForArtifact(t *testing.T) {
-	for name, want := range map[string]string{
-		"app-release.apk":     "dex",
-		"app-release.aab":     "dex",
-		"lib-release.aar":     "cf",
-		"lib.jar":             "cf",
-		"APP-RELEASE.APK":     "dex",
-		"mapping20260819.txt": "dex", // not an app artifact, but must not panic
-	} {
-		if got := BackendForArtifact(name); got != want {
-			t.Errorf("%s: got %q, want %q", name, got, want)
-		}
-	}
-}
-
-func TestOwnMarker(t *testing.T) {
-	// An artifact can carry several markers: its own, plus one per minified library
-	// baked into it. Picking a library's marker would pair the app with the library's
-	// mapping file.
-	markers := []Marker{
-		{Tool: "R8", Backend: "cf", MapID: "5da8853"},  // a minified library
-		{Tool: "R8", Backend: "dex", MapID: "58e175b"}, // the app's own compilation
-	}
-
-	got, ok := OwnMarker(markers, "dex")
-	if !ok {
-		t.Fatal("expected to find the dex-backed marker")
-	}
-	if got.MapID != "58e175b" {
-		t.Errorf("picked the wrong marker: got id %q, want the dex one (58e175b)", got.MapID)
-	}
-
-	// For an AAR the library's own compilation is the cf one.
-	got, ok = OwnMarker(markers, "cf")
-	if !ok || got.MapID != "5da8853" {
-		t.Errorf("cf lookup: got %+v, ok=%v", got, ok)
+func TestMapIDs(t *testing.T) {
+	// The normal case: one R8 compilation, one id.
+	ids := MapIDs([]Marker{{Tool: "R8", Backend: "dex", MapID: "58e175b"}})
+	if len(ids) != 1 || ids[0] != "58e175b" {
+		t.Errorf("single marker: got %v", ids)
 	}
 
 	// D8 means no minification, so there is no mapping to look for.
-	_, ok = OwnMarker([]Marker{{Tool: "D8", Backend: "dex", MapID: ""}}, "dex")
-	if ok {
-		t.Error("a D8 marker without an id must not be treated as minified")
+	if ids := MapIDs([]Marker{{Tool: "D8", Backend: "dex", MapID: ""}}); len(ids) != 0 {
+		t.Errorf("a D8 marker must yield no id, got %v", ids)
 	}
 
 	// An R8 marker with an empty id is equally unusable.
-	_, ok = OwnMarker([]Marker{{Tool: "R8", Backend: "dex", MapID: ""}}, "dex")
-	if ok {
-		t.Error("an R8 marker without an id must not be paired")
+	if ids := MapIDs([]Marker{{Tool: "R8", Backend: "dex", MapID: ""}}); len(ids) != 0 {
+		t.Errorf("an R8 marker without an id must yield nothing, got %v", ids)
 	}
 
-	_, ok = OwnMarker(nil, "dex")
-	if ok {
-		t.Error("no markers must mean no pairing")
+	if ids := MapIDs(nil); len(ids) != 0 {
+		t.Errorf("no markers must yield no ids, got %v", ids)
+	}
+
+	// The same id repeated across dex entries collapses.
+	ids = MapIDs([]Marker{
+		{Tool: "R8", Backend: "dex", MapID: "aaa"},
+		{Tool: "R8", Backend: "dex", MapID: "aaa"},
+	})
+	if len(ids) != 1 {
+		t.Errorf("duplicate ids must collapse, got %v", ids)
+	}
+
+	// Several distinct ids are reported as such; the caller decides what to do.
+	ids = MapIDs([]Marker{
+		{Tool: "R8", Backend: "cf", MapID: "5da8853"},
+		{Tool: "R8", Backend: "dex", MapID: "58e175b"},
+	})
+	if len(ids) != 2 {
+		t.Errorf("expected both ids reported, got %v", ids)
+	}
+}
+
+func TestForArtifactAmbiguousIsSkippedNotGuessed(t *testing.T) {
+	// Two distinct R8 ids in one artifact. Uploading either could attach a
+	// library's mapping to the app's version code, so nothing is uploaded.
+	dir := t.TempDir()
+	apk := writeZip(t, dir, "app-release.apk", map[string]string{
+		"classes.dex": `~~R8{"backend":"cf","pg-map-id":"5da8853","version":"8.12.22"}` + "\x00" +
+			`~~R8{"backend":"dex","pg-map-id":"58e175b","version":"8.12.22"}`,
+	})
+	m1 := writeFile(t, dir, "a.txt", "# compiler: R8\n# pg_map_id: 5da8853\n")
+	m2 := writeFile(t, dir, "b.txt", "# compiler: R8\n# pg_map_id: 58e175b\n")
+
+	idx := BuildIndex([]string{m1, m2}, testLogger{t})
+	mapping, needs, err := idx.ForArtifact(apk, testLogger{t})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if mapping != "" {
+		t.Errorf("ambiguous artifact must not be paired, got %q", mapping)
+	}
+	if needs {
+		t.Error("ambiguous artifact must not be reported as an unmatched minified artifact")
 	}
 }
 
@@ -200,9 +208,9 @@ func TestMarkersFromArchive(t *testing.T) {
 		}
 	}
 
-	own, ok := OwnMarker(markers, "dex")
-	if !ok || own.MapID != "58e175b" {
-		t.Errorf("own marker: got %+v ok=%v, want the dex-backed 58e175b", own, ok)
+	ids := MapIDs(markers)
+	if len(ids) != 2 {
+		t.Errorf("expected both ids from classes.dex, got %v", ids)
 	}
 }
 
