@@ -181,9 +181,11 @@ inputs:
       A mapping file that matches none of the uploaded artifacts is not uploaded. An artifact that is not
       minified needs no mapping file, and one is not looked for.
 
-      Mapping files produced by ProGuard without R8 carry no `pg_map_id` and cannot be matched by content.
-      If none of the provided files has one, the Step falls back to matching them to `app_path` by
-      position, as earlier versions did.
+      R8 always writes a `pg_map_id`, in both full and compatibility mode, so any build minified by R8 is
+      paired by content. Mapping files from an obfuscator that is not R8 — Guardsquare's standalone
+      ProGuard plugin, DexGuard — carry no id and cannot be matched that way. If none of the provided
+      files has one, the Step falls back to matching them to `app_path` by position, as earlier versions
+      did.
 
       The default lists both `$BITRISE_MAPPING_PATH_LIST` and `$BITRISE_MAPPING_PATH`, so the Step works
       whether or not the build Step that produced the mapping files is new enough to export the list.

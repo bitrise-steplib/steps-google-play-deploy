@@ -49,16 +49,22 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 	mappingIndex := pairing.BuildIndex(mappingPaths, p.logger)
 
 	// Fall back to the previous positional behaviour when no candidate carries a
-	// pg_map_id at all. ProGuard without R8 writes no marker and no id, so those
-	// mapping files can only be matched by position; pairing by content would
-	// silently stop uploading them.
+	// pg_map_id at all, which means nothing can be matched by content.
+	//
+	// R8 always writes the id, in both full and compatibility mode, and AGP has not
+	// let you swap R8 out for ProGuard since AGP 7 (removed android.enableR8) — with
+	// ProGuard support dropped entirely in AGP 8. So this is not about old AGP
+	// versions. It is about obfuscators that are not R8: Guardsquare's standalone
+	// ProGuard Gradle plugin, which is the supported way to run ProGuard on AGP 7+,
+	// and DexGuard. Their mapping files have no pg_map_id and their artifacts carry
+	// no R8 marker, so positional matching is the only thing available.
 	pairByContent := len(mappingIndex) > 0
 	switch {
 	case pairByContent:
 		p.logger.Printf("Indexed %d mapping file id(s) to pair with the uploaded artifacts by content", len(mappingIndex))
 	case len(mappingPaths) > 0:
 		p.logger.Warnf("None of the %d mapping file(s) has a '# pg_map_id:' header, so they cannot be matched to an artifact by content.", len(mappingPaths))
-		p.logger.Warnf("Falling back to matching them to the app_path list by position. This is what ProGuard (without R8) produces; with R8 it usually means the mapping files are not the ones the build published.")
+		p.logger.Warnf("Falling back to matching them to the app_path list by position. This is expected from a non-R8 obfuscator such as the standalone ProGuard plugin or DexGuard; from an R8 build it usually means these are not the mapping files the build published.")
 	}
 
 	var versionCodeListLog bytes.Buffer
