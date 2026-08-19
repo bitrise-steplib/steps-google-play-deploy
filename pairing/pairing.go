@@ -170,9 +170,17 @@ func markersFromEntry(f *zip.File) ([]Marker, error) {
 	return ms, nil
 }
 
-// scanMarkers finds markers in a stream without materialising it. A dex is
-// routinely 10-20 MB and only a short marker string is needed, so the stream is
-// read in chunks with an overlap so a marker spanning a boundary is still matched.
+// scanMarkers finds markers in a stream without materialising it.
+//
+// The whole entry is still read: measured marker offsets in real R8/D8 output are
+// 66-92% of the dex, always in the last third, so there is no prefix of the file
+// that can be scanned instead. Nor can it stop at the first marker, because
+// detecting an artifact that carries several ids requires seeing all of them.
+//
+// What this avoids is holding the entry in memory. A dex is routinely 10-20 MB and
+// only a short marker string is needed, so the stream is read in fixed chunks with
+// an overlap long enough that a marker spanning a boundary is still matched. See
+// the benchmarks in scan_test.go for the numbers.
 func scanMarkers(r io.Reader) ([]Marker, error) {
 	const chunk = 256 * 1024
 
