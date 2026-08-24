@@ -133,28 +133,34 @@ type appArtifact struct {
 	mappingPath string
 }
 
-// appsToDeploy pairs each app in app_path with the mapping file at the same
-// position in mapping_file, then selects the artifacts to deploy, preferring
-// .aab over .apk.
+// appsToDeploy pairs each app to deploy with the mapping file that belongs to
+// it, preferring .aab over .apk when both extensions are given.
 //
-// The pairing happens BEFORE the .aab/.apk selection: dropping an .apk has to
-// drop its mapping file with it, otherwise the surviving apps and the raw
-// mapping list are no longer index-aligned and an app gets uploaded with
-// another variant's mapping file.
+// mapping_file is documented as a positional list against app_path ("The order
+// of mapping files should match the list of APK or AAB files in the app_path
+// input"), so when the two lists have the same length each app is paired BEFORE
+// the .aab/.apk selection: dropping an .apk then drops its mapping file with
+// it, instead of shifting every later pair by one and uploading a mapping file
+// with an app it does not belong to.
+//
+// A different number of mapping files carries no alignment to preserve — the
+// default configuration is a single $BITRISE_MAPPING_PATH with
+// `$BITRISE_APK_PATH\n$BITRISE_AAB_PATH` — so those are indexed against the
+// apps that are actually deployed, which is what the step has always done.
 func (c Configs) appsToDeploy() ([]appArtifact, []string) {
 	apps := c.parseInputList(c.AppPath)
 	mappings := c.mappingPaths()
+	alignedWithAppPath := len(mappings) == len(apps)
 
 	var apks, aabs []appArtifact
 	var warnings []string
 	for i, pth := range apps {
 		pth = strings.TrimSpace(pth)
 
-		mapping := ""
-		if i < len(mappings) {
-			mapping = mappings[i]
+		artifact := appArtifact{path: pth}
+		if alignedWithAppPath {
+			artifact.mappingPath = mappings[i]
 		}
-		artifact := appArtifact{path: pth, mappingPath: mapping}
 
 		switch strings.ToLower(filepath.Ext(pth)) {
 		case ".aab":
@@ -174,11 +180,21 @@ func (c Configs) appsToDeploy() ([]appArtifact, []string) {
 		warnings = append(warnings, fmt.Sprintf("Both .aab and .apk files provided, using the .aab file(s): %s", strings.Join(appPathsOf(aabs), ",")))
 	}
 
+	deploy := apks
 	if len(aabs) > 0 {
-		return aabs, warnings
+		deploy = aabs
 	}
 
-	return apks, warnings
+	if !alignedWithAppPath {
+		for i := range deploy {
+			if i >= len(mappings) {
+				break
+			}
+			deploy[i].mappingPath = mappings[i]
+		}
+	}
+
+	return deploy, warnings
 }
 
 func appPathsOf(artifacts []appArtifact) []string {

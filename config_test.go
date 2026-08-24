@@ -320,6 +320,18 @@ func TestConfigs_appsToDeploy(t *testing.T) {
 			},
 		},
 		{
+			// the default configuration: app_path is
+			// `$BITRISE_APK_PATH\n$BITRISE_AAB_PATH` and mapping_file is a single
+			// $BITRISE_MAPPING_PATH, so the mapping belongs to the deploy, not to
+			// the .apk that happens to be first in the list
+			name:        "one mapping file for an apk and an aab",
+			appPath:     "app.apk\napp.aab",
+			mappingFile: "mapping.txt",
+			want: []appArtifact{
+				{path: "app.aab", mappingPath: "mapping.txt"},
+			},
+		},
+		{
 			name:    "apps without mapping files",
 			appPath: "app-demo.aab\napp-full.aab",
 			want: []appArtifact{
