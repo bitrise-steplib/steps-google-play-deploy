@@ -79,9 +79,18 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 		// Upload mapping.txt files
 		if len(mappingPaths)-1 >= appIndex && versionCode != 0 {
 			filePath := mappingPaths[appIndex]
-			if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
+
+			embedded, err := bundleEmbedsMappingFile(appPath)
+			if err != nil {
+				p.logger.Warnf("Failed to check whether %s carries its own mapping file, uploading %s: %s", filepath.Base(appPath), filepath.Base(filePath), err)
+			}
+
+			if embedded {
+				p.logger.Printf(" %s already contains its mapping file, skipping the upload of %s", filepath.Base(appPath), filepath.Base(filePath))
+			} else if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
 				return nil, err
 			}
+
 			if appIndex < len(appPaths)-1 {
 				fmt.Println()
 			}
