@@ -159,13 +159,13 @@ inputs:
       Format examples:
       - "./"         # what's new files are in the repo root directory
       - "./whatsnew" # what's new files are in the whatsnew directory
-- mapping_file: $BITRISE_MAPPING_PATH
+- mapping_file:
   opts:
     title: Mapping txt file path
     description: |-
       The `mapping.txt` file provides a translation between the original and obfuscated class, method, and field names.
 
-      Uploading a mapping file is not required when deploying an AAB: an app bundle built with minification carries its own mapping file, and the Step skips the upload for those artifacts.
+      Empty by default, because an app bundle built with minification already contains its own mapping file: Google Play reads it from the bundle, so uploading one is redundant. Set this input — to `$BITRISE_MAPPING_PATH`, for example — when you deploy APKs, or when your bundle carries no mapping file.
 
       In case of deploying [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html), you can specify multiple mapping.txt files as a newline (`\n`) or pipe (`|`) separated list. The order of mapping files should match the list of APK or AAB files in the `app_path` input.
 - retry_without_sending_to_review: "false"
