@@ -126,41 +126,103 @@ func (c Configs) parseInputList(list string) (elements []string) {
 	return
 }
 
-// appPaths returns the app to deploy, by preferring .aab files.
-func (c Configs) appPaths() ([]string, []string) {
-	var apks, aabs, warnings []string
-	for _, pth := range c.parseInputList(c.AppPath) {
+// appArtifact is an app file to deploy together with the mapping file that
+// belongs to it (empty when the app has no mapping file).
+type appArtifact struct {
+	path        string
+	mappingPath string
+}
+
+// appsToDeploy pairs each app to deploy with the mapping file that belongs to
+// it, preferring .aab over .apk when both extensions are given.
+//
+// mapping_file is documented as a positional list against app_path ("The order
+// of mapping files should match the list of APK or AAB files in the app_path
+// input"), so when the two lists have the same length each app is paired BEFORE
+// the .aab/.apk selection: dropping an .apk then drops its mapping file with
+// it, instead of shifting every later pair by one and uploading a mapping file
+// with an app it does not belong to.
+//
+// A different number of mapping files carries no alignment to preserve — the
+// default configuration is a single $BITRISE_MAPPING_PATH with
+// `$BITRISE_APK_PATH\n$BITRISE_AAB_PATH` — so those are indexed against the
+// apps that are actually deployed, which is what the step has always done.
+func (c Configs) appsToDeploy() ([]appArtifact, []string) {
+	apps := c.parseInputList(c.AppPath)
+	mappings := c.mappingPaths()
+	alignedWithAppPath := len(mappings) == len(apps)
+
+	var apks, aabs []appArtifact
+	var warnings []string
+	for i, pth := range apps {
 		pth = strings.TrimSpace(pth)
-		ext := strings.ToLower(filepath.Ext(pth))
-		switch ext {
+
+		artifact := appArtifact{path: pth}
+		if alignedWithAppPath {
+			artifact.mappingPath = mappings[i]
+		}
+
+		switch strings.ToLower(filepath.Ext(pth)) {
 		case ".aab":
-			aabs = append(aabs, pth)
+			aabs = append(aabs, artifact)
 		case ".apk":
-			apks = append(apks, pth)
+			apks = append(apks, artifact)
 		default:
 			warnings = append(warnings, fmt.Sprintf("unknown app path extension in path: %s, supported extensions: .apk, .aab", pth))
 		}
 	}
 
+	if len(mappings) > len(apps) {
+		warnings = append(warnings, fmt.Sprintf("More mapping files (%d) provided than app files (%d), the extra mapping files are ignored. Check that the mapping_file list is aligned with the app_path list.", len(mappings), len(apps)))
+	}
+
 	if len(aabs) > 0 && len(apks) > 0 {
-		warnings = append(warnings, fmt.Sprintf("Both .aab and .apk files provided, using the .aab file(s): %s", strings.Join(aabs, ",")))
+		warnings = append(warnings, fmt.Sprintf("Both .aab and .apk files provided, using the .aab file(s): %s", strings.Join(appPathsOf(aabs), ",")))
 	}
 
+	deploy := apks
 	if len(aabs) > 0 {
-		return aabs, warnings
+		deploy = aabs
 	}
 
-	return apks, warnings
-}
-
-func (c Configs) mappingPaths() []string {
-	var mappingPaths []string
-	for _, path := range strings.Split(c.MappingFile, "|") {
-		if trimmed := strings.TrimSpace(path); trimmed != "" {
-			mappingPaths = append(mappingPaths, trimmed)
+	if !alignedWithAppPath {
+		for i := range deploy {
+			if i >= len(mappings) {
+				break
+			}
+			deploy[i].mappingPath = mappings[i]
 		}
 	}
-	return mappingPaths
+
+	return deploy, warnings
+}
+
+func appPathsOf(artifacts []appArtifact) []string {
+	if len(artifacts) == 0 {
+		return nil
+	}
+
+	paths := make([]string, len(artifacts))
+	for i, artifact := range artifacts {
+		paths[i] = artifact.path
+	}
+
+	return paths
+}
+
+// appPaths returns the paths of the apps to deploy, by preferring .aab files.
+func (c Configs) appPaths() ([]string, []string) {
+	apps, warnings := c.appsToDeploy()
+
+	return appPathsOf(apps), warnings
+}
+
+// mappingPaths parses mapping_file with the same list syntax that
+// validateMappingFile validates it with: newline, literal `\n` and `|`
+// separators. It used to split on `|` only, so a newline-separated list passed
+// validation and was then uploaded as a single, non-existent path.
+func (c Configs) mappingPaths() []string {
+	return c.parseInputList(c.MappingFile)
 }
 
 // validateApps validates if files provided via app_path are existing files,
