@@ -115,7 +115,6 @@ func (c Configs) validateNativeSymbolsFile() error {
 			return errors.New("native symbols file doesn't exist at: " + path)
 		}
 
-		// Validate .zip extension
 		if !strings.HasSuffix(strings.ToLower(path), ".zip") {
 			return fmt.Errorf("native symbols file must be a .zip file, got: %s", path)
 		}
