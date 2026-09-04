@@ -80,7 +80,7 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 		// Upload mapping.txt files
 		if len(mappingPaths)-1 >= appIndex && versionCode != 0 {
 			filePath := mappingPaths[appIndex]
-			if err := p.uploadMappingFile(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
+			if err := p.uploadDeobfuscationFile(service, appEdit.Id, versionCode, configs.PackageName, filePath, "proguard", "mapping file"); err != nil {
 				return nil, err
 			}
 		}
@@ -88,7 +88,7 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 		// Upload native symbols files
 		if len(nativeSymbolsPaths)-1 >= appIndex && versionCode != 0 {
 			filePath := nativeSymbolsPaths[appIndex]
-			if err := p.uploadNativeSymbols(service, appEdit.Id, versionCode, configs.PackageName, filePath); err != nil {
+			if err := p.uploadDeobfuscationFile(service, appEdit.Id, versionCode, configs.PackageName, filePath, "nativeCode", "native symbols file"); err != nil {
 				return nil, err
 			}
 		}

@@ -74,43 +74,25 @@ func validateExpansionFileConfig(expFileEntry string) bool {
 	return strings.HasPrefix(cleanExpFileConfigEntry, "main:") || strings.HasPrefix(cleanExpFileConfigEntry, "patch:")
 }
 
-// uploadMappingFile uploads a given mapping file to a given app artifact (based on versionCode) to Google Play.
-func (p *Publisher) uploadMappingFile(service *androidpublisher.Service, appEditID string, versionCode int64, packageName string, filePath string) error {
-	p.logger.Debugf("Getting mapping file from %v", filePath)
-	mappingFile, err := os.Open(filePath)
+// uploadDeobfuscationFile uploads a given deobfuscation file to a given app artifact (based on versionCode) to Google
+// Play. symbolType is the Google Play deobfuscation file type ("proguard" for mapping files, "nativeCode" for native
+// debug symbols), fileDesc names the file in the logs.
+func (p *Publisher) uploadDeobfuscationFile(service *androidpublisher.Service, appEditID string, versionCode int64, packageName string, filePath string, symbolType string, fileDesc string) error {
+	p.logger.Debugf("Getting %v from %v", fileDesc, filePath)
+	file, err := os.Open(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to read mapping file (%s), error: %s", filePath, err)
+		return fmt.Errorf("failed to read %s (%s), error: %s", fileDesc, filePath, err)
 	}
-	p.logger.Debugf("Uploading mapping file %v with package name '%v', AppEditId '%v', version code '%v'", filePath, packageName, appEditID, versionCode)
+	p.logger.Debugf("Uploading %v %v with package name '%v', AppEditId '%v', version code '%v'", fileDesc, filePath, packageName, appEditID, versionCode)
 	editsDeobfuscationFilesService := androidpublisher.NewEditsDeobfuscationfilesService(service)
-	editsDeobfuscationFilesUploadCall := editsDeobfuscationFilesService.Upload(packageName, appEditID, versionCode, "proguard")
-	editsDeobfuscationFilesUploadCall.Media(mappingFile, googleapi.ContentType("application/octet-stream"))
+	editsDeobfuscationFilesUploadCall := editsDeobfuscationFilesService.Upload(packageName, appEditID, versionCode, symbolType)
+	editsDeobfuscationFilesUploadCall.Media(file, googleapi.ContentType("application/octet-stream"))
 
 	if _, err = editsDeobfuscationFilesUploadCall.Do(); err != nil {
-		return fmt.Errorf("failed to upload mapping file, error: %s", err)
+		return fmt.Errorf("failed to upload %s, error: %s", fileDesc, err)
 	}
 
-	p.logger.Printf(" uploaded mapping file for apk version: %d", versionCode)
-	return nil
-}
-
-// uploadNativeSymbols uploads a given native debug symbols file to a given app artifact (based on versionCode) to Google Play.
-func (p *Publisher) uploadNativeSymbols(service *androidpublisher.Service, appEditID string, versionCode int64, packageName string, filePath string) error {
-	p.logger.Debugf("Getting native symbols file from %v", filePath)
-	nativeSymbolsFile, err := os.Open(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to read native symbols file (%s), error: %s", filePath, err)
-	}
-	p.logger.Debugf("Uploading native symbols file %v with package name '%v', AppEditId '%v', version code '%v'", filePath, packageName, appEditID, versionCode)
-	editsDeobfuscationFilesService := androidpublisher.NewEditsDeobfuscationfilesService(service)
-	editsDeobfuscationFilesUploadCall := editsDeobfuscationFilesService.Upload(packageName, appEditID, versionCode, "nativeCode")
-	editsDeobfuscationFilesUploadCall.Media(nativeSymbolsFile, googleapi.ContentType("application/octet-stream"))
-
-	if _, err = editsDeobfuscationFilesUploadCall.Do(); err != nil {
-		return fmt.Errorf("failed to upload native symbols file, error: %s", err)
-	}
-
-	p.logger.Printf(" uploaded native symbols file for apk version: %d", versionCode)
+	p.logger.Printf(" uploaded %s for apk version: %d", fileDesc, versionCode)
 	return nil
 }
 
