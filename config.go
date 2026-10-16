@@ -24,6 +24,7 @@ type Configs struct {
 	MappingFile                  string          `env:"mapping_file"`
 	ReleaseName                  string          `env:"release_name"`
 	Status                       string          `env:"status"`
+	ChangesNotSentForReview      bool            `env:"changes_not_sent_for_review,opt[true,false]"`
 	RetryWithoutSendingToReview  bool            `env:"retry_without_sending_to_review,opt[true,false]"`
 	AckBundleInstallationWarning bool            `env:"ack_bundle_installation_warning,opt[true,false]"`
 	DryRun                       bool            `env:"dry_run,opt[true,false]"`
