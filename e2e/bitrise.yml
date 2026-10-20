@@ -137,7 +137,6 @@ workflows:
             set -eo pipefail
             "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "after the step"
 
-
   test_apk_deploy_custom_track:
     summary: Tests deploying an APK to a user-defined track
     envs:
@@ -332,7 +331,6 @@ workflows:
         - content: |-
             set -eo pipefail
             "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "after the step"
-
 
   test_exp_e1_flag_in_auto_send_state:
     summary: |-
