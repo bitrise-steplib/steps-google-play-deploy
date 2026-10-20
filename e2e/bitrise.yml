@@ -169,6 +169,7 @@ workflows:
         - mapping_file: ""
         - user_fraction: ""
         - retry_without_sending_to_review: true
+        - changes_in_review_behavior: upload_as_draft
         - verbose_log: true
   test_dry_run:
     envs:
