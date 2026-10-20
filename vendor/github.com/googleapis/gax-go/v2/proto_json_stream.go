@@ -27,6 +27,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+//go:build !go1.27
+
 package gax
 
 import (
@@ -111,7 +113,8 @@ func (s *ProtoJSONStream) Recv() (proto.Message, error) {
 	// Initialize a new instance of the protobuf message to unmarshal the
 	// raw data into.
 	m := s.typ.New().Interface()
-	err := protojson.Unmarshal(raw, m)
+	unm := protojson.UnmarshalOptions{AllowPartial: true, DiscardUnknown: true}
+	err := unm.Unmarshal(raw, m)
 
 	return m, err
 }

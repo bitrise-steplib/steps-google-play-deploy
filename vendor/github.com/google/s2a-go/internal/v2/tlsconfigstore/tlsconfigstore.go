@@ -25,6 +25,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/google/s2a-go/internal/tokenmanager"
 	"github.com/google/s2a-go/internal/v2/certverifier"
@@ -33,7 +34,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 
-	commonpbv1 "github.com/google/s2a-go/internal/proto/common_go_proto"
 	commonpb "github.com/google/s2a-go/internal/proto/v2/common_go_proto"
 	s2av2pb "github.com/google/s2a-go/internal/proto/v2/s2a_go_proto"
 )
@@ -43,9 +43,19 @@ const (
 	h2 = "h2"
 )
 
+// nextProtosOrDefault returns the ALPN protocols to offer during the handshake.
+func nextProtosOrDefault(nextProtos []string) []string {
+	if len(nextProtos) == 0 {
+		return []string{h2}
+	}
+	return slices.Clone(nextProtos)
+}
+
 // GetTLSConfigurationForClient returns a tls.Config instance for use by a client application.
-func GetTLSConfigurationForClient(serverHostname string, s2AStream stream.S2AStream, tokenManager tokenmanager.AccessTokenManager, localIdentity *commonpbv1.Identity, verificationMode s2av2pb.ValidatePeerCertificateChainReq_VerificationMode, serverAuthorizationPolicy []byte) (*tls.Config, error) {
-	authMechanisms := getAuthMechanisms(tokenManager, []*commonpbv1.Identity{localIdentity})
+// nextProtos sets the ALPN protocols offered during the handshake; if it is
+// empty, the returned config offers HTTP/2 only.
+func GetTLSConfigurationForClient(serverHostname string, s2AStream stream.S2AStream, tokenManager tokenmanager.AccessTokenManager, localIdentity *commonpb.Identity, verificationMode s2av2pb.ValidatePeerCertificateChainReq_VerificationMode, serverAuthorizationPolicy []byte, nextProtos []string) (*tls.Config, error) {
+	authMechanisms := getAuthMechanisms(tokenManager, []*commonpb.Identity{localIdentity})
 
 	if grpclog.V(1) {
 		grpclog.Infof("Sending request to S2Av2 for client TLS config.")
@@ -76,7 +86,7 @@ func GetTLSConfigurationForClient(serverHostname string, s2AStream stream.S2AStr
 		return nil, fmt.Errorf("failed to get TLS configuration from S2A: %d, %v", resp.GetStatus().Code, resp.GetStatus().Details)
 	}
 
-	// Extract TLS configiguration from SessionResp.
+	// Extract TLS configuration from SessionResp.
 	tlsConfig := resp.GetGetTlsConfigurationResp().GetClientTlsConfiguration()
 
 	var cert tls.Certificate
@@ -117,7 +127,7 @@ func GetTLSConfigurationForClient(serverHostname string, s2AStream stream.S2AStr
 		SessionTicketsDisabled: true,
 		MinVersion:             minVersion,
 		MaxVersion:             maxVersion,
-		NextProtos:             []string{h2},
+		NextProtos:             nextProtosOrDefault(nextProtos),
 	}
 	if len(tlsConfig.CertificateChain) > 0 {
 		config.Certificates = []tls.Certificate{cert}
@@ -126,7 +136,7 @@ func GetTLSConfigurationForClient(serverHostname string, s2AStream stream.S2AStr
 }
 
 // GetTLSConfigurationForServer returns a tls.Config instance for use by a server application.
-func GetTLSConfigurationForServer(s2AStream stream.S2AStream, tokenManager tokenmanager.AccessTokenManager, localIdentities []*commonpbv1.Identity, verificationMode s2av2pb.ValidatePeerCertificateChainReq_VerificationMode) (*tls.Config, error) {
+func GetTLSConfigurationForServer(s2AStream stream.S2AStream, tokenManager tokenmanager.AccessTokenManager, localIdentities []*commonpb.Identity, verificationMode s2av2pb.ValidatePeerCertificateChainReq_VerificationMode) (*tls.Config, error) {
 	return &tls.Config{
 		GetConfigForClient: ClientConfig(tokenManager, localIdentities, verificationMode, s2AStream),
 	}, nil
@@ -136,7 +146,7 @@ func GetTLSConfigurationForServer(s2AStream stream.S2AStream, tokenManager token
 // connection with a client, based on SNI communicated during ClientHello.
 // Ensures that server presents the correct certificate to establish a TLS
 // connection.
-func ClientConfig(tokenManager tokenmanager.AccessTokenManager, localIdentities []*commonpbv1.Identity, verificationMode s2av2pb.ValidatePeerCertificateChainReq_VerificationMode, s2AStream stream.S2AStream) func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
+func ClientConfig(tokenManager tokenmanager.AccessTokenManager, localIdentities []*commonpb.Identity, verificationMode s2av2pb.ValidatePeerCertificateChainReq_VerificationMode, s2AStream stream.S2AStream) func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
 	return func(chi *tls.ClientHelloInfo) (*tls.Config, error) {
 		tlsConfig, err := getServerConfigFromS2Av2(tokenManager, localIdentities, chi.ServerName, s2AStream)
 		if err != nil {
@@ -219,9 +229,9 @@ func getTLSCipherSuite(tlsCipherSuite commonpb.Ciphersuite) uint16 {
 	}
 }
 
-func getServerConfigFromS2Av2(tokenManager tokenmanager.AccessTokenManager, localIdentities []*commonpbv1.Identity, sni string, s2AStream stream.S2AStream) (*s2av2pb.GetTlsConfigurationResp_ServerTlsConfiguration, error) {
+func getServerConfigFromS2Av2(tokenManager tokenmanager.AccessTokenManager, localIdentities []*commonpb.Identity, sni string, s2AStream stream.S2AStream) (*s2av2pb.GetTlsConfigurationResp_ServerTlsConfiguration, error) {
 	authMechanisms := getAuthMechanisms(tokenManager, localIdentities)
-	var locID *commonpbv1.Identity
+	var locID *commonpb.Identity
 	if localIdentities != nil {
 		locID = localIdentities[0]
 	}
@@ -283,7 +293,7 @@ func getTLSClientAuthType(tlsConfig *s2av2pb.GetTlsConfigurationResp_ServerTlsCo
 	return clientAuth
 }
 
-func getAuthMechanisms(tokenManager tokenmanager.AccessTokenManager, localIdentities []*commonpbv1.Identity) []*s2av2pb.AuthenticationMechanism {
+func getAuthMechanisms(tokenManager tokenmanager.AccessTokenManager, localIdentities []*commonpb.Identity) []*s2av2pb.AuthenticationMechanism {
 	if tokenManager == nil {
 		return nil
 	}
