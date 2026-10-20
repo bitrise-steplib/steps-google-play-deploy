@@ -1,12 +1,14 @@
-// Command lifecycle prints the state of every track of a Google Play app, so the e2e tests can show what a step run
-// changed on Google Play. Each track is shown twice: as the edits API reports it (release status draft, inProgress,
-// halted or completed) and as the applications.tracks.releases endpoint reports it (review lifecycle DRAFT,
-// NOT_SENT_FOR_REVIEW, IN_REVIEW, APPROVED_NOT_PUBLISHED, NOT_APPROVED or PUBLISHED). The vendored API client predates
-// the lifecycle endpoint, so both views are read through the REST API directly.
+// Command lifecycle prints the state of a Google Play app, so the e2e tests can show what a step run changed on
+// Google Play: the releases of every track as the edits API reports them (status draft, inProgress, halted or
+// completed), the artifact library (every uploaded bundle and APK, marking the ones no track references, which is
+// where a trackless upload ends up) and, on request, the review lifecycle of selected tracks as the
+// applications.tracks.releases endpoint reports it (DRAFT, NOT_SENT_FOR_REVIEW, IN_REVIEW, APPROVED_NOT_PUBLISHED,
+// NOT_APPROVED or PUBLISHED). The vendored API client predates the lifecycle endpoint, so everything is read through
+// the REST API directly.
 //
 // Usage:
 //
-//	lifecycle -package <package name> -key <service account JSON path or URL> [-label <heading>]
+//	lifecycle -package <package name> -key <service account JSON path or URL> [-label <heading>] [-lifecycle -tracks a,b]
 package main
 
 import (
@@ -49,7 +51,8 @@ type releaseSummary struct {
 	ActiveArtifacts       []artifactSummary `json:"activeArtifacts"`
 }
 
-// artifactSummary keeps the version code raw: the REST API encodes int64 as a JSON string, and this tolerates both.
+// artifactSummary keeps the version code raw: the REST API encodes int64 as a JSON string and int32 as a number, and
+// this tolerates both.
 type artifactSummary struct {
 	VersionCode json.RawMessage `json:"versionCode"`
 }
@@ -58,11 +61,22 @@ func (a artifactSummary) code() string {
 	return strings.Trim(string(a.VersionCode), `"`)
 }
 
+type inspectOptions struct {
+	// Lifecycle turns on the applications.tracks.releases calls. Their quota is small: a dozen calls exhausted it for
+	// well over an hour in CI, while the edits API kept working.
+	Lifecycle bool
+	// Tracks limits the lifecycle calls to these tracks; empty means every track.
+	Tracks []string
+}
+
 type report struct {
-	Package   string
-	Tracks    []track
-	Lifecycle map[string][]releaseSummary
-	Errors    map[string]error
+	Package       string
+	Tracks        []track
+	Bundles       []string
+	Apks          []string
+	LifecycleRead bool
+	Lifecycle     map[string][]releaseSummary
+	Errors        map[string]error
 }
 
 type apiError struct {
@@ -78,7 +92,8 @@ func main() {
 	pkg := flag.String("package", "", "package name of the app")
 	keySource := flag.String("key", "", "service account JSON key: a file path, a file:// URL or an http(s) URL")
 	label := flag.String("label", "", "heading printed above the report, for example 'before the step'")
-	tracksFlag := flag.String("tracks", "", "comma separated track names to read the review lifecycle of (default: every track); the endpoint's quota is tight")
+	lifecycle := flag.Bool("lifecycle", false, "also read the review lifecycle (applications.tracks.releases); its quota is small, use sparingly")
+	tracksFlag := flag.String("tracks", "", "comma separated track names to read the review lifecycle of (default: every track)")
 	baseURL := flag.String("base-url", defaultBaseURL, "Android Publisher API base URL")
 	flag.Parse()
 
@@ -94,7 +109,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	r, err := inspect(ctx, client, *baseURL, *pkg, splitList(*tracksFlag))
+	r, err := inspect(ctx, client, *baseURL, *pkg, inspectOptions{Lifecycle: *lifecycle, Tracks: splitList(*tracksFlag)})
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -145,9 +160,9 @@ func splitList(list string) []string {
 	return items
 }
 
-// inspect opens a throwaway edit to read the tracks, deletes it, then reads the review lifecycle of the tracks in
-// lifecycleTracks, or of every track when it is empty.
-func inspect(ctx context.Context, client *http.Client, baseURL, pkg string, lifecycleTracks []string) (*report, error) {
+// inspect opens a throwaway edit to read the tracks and the artifact library, deletes it, then optionally reads the
+// review lifecycle of the selected tracks.
+func inspect(ctx context.Context, client *http.Client, baseURL, pkg string, opts inspectOptions) (*report, error) {
 	appURL := baseURL + "/applications/" + url.PathEscape(pkg)
 
 	var edit struct {
@@ -156,8 +171,9 @@ func inspect(ctx context.Context, client *http.Client, baseURL, pkg string, life
 	if err := call(ctx, client, http.MethodPost, appURL+"/edits", strings.NewReader("{}"), &edit); err != nil {
 		return nil, fmt.Errorf("insert edit: %w", err)
 	}
+	editURL := appURL + "/edits/" + url.PathEscape(edit.ID)
 	defer func() {
-		if err := call(ctx, client, http.MethodDelete, appURL+"/edits/"+url.PathEscape(edit.ID), nil, nil); err != nil {
+		if err := call(ctx, client, http.MethodDelete, editURL, nil, nil); err != nil {
 			_, _ = fmt.Fprintf(os.Stderr, "warning: could not delete the inspection edit %s: %v\n", edit.ID, err)
 		}
 	}()
@@ -165,18 +181,38 @@ func inspect(ctx context.Context, client *http.Client, baseURL, pkg string, life
 	var tracks struct {
 		Tracks []track `json:"tracks"`
 	}
-	if err := call(ctx, client, http.MethodGet, appURL+"/edits/"+url.PathEscape(edit.ID)+"/tracks", nil, &tracks); err != nil {
+	if err := call(ctx, client, http.MethodGet, editURL+"/tracks", nil, &tracks); err != nil {
 		return nil, fmt.Errorf("list tracks: %w", err)
 	}
 
-	r := &report{
-		Package:   pkg,
-		Tracks:    tracks.Tracks,
-		Lifecycle: map[string][]releaseSummary{},
-		Errors:    map[string]error{},
+	var bundles struct {
+		Bundles []artifactSummary `json:"bundles"`
 	}
+	if err := call(ctx, client, http.MethodGet, editURL+"/bundles", nil, &bundles); err != nil {
+		return nil, fmt.Errorf("list bundles: %w", err)
+	}
+	var apks struct {
+		Apks []artifactSummary `json:"apks"`
+	}
+	if err := call(ctx, client, http.MethodGet, editURL+"/apks", nil, &apks); err != nil {
+		return nil, fmt.Errorf("list apks: %w", err)
+	}
+
+	r := &report{
+		Package:       pkg,
+		Tracks:        tracks.Tracks,
+		Bundles:       codes(bundles.Bundles),
+		Apks:          codes(apks.Apks),
+		LifecycleRead: opts.Lifecycle,
+		Lifecycle:     map[string][]releaseSummary{},
+		Errors:        map[string]error{},
+	}
+	if !opts.Lifecycle {
+		return r, nil
+	}
+
 	wanted := map[string]bool{}
-	for _, name := range lifecycleTracks {
+	for _, name := range opts.Tracks {
 		wanted[name] = true
 	}
 	for _, t := range tracks.Tracks {
@@ -191,6 +227,14 @@ func inspect(ctx context.Context, client *http.Client, baseURL, pkg string, life
 		r.Lifecycle[t.Track] = releases
 	}
 	return r, nil
+}
+
+func codes(artifacts []artifactSummary) []string {
+	out := make([]string, 0, len(artifacts))
+	for _, a := range artifacts {
+		out = append(out, a.code())
+	}
+	return out
 }
 
 func listLifecycle(ctx context.Context, client *http.Client, appURL, trackName string) ([]releaseSummary, error) {
@@ -216,11 +260,10 @@ func listLifecycle(ctx context.Context, client *http.Client, appURL, trackName s
 	}
 }
 
-// quotaBackoff is how long to wait between attempts when Google answers "Listing releases quota exceeded"; the
-// quota of applications.tracks.releases is undocumented and was exhausted by a handful of calls in one CI build.
+// quotaBackoff is how long to wait between attempts when Google answers "Listing releases quota exceeded".
 var quotaBackoff = 20 * time.Second
 
-const quotaAttempts = 4
+const quotaAttempts = 2
 
 func callWithQuotaBackoff(ctx context.Context, client *http.Client, rawURL string, out interface{}) error {
 	var err error
@@ -275,12 +318,14 @@ func printReport(w io.Writer, label string, r *report) {
 	if label == "" {
 		label = "state"
 	}
-	_, _ = fmt.Fprintf(w, "\n== Play state: %s (%s) ==\n", label, r.Package)
+	p := func(format string, a ...interface{}) { _, _ = fmt.Fprintf(w, format, a...) }
+	p("\n== Play state: %s (%s) ==\n", label, r.Package)
 
 	tracks := append([]track(nil), r.Tracks...)
 	sort.Slice(tracks, func(i, j int) bool { return tracks[i].Track < tracks[j].Track })
 
-	_, _ = fmt.Fprintln(w, "\n-- track releases (edits.tracks) --")
+	onTrack := map[string][]string{}
+	p("\n-- track releases (edits.tracks) --\n")
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
 	_, _ = fmt.Fprintln(tw, "TRACK\tSTATUS\tVERSION CODES\tFRACTION\tRELEASE NAME")
 	for _, t := range tracks {
@@ -293,12 +338,23 @@ func printReport(w io.Writer, label string, r *report) {
 			if rel.UserFraction != 0 {
 				fraction = fmt.Sprintf("%g", rel.UserFraction)
 			}
+			for _, code := range rel.VersionCodes {
+				onTrack[code] = append(onTrack[code], t.Track)
+			}
 			_, _ = fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\n", t.Track, rel.Status, strings.Join(rel.VersionCodes, ","), fraction, rel.Name)
 		}
 	}
 	_ = tw.Flush()
 
-	_, _ = fmt.Fprintln(w, "\n-- review lifecycle (applications.tracks.releases) --")
+	p("\n-- artifact library (edits.bundles, edits.apks); codes no track references are marked --\n")
+	p("bundles: %s\n", describeArtifacts(r.Bundles, onTrack))
+	p("apks:    %s\n", describeArtifacts(r.Apks, onTrack))
+
+	if !r.LifecycleRead {
+		p("\n-- review lifecycle (applications.tracks.releases): not read, pass -lifecycle; the endpoint's quota is small --\n\n")
+		return
+	}
+	p("\n-- review lifecycle (applications.tracks.releases) --\n")
 	tw = tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
 	_, _ = fmt.Fprintln(tw, "TRACK\tLIFECYCLE\tVERSION CODES\tRELEASE NAME")
 	for _, t := range tracks {
@@ -306,19 +362,34 @@ func printReport(w io.Writer, label string, r *report) {
 			_, _ = fmt.Fprintf(tw, "%s\terror: %v\t\t\n", t.Track, err)
 			continue
 		}
-		releases := r.Lifecycle[t.Track]
+		releases, read := r.Lifecycle[t.Track]
+		if !read {
+			_, _ = fmt.Fprintf(tw, "%s\t(not read)\t\t\n", t.Track)
+			continue
+		}
 		if len(releases) == 0 {
 			_, _ = fmt.Fprintf(tw, "%s\t(none)\t\t\n", t.Track)
 			continue
 		}
 		for _, rel := range releases {
-			codes := make([]string, 0, len(rel.ActiveArtifacts))
-			for _, a := range rel.ActiveArtifacts {
-				codes = append(codes, a.code())
-			}
-			_, _ = fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", t.Track, rel.ReleaseLifecycleState, strings.Join(codes, ","), rel.ReleaseName)
+			_, _ = fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", t.Track, rel.ReleaseLifecycleState, strings.Join(codes(rel.ActiveArtifacts), ","), rel.ReleaseName)
 		}
 	}
 	_ = tw.Flush()
-	_, _ = fmt.Fprintln(w)
+	p("\n")
+}
+
+func describeArtifacts(artifactCodes []string, onTrack map[string][]string) string {
+	if len(artifactCodes) == 0 {
+		return "(none)"
+	}
+	parts := make([]string, 0, len(artifactCodes))
+	for _, code := range artifactCodes {
+		if tracks := onTrack[code]; len(tracks) > 0 {
+			parts = append(parts, fmt.Sprintf("%s (%s)", code, strings.Join(tracks, ",")))
+		} else {
+			parts = append(parts, code+" (not on any track)")
+		}
+	}
+	return strings.Join(parts, ", ")
 }

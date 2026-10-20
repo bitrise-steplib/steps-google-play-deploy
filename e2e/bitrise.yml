@@ -112,7 +112,7 @@ workflows:
         inputs:
         - content: |-
             set -eo pipefail
-            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -tracks internal,apk-testing -label "before the step"
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "before the step"
     - path::./:
         title: Execute step
         # Limit running this test to only one stack to avoid parallel testing issues
@@ -135,7 +135,7 @@ workflows:
         inputs:
         - content: |-
             set -eo pipefail
-            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -tracks internal,apk-testing -label "after the step"
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -lifecycle -tracks internal -label "after the step"
 
   test_apk_deploy_custom_track:
     summary: Tests deploying an APK to a user-defined track
@@ -178,7 +178,7 @@ workflows:
         inputs:
         - content: |-
             set -eo pipefail
-            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -tracks internal,apk-testing -label "before the step"
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "before the step"
     - path::./:
         title: Execute step
         # Limit running this test to only one stack to avoid parallel testing issues
@@ -202,7 +202,7 @@ workflows:
         inputs:
         - content: |-
             set -eo pipefail
-            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -tracks internal,apk-testing -label "after the step"
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "after the step"
 
   test_dry_run:
     envs:
@@ -306,7 +306,7 @@ workflows:
         inputs:
         - content: |-
             set -eo pipefail
-            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -tracks internal,apk-testing -label "before the step"
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "before the step"
     - path::./:
         title: Execute step
         # Limit running this test to only one stack to avoid parallel testing issues
@@ -330,7 +330,7 @@ workflows:
         inputs:
         - content: |-
             set -eo pipefail
-            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -tracks internal,apk-testing -label "after the step"
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "after the step"
 
   test_exp_e1_flag_in_auto_send_state:
     summary: |-
@@ -388,7 +388,7 @@ workflows:
         inputs:
         - content: |-
             set -eo pipefail
-            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -tracks internal,apk-testing -label "before run A"
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "before run A"
     - path::./:
         title: "Run A: default commit, expected to succeed"
         run_if: |-
@@ -411,7 +411,7 @@ workflows:
         inputs:
         - content: |-
             set -eo pipefail
-            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -tracks internal,apk-testing -label "after run A"
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "after run A"
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
@@ -448,7 +448,7 @@ workflows:
         inputs:
         - content: |-
             set -eo pipefail
-            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -tracks internal,apk-testing -label "after run B"
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -lifecycle -tracks apk-testing -label "after run B"
 
   _setup:
     steps:
