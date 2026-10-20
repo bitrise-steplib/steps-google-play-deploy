@@ -128,10 +128,8 @@ workflows:
         - track: $TRACK
         - user_fraction: 0.6
         - release_name: Overwritten release name
-        # Proves Google Play accepts changesInReviewBehavior on a real commit. Google Play keeps this app's changes
-        # "in review" for a few minutes after every commit, so `fail` would make the test depend on the timing of the
-        # other tests; upload_as_draft saves a draft in that case and the test still passes.
-        - changes_in_review_behavior: upload_as_draft
+        # Google Play's default: the one commit this test makes also counts against the e2e app's daily commit quota.
+        - changes_in_review_behavior: cancel_and_resubmit
         - verbose_log: true
 
   test_apk_deploy_custom_track:
@@ -182,6 +180,8 @@ workflows:
         - mapping_file: ""
         - user_fraction: ""
         - retry_without_sending_to_review: true
+        # Runs about a minute after the AAB deploy, while Google Play still has that commit "in review", so this
+        # deploy is refused and saved as a draft: the one e2e test of the draft path, at the price of a second commit.
         - changes_in_review_behavior: upload_as_draft
         - verbose_log: true
   test_dry_run:
@@ -295,12 +295,14 @@ workflows:
         - retry_without_sending_to_review: true
         - verbose_log: true
 
-  test_git_reference_upload_as_draft:
+  manual_test_git_reference_upload_as_draft:
     summary: |-
+      Not part of the CI e2e run (no test_ prefix); run it by hand with `bitrise run manual_test_git_reference_upload_as_draft`.
       Runs the Step from its git URL at this branch, the way a customer tries an unreleased branch, instead of
       path::./. This proves the Bitrise CLI's Go toolkit can build the go 1.26 module on the stack, and deploys an
       APK to the apk-testing track with changes_in_review_behavior: upload_as_draft. Point the reference at master
-      once the branch is merged.
+      once the branch is merged. Google Play's daily commit quota on the e2e app is small, so the CI run keeps to
+      the tests that commit at most once.
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
     - BRANCH: master
