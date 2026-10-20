@@ -194,16 +194,16 @@ func TestReviewInProgressFailure(t *testing.T) {
 
 // fakePlay serves the subset of the Android Publisher API the deploy flow touches and records what it was sent.
 type fakePlay struct {
-	server          *httptest.Server
-	mu              sync.Mutex
-	commitResponses []fakeResponse // consumed in order; the last one repeats
-	trackUpdate     *fakeResponse  // when set, every track update answers with it
-	tracksList      *fakeResponse  // when set, the tracks list answers with it
-	inserts         int
-	uploads         int
-	validates       int
-	commits         []url.Values
-	trackUpdates    []androidpublisher.Track
+	server               *httptest.Server
+	mu                   sync.Mutex
+	commitResponses      []fakeResponse // consumed in order, then commits succeed
+	trackUpdateResponses []fakeResponse // consumed in order, then track updates succeed
+	tracksList           *fakeResponse  // when set, the tracks list answers with it
+	inserts              int
+	uploads              int
+	validates            int
+	commits              []url.Values
+	trackUpdates         []androidpublisher.Track
 }
 
 type fakeResponse struct {
@@ -261,23 +261,20 @@ func (f *fakePlay) handle(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		f.trackUpdates = append(f.trackUpdates, track)
-		if f.trackUpdate != nil {
-			w.WriteHeader(f.trackUpdate.status)
-			_, _ = w.Write([]byte(f.trackUpdate.body))
+		if i := len(f.trackUpdates); i < len(f.trackUpdateResponses) {
+			f.trackUpdates = append(f.trackUpdates, track)
+			w.WriteHeader(f.trackUpdateResponses[i].status)
+			_, _ = w.Write([]byte(f.trackUpdateResponses[i].body))
 			return
 		}
+		f.trackUpdates = append(f.trackUpdates, track)
 		_, _ = w.Write(body)
 	case r.Method == http.MethodPost && r.URL.Path == fakeEditsPath+"/edit-1:validate":
 		f.validates++
 		_, _ = w.Write([]byte(editBody))
 	case r.Method == http.MethodPost && r.URL.Path == fakeEditsPath+"/edit-1:commit":
 		resp := commitOK
-		if n := len(f.commitResponses); n > 0 {
-			i := len(f.commits)
-			if i >= n {
-				i = n - 1
-			}
+		if i := len(f.commits); i < len(f.commitResponses) {
 			resp = f.commitResponses[i]
 		}
 		f.commits = append(f.commits, r.URL.Query())
@@ -472,20 +469,50 @@ func TestExecuteEditStartsANewEditWhenTheRetriedEditIsLost(t *testing.T) {
 	require.Equal(t, "true", play.commits[2].Get("changesNotSentForReview"), "the new edit is committed without sending for review from the start")
 }
 
-func TestExecuteEditDoesNotStartANewEditWhenAFirstCommitFails(t *testing.T) {
-	play := newFakePlay(t, commitEditLost)
-	configs := testConfigs(t)
-	configs.RetryWithoutSendingToReview = true
+func TestExecuteEditStartsANewEditWhenGooglePlayDiscardedIt(t *testing.T) {
+	t.Log("discarded before the commit")
+	{
+		play := newFakePlay(t, commitEditLost)
+		configs := testConfigs(t)
 
-	errorString := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+		require.Equal(t, "", NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
 
-	require.Contains(t, errorString, "Failed to commit edit: ")
-	require.Equal(t, 1, play.inserts, "only the retry without sending for review may lose the edit")
+		require.Equal(t, 2, play.inserts)
+		require.Equal(t, 2, play.uploads)
+		require.Len(t, play.commits, 2)
+		require.Equal(t, "false", play.commits[1].Get("changesNotSentForReview"))
+	}
+
+	t.Log("discarded before the track update")
+	{
+		play := newFakePlay(t)
+		play.trackUpdateResponses = []fakeResponse{{status: http.StatusBadRequest, body: `{"error":{"code":400,"message":"This Edit has been deleted.","status":"FAILED_PRECONDITION"}}`}}
+		configs := testConfigs(t)
+
+		require.Equal(t, "", NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
+
+		require.Equal(t, 2, play.inserts)
+		require.Len(t, play.trackUpdates, 2)
+		require.Len(t, play.commits, 1)
+	}
+
+	t.Log("discarded twice - the Step starts over once")
+	{
+		play := newFakePlay(t, commitEditLost, commitEditLost)
+		configs := testConfigs(t)
+
+		errorString := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+
+		require.Contains(t, errorString, "Failed to commit edit: ")
+		require.Contains(t, errorString, "This edit has expired")
+		require.Equal(t, 2, play.inserts)
+	}
 }
 
 func TestExecuteEditReportsATrackUpdateFailureEvenWhenTracksCannotBeListed(t *testing.T) {
 	play := newFakePlay(t)
-	play.trackUpdate = &fakeResponse{status: http.StatusNotFound, body: `{"error":{"code":404,"message":"Track not found.","status":"NOT_FOUND"}}`}
+	notFound := fakeResponse{status: http.StatusNotFound, body: `{"error":{"code":404,"message":"Track not found.","status":"NOT_FOUND"}}`}
+	play.trackUpdateResponses = []fakeResponse{notFound, notFound}
 	play.tracksList = &serverError
 	configs := testConfigs(t)
 	configs.Track = "no-such-track"
