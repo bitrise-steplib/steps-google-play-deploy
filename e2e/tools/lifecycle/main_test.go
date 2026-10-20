@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -48,7 +49,7 @@ func TestInspectAndPrint(t *testing.T) {
 	}))
 	defer server.Close()
 
-	r, err := inspect(context.Background(), server.Client(), server.URL, "com.example.app")
+	r, err := inspect(context.Background(), server.Client(), server.URL, "com.example.app", nil)
 	require.NoError(t, err)
 
 	require.Len(t, r.Tracks, 3)
@@ -82,4 +83,59 @@ func TestCallReportsAPIErrors(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "HTTP 400")
 	require.Contains(t, err.Error(), "must not be set")
+}
+
+func TestInspectLimitsLifecycleToWantedTracks(t *testing.T) {
+	var mu sync.Mutex
+	var lifecycleCalls []string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch {
+		case r.Method == http.MethodPost:
+			_, _ = w.Write([]byte(`{"id":"edit-1"}`))
+		case r.URL.Path == "/applications/com.example.app/edits/edit-1/tracks":
+			_, _ = w.Write([]byte(`{"tracks":[{"track":"internal"},{"track":"apk-testing"},{"track":"production"}]}`))
+		case r.Method == http.MethodDelete:
+			_, _ = w.Write([]byte(`{}`))
+		default:
+			mu.Lock()
+			lifecycleCalls = append(lifecycleCalls, r.URL.Path)
+			mu.Unlock()
+			_, _ = w.Write([]byte(`{"releases":[]}`))
+		}
+	}))
+	defer server.Close()
+
+	_, err := inspect(context.Background(), server.Client(), server.URL, "com.example.app", splitList(" apk-testing, internal,,"))
+	require.NoError(t, err)
+	require.ElementsMatch(t, []string{
+		"/applications/com.example.app/tracks/internal/releases",
+		"/applications/com.example.app/tracks/apk-testing/releases",
+	}, lifecycleCalls)
+}
+
+func TestCallWithQuotaBackoffRetries(t *testing.T) {
+	quotaBackoff = 0
+	defer func() { quotaBackoff = 20 * time.Second }()
+
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts++
+		if attempts < 3 {
+			w.WriteHeader(http.StatusForbidden)
+			_, _ = w.Write([]byte(`{"error":{"code":403,"message":"Listing releases quota exceeded.","status":"PERMISSION_DENIED"}}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"releases":[{"releaseName":"r","releaseLifecycleState":"RELEASE_LIFECYCLE_STATE_PUBLISHED"}]}`))
+	}))
+	defer server.Close()
+
+	var page struct {
+		Releases []releaseSummary `json:"releases"`
+	}
+	err := callWithQuotaBackoff(context.Background(), server.Client(), server.URL+"/releases", &page)
+	require.NoError(t, err)
+	require.Equal(t, 3, attempts)
+	require.Len(t, page.Releases, 1)
 }

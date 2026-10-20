@@ -12,6 +12,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -77,6 +78,7 @@ func main() {
 	pkg := flag.String("package", "", "package name of the app")
 	keySource := flag.String("key", "", "service account JSON key: a file path, a file:// URL or an http(s) URL")
 	label := flag.String("label", "", "heading printed above the report, for example 'before the step'")
+	tracksFlag := flag.String("tracks", "", "comma separated track names to read the review lifecycle of (default: every track); the endpoint's quota is tight")
 	baseURL := flag.String("base-url", defaultBaseURL, "Android Publisher API base URL")
 	flag.Parse()
 
@@ -92,7 +94,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	r, err := inspect(ctx, client, *baseURL, *pkg)
+	r, err := inspect(ctx, client, *baseURL, *pkg, splitList(*tracksFlag))
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -133,8 +135,19 @@ func readKey(ctx context.Context, source string) ([]byte, error) {
 	return os.ReadFile(strings.TrimPrefix(source, "file://"))
 }
 
-// inspect opens a throwaway edit to read the tracks, deletes it, then reads the review lifecycle of every track.
-func inspect(ctx context.Context, client *http.Client, baseURL, pkg string) (*report, error) {
+func splitList(list string) []string {
+	var items []string
+	for _, item := range strings.Split(list, ",") {
+		if item = strings.TrimSpace(item); item != "" {
+			items = append(items, item)
+		}
+	}
+	return items
+}
+
+// inspect opens a throwaway edit to read the tracks, deletes it, then reads the review lifecycle of the tracks in
+// lifecycleTracks, or of every track when it is empty.
+func inspect(ctx context.Context, client *http.Client, baseURL, pkg string, lifecycleTracks []string) (*report, error) {
 	appURL := baseURL + "/applications/" + url.PathEscape(pkg)
 
 	var edit struct {
@@ -162,7 +175,14 @@ func inspect(ctx context.Context, client *http.Client, baseURL, pkg string) (*re
 		Lifecycle: map[string][]releaseSummary{},
 		Errors:    map[string]error{},
 	}
+	wanted := map[string]bool{}
+	for _, name := range lifecycleTracks {
+		wanted[name] = true
+	}
 	for _, t := range tracks.Tracks {
+		if len(wanted) > 0 && !wanted[t.Track] {
+			continue
+		}
 		releases, err := listLifecycle(ctx, client, appURL, t.Track)
 		if err != nil {
 			r.Errors[t.Track] = err
@@ -185,7 +205,7 @@ func listLifecycle(ctx context.Context, client *http.Client, appURL, trackName s
 			Releases      []releaseSummary `json:"releases"`
 			NextPageToken string           `json:"nextPageToken"`
 		}
-		if err := call(ctx, client, http.MethodGet, u, nil, &page); err != nil {
+		if err := callWithQuotaBackoff(ctx, client, u, &page); err != nil {
 			return nil, err
 		}
 		all = append(all, page.Releases...)
@@ -194,6 +214,30 @@ func listLifecycle(ctx context.Context, client *http.Client, appURL, trackName s
 		}
 		pageToken = page.NextPageToken
 	}
+}
+
+// quotaBackoff is how long to wait between attempts when Google answers "Listing releases quota exceeded"; the
+// quota of applications.tracks.releases is undocumented and was exhausted by a handful of calls in one CI build.
+var quotaBackoff = 20 * time.Second
+
+const quotaAttempts = 4
+
+func callWithQuotaBackoff(ctx context.Context, client *http.Client, rawURL string, out interface{}) error {
+	var err error
+	for attempt := 1; attempt <= quotaAttempts; attempt++ {
+		err = call(ctx, client, http.MethodGet, rawURL, nil, out)
+		var apiErr *apiError
+		if err == nil || !errors.As(err, &apiErr) || !strings.Contains(apiErr.Body, "quota exceeded") || attempt == quotaAttempts {
+			return err
+		}
+		_, _ = fmt.Fprintf(os.Stderr, "quota exceeded for %s, retrying in %s (%d/%d)\n", rawURL, quotaBackoff, attempt, quotaAttempts)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(quotaBackoff):
+		}
+	}
+	return err
 }
 
 func call(ctx context.Context, client *http.Client, method, rawURL string, body io.Reader, out interface{}) error {
