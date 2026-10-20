@@ -315,14 +315,17 @@ workflows:
             set -ex
 
             # The worker builds of one e2e run get consecutive build numbers, so a small offset on one stack collides
-            # with another stack's code. Each stack therefore gets its own track, so the codes on a track keep
-            # increasing, and the macOS stack an offset beyond the dozen workers: on Linux BITRISE_BUILD_NUMBER + 2
-            # (0 and 1 are taken by the other tests there) on apk-testing, on macOS BITRISE_BUILD_NUMBER + 20 on alpha.
+            # with another stack's code. On Linux this run takes BITRISE_BUILD_NUMBER + 2 on apk-testing (0 and 1 are
+            # taken by the other tests there). On macOS it takes BITRISE_BUILD_NUMBER + 20, beyond the dozen workers,
+            # on internal, as a draft: a draft never becomes the active release, so the next AAB deploy's lower code
+            # still rolls out there. (alpha and beta target no countries and refuse releases.)
             if [ "$IS_LATEST_STACK_XCODE" = "true" ]; then
-              envman add --key TRACK --value alpha
+              envman add --key TRACK --value internal
+              envman add --key RELEASE_STATUS --value draft
               envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 20 ))
             else
               envman add --key TRACK --value apk-testing
+              envman add --key RELEASE_STATUS --value ""
               envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 2 ))
             fi
     - change-android-versioncode-and-versionname:
@@ -359,6 +362,7 @@ workflows:
         - package_name: $PACKAGE_NAME
         - app_path: $BITRISE_SIGNED_APK_PATH
         - track: $TRACK
+        - status: $RELEASE_STATUS
         - mapping_file: ""
         - user_fraction: ""
         - changes_in_review_behavior: upload_as_draft
