@@ -156,8 +156,8 @@ func TestCommitEdit(t *testing.T) {
 	}
 }
 
-func TestCommitErrorMessage(t *testing.T) {
-	t.Log("changes already in review - explains that the review was left untouched and how to proceed")
+func TestReviewInProgressFailure(t *testing.T) {
+	t.Log("changes already in review - names the cause, Google Play's message and what to do next")
 	{
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -175,18 +175,19 @@ func TestCommitErrorMessage(t *testing.T) {
 		require.Error(t, err)
 		require.True(t, isChangesAlreadyInReview(err))
 
-		msg := commitErrorMessage(err)
-		require.Contains(t, msg, "Failed to commit edit, error: googleapi: Error 400: You already have changes in review.")
-		require.Contains(t, msg, "left that review untouched")
-		require.Contains(t, msg, "changes_in_review_behavior")
-		require.NotContains(t, msg, changesNotSentForReviewMessage)
+		require.Equal(t, "You already have changes in review. Cancel this review or wait for it to complete before you try again.", googleMessage(err), "the HTTP code and the details block are left out")
+
+		msg := reviewInProgressFailure(err, waitOrCancelAdvice)
+		require.Equal(t, "Google Play is still reviewing an earlier submission of this app, so nothing was committed and that review was left untouched "+
+			"(Google Play: You already have changes in review. Cancel this review or wait for it to complete before you try again.). "+
+			"Wait for the review to finish or cancel it in the Google Play Console, then run the Step again.", msg)
 	}
 
-	t.Log("other errors - unchanged")
+	t.Log("other errors - passed through whole")
 	{
 		err := errors.New("googleapi: Error 500: Internal error encountered., backendError")
 		require.False(t, isChangesAlreadyInReview(err))
-		require.Equal(t, "Failed to commit edit, error: googleapi: Error 500: Internal error encountered., backendError", commitErrorMessage(err))
+		require.Equal(t, "googleapi: Error 500: Internal error encountered., backendError", googleMessage(err))
 	}
 }
 
@@ -325,8 +326,8 @@ func TestExecuteEditFailsWhenReviewInProgress(t *testing.T) {
 
 	errorString := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
 
-	require.Contains(t, errorString, "Failed to commit edit, error: googleapi: Error 400: You already have changes in review.")
-	require.Contains(t, errorString, "left that review untouched")
+	require.Contains(t, errorString, "(Google Play: You already have changes in review.")
+	require.Contains(t, errorString, "set changes_in_review_behavior to cancel_and_resubmit")
 	require.Len(t, play.commits, 1, "fail does not retry")
 	require.Len(t, play.trackUpdates, 1)
 }
@@ -365,7 +366,8 @@ func TestExecuteEditFailsWhenDraftIsRefusedToo(t *testing.T) {
 
 	errorString := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
 
-	require.Contains(t, errorString, "refused to save the release as a draft as well")
+	require.Contains(t, errorString, "refused to save the release as a draft")
+	require.Contains(t, errorString, waitOrCancelAdvice)
 	require.Len(t, play.commits, 2, "the draft is tried once")
 	require.Len(t, play.trackUpdates, 2)
 }
@@ -375,9 +377,10 @@ func TestExecuteEditDoesNotFallBackToDraft(t *testing.T) {
 		name             string
 		prepare          func(*Configs)
 		wantTrackUpdates int
+		wantAdvice       string
 	}{
-		{"the release is a draft already", func(c *Configs) { c.Status = releaseStatusDraft }, 1},
-		{"no track is set", func(c *Configs) { c.Track = "" }, 0},
+		{"the release is a draft already", func(c *Configs) { c.Status = releaseStatusDraft }, 1, "The release is a draft already"},
+		{"no track is set", func(c *Configs) { c.Track = "" }, 0, "There is no track to save a draft on"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -388,7 +391,8 @@ func TestExecuteEditDoesNotFallBackToDraft(t *testing.T) {
 
 			errorString := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
 
-			require.Contains(t, errorString, "left that review untouched")
+			require.Contains(t, errorString, "that review was left untouched")
+			require.Contains(t, errorString, tt.wantAdvice)
 			require.Len(t, play.commits, 1)
 			require.Len(t, play.trackUpdates, tt.wantTrackUpdates)
 		})
@@ -416,7 +420,8 @@ func TestExecuteEditFailsWithoutRetryWhenChangesCannotBeSentForReview(t *testing
 
 	errorString := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
 
-	require.Contains(t, errorString, changesNotSentForReviewMessage)
+	require.Contains(t, errorString, "Set retry_without_sending_to_review to true")
+	require.Contains(t, errorString, "(Google Play: "+changesNotSentForReviewMessage)
 	require.Len(t, play.commits, 1)
 }
 

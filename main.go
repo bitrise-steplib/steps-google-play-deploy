@@ -30,15 +30,8 @@ const (
 // changesAlreadyInReviewReason is the error reason Google Play returns to a commit sent with
 // changesInReviewBehavior=ERROR_IF_IN_REVIEW while an earlier submission of the app is under review.
 const changesAlreadyInReviewReason = "CHANGES_ALREADY_IN_REVIEW"
-const changesAlreadyInReviewHint = "Google Play is still reviewing an earlier submission of this app, so the Step did not commit the changes and left that review untouched. " +
-	"Wait for the review to finish or cancel it in the Google Play Console, then run the Step again. " +
-	"To replace the review in progress with the new changes instead, set the Behavior when a review is in progress (changes_in_review_behavior) input to cancel_and_resubmit; the review then starts over."
 
-// draftRefusedHint is used when Google Play refuses even the draft the Step falls back to while a review is in
-// progress. Google Play does not document whether a draft can be saved during a review; the Step never sends the
-// cancel-and-resubmit default on this path, so the review was left untouched either way.
-const draftRefusedHint = "Google Play refused to save the release as a draft as well while the review is in progress, so nothing was committed and the review in progress was left untouched. " +
-	"Wait for the review to finish or cancel it in the Google Play Console, then run the Step again."
+const waitOrCancelAdvice = "Wait for the review to finish or cancel it in the Google Play Console, then run the Step again."
 
 // Publisher handles publishing to Google Play with integrated logging
 type Publisher struct {
@@ -327,20 +320,17 @@ func (p *Publisher) commitWithRetries(editsService *androidpublisher.EditsServic
 		switch {
 		case isChangesNotSentForReviewRequired(err) && !changesNotSentForReview:
 			if !configs.RetryWithoutSendingToReview {
-				p.logger.Warnf("Sending the edit to review failed. Please change \"Retry changes without sending to review\" input to true if you wish to send the changes with the changesNotSentForReview flag. Please note that in that case the review has to be manually initiated from Google Play Console UI")
-				return commitErrorMessage(err)
+				return fmt.Sprintf("Google Play does not send this app's changes for review automatically, so the commit was refused and nothing was committed (Google Play: %s). "+
+					"Set retry_without_sending_to_review to true to commit without sending for review, then send the changes for review from the Google Play Console.", googleMessage(err))
 			}
-			p.logger.Warnf("Failed to commit edit, error: %s", err)
-			p.logger.Warnf("Trying to commit edit with setting changesNotSentForReview to true. Please make sure to send the changes to review from Google Play Console UI.")
+			p.logger.Warnf("Google Play does not send this app's changes for review automatically (Google Play: %s). Committing without sending for review; send the changes for review from the Google Play Console once the Step finishes.", googleMessage(err))
 			changesNotSentForReview = true
 
 		case isChangesAlreadyInReview(err) && configs.ChangesInReviewBehavior == changesInReviewUploadAsDraft && !savedAsDraft:
-			if reason := draftFallbackUnavailableReason(configs); reason != "" {
-				p.logger.Warnf(reason)
-				return commitErrorMessage(err)
+			if advice := draftFallbackUnavailableAdvice(configs); advice != "" {
+				return reviewInProgressFailure(err, advice)
 			}
-			p.logger.Warnf("Failed to commit edit, error: %s", err)
-			p.logger.Warnf("Google Play is still reviewing an earlier submission of the app. Saving the release as a draft on the %s track instead, without sending it for review.", configs.Track)
+			p.logger.Warnf("Google Play is still reviewing an earlier submission of this app (Google Play: %s). Saving the release as a draft on the %s track instead, without sending it for review.", googleMessage(err), configs.Track)
 			draftConfigs := configs
 			draftConfigs.Status = releaseStatusDraft
 			if errorString := p.updateTrack(draftConfigs, service, appEdit, versionCodes); errorString != "" {
@@ -348,25 +338,44 @@ func (p *Publisher) commitWithRetries(editsService *androidpublisher.EditsServic
 			}
 			savedAsDraft = true
 
+		case isChangesAlreadyInReview(err) && savedAsDraft:
+			return fmt.Sprintf("Google Play refused to save the release as a draft while an earlier submission is in review, so nothing was committed and that review was left untouched (Google Play: %s). %s", googleMessage(err), waitOrCancelAdvice)
+
+		case isChangesAlreadyInReview(err):
+			return reviewInProgressFailure(err, waitOrCancelAdvice+" To replace the review with these changes instead, set changes_in_review_behavior to cancel_and_resubmit.")
+
 		default:
-			if savedAsDraft && isChangesAlreadyInReview(err) {
-				return fmt.Sprintf("Failed to commit edit, error: %s\n%s", err, draftRefusedHint)
-			}
-			return commitErrorMessage(err)
+			return fmt.Sprintf("Failed to commit edit: %s", err)
 		}
 	}
 }
 
-// draftFallbackUnavailableReason explains why a refused commit cannot be retried as a draft, or returns "" when it
-// can: the release has to exist (a track is set) and must not be a draft already.
-func draftFallbackUnavailableReason(configs Configs) string {
+// reviewInProgressFailure is the Step's message when Google Play refused the commit because a review is in progress;
+// advice says what to do next.
+func reviewInProgressFailure(err error, advice string) string {
+	return fmt.Sprintf("Google Play is still reviewing an earlier submission of this app, so nothing was committed and that review was left untouched (Google Play: %s). %s", googleMessage(err), advice)
+}
+
+// draftFallbackUnavailableAdvice says why a refused commit cannot be retried as a draft and what to do instead, or
+// returns "" when the fallback is possible: the release has to exist (a track is set) and must not be a draft already.
+func draftFallbackUnavailableAdvice(configs Configs) string {
 	if strings.TrimSpace(configs.Track) == "" {
-		return "No track is set, so there is no release to save as a draft; the Step fails instead."
+		return "There is no track to save a draft on: set a track to use upload_as_draft, or run the Step again once the review is complete."
 	}
 	if configs.Status == releaseStatusDraft {
-		return "The release is already a draft, so there is nothing to fall back to; the Step fails instead."
+		return "The release is a draft already, so there is nothing to fall back to: run the Step again once the review is complete, or cancel the review in the Google Play Console."
 	}
 	return ""
+}
+
+// googleMessage returns Google Play's own message for an API error, without the HTTP code and the details block the
+// client appends, or the whole error when it is not an API error.
+func googleMessage(err error) string {
+	var apiErr *googleapi.Error
+	if errors.As(err, &apiErr) && apiErr.Message != "" {
+		return apiErr.Message
+	}
+	return err.Error()
 }
 
 // commitEdit commits the edit. changesNotSentForReview and the changes_in_review_behavior input map to the commit
@@ -379,16 +388,6 @@ func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, conf
 	}
 	_, err := call.Do()
 	return err
-}
-
-// commitErrorMessage turns a failed commit into the Step's error message, with guidance for the cases the Step can
-// explain better than Google Play's own message does.
-func commitErrorMessage(err error) string {
-	msg := fmt.Sprintf("Failed to commit edit, error: %s", err)
-	if isChangesAlreadyInReview(err) {
-		msg += "\n" + changesAlreadyInReviewHint
-	}
-	return msg
 }
 
 // isChangesNotSentForReviewRequired reports whether Google Play refused the commit because the app is in the state
