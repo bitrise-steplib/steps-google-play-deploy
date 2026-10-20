@@ -88,13 +88,13 @@ func main() {
 	ctx := context.Background()
 	client, err := newClient(ctx, *keySource)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
 	r, err := inspect(ctx, client, *baseURL, *pkg)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 	printReport(os.Stdout, *label, r)
@@ -145,7 +145,7 @@ func inspect(ctx context.Context, client *http.Client, baseURL, pkg string) (*re
 	}
 	defer func() {
 		if err := call(ctx, client, http.MethodDelete, appURL+"/edits/"+url.PathEscape(edit.ID), nil, nil); err != nil {
-			fmt.Fprintf(os.Stderr, "warning: could not delete the inspection edit %s: %v\n", edit.ID, err)
+			_, _ = fmt.Fprintf(os.Stderr, "warning: could not delete the inspection edit %s: %v\n", edit.ID, err)
 		}
 	}()
 
@@ -231,17 +231,17 @@ func printReport(w io.Writer, label string, r *report) {
 	if label == "" {
 		label = "state"
 	}
-	fmt.Fprintf(w, "\n== Play state: %s (%s) ==\n", label, r.Package)
+	_, _ = fmt.Fprintf(w, "\n== Play state: %s (%s) ==\n", label, r.Package)
 
 	tracks := append([]track(nil), r.Tracks...)
 	sort.Slice(tracks, func(i, j int) bool { return tracks[i].Track < tracks[j].Track })
 
-	fmt.Fprintln(w, "\n-- track releases (edits.tracks) --")
+	_, _ = fmt.Fprintln(w, "\n-- track releases (edits.tracks) --")
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(tw, "TRACK\tSTATUS\tVERSION CODES\tFRACTION\tRELEASE NAME")
+	_, _ = fmt.Fprintln(tw, "TRACK\tSTATUS\tVERSION CODES\tFRACTION\tRELEASE NAME")
 	for _, t := range tracks {
 		if len(t.Releases) == 0 {
-			fmt.Fprintf(tw, "%s\t(no releases)\t\t\t\n", t.Track)
+			_, _ = fmt.Fprintf(tw, "%s\t(no releases)\t\t\t\n", t.Track)
 			continue
 		}
 		for _, rel := range t.Releases {
@@ -249,22 +249,22 @@ func printReport(w io.Writer, label string, r *report) {
 			if rel.UserFraction != 0 {
 				fraction = fmt.Sprintf("%g", rel.UserFraction)
 			}
-			fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\n", t.Track, rel.Status, strings.Join(rel.VersionCodes, ","), fraction, rel.Name)
+			_, _ = fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\n", t.Track, rel.Status, strings.Join(rel.VersionCodes, ","), fraction, rel.Name)
 		}
 	}
 	_ = tw.Flush()
 
-	fmt.Fprintln(w, "\n-- review lifecycle (applications.tracks.releases) --")
+	_, _ = fmt.Fprintln(w, "\n-- review lifecycle (applications.tracks.releases) --")
 	tw = tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(tw, "TRACK\tLIFECYCLE\tVERSION CODES\tRELEASE NAME")
+	_, _ = fmt.Fprintln(tw, "TRACK\tLIFECYCLE\tVERSION CODES\tRELEASE NAME")
 	for _, t := range tracks {
 		if err, failed := r.Errors[t.Track]; failed {
-			fmt.Fprintf(tw, "%s\terror: %v\t\t\n", t.Track, err)
+			_, _ = fmt.Fprintf(tw, "%s\terror: %v\t\t\n", t.Track, err)
 			continue
 		}
 		releases := r.Lifecycle[t.Track]
 		if len(releases) == 0 {
-			fmt.Fprintf(tw, "%s\t(none)\t\t\n", t.Track)
+			_, _ = fmt.Fprintf(tw, "%s\t(none)\t\t\n", t.Track)
 			continue
 		}
 		for _, rel := range releases {
@@ -272,9 +272,9 @@ func printReport(w io.Writer, label string, r *report) {
 			for _, a := range rel.ActiveArtifacts {
 				codes = append(codes, a.code())
 			}
-			fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", t.Track, rel.ReleaseLifecycleState, strings.Join(codes, ","), rel.ReleaseName)
+			_, _ = fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", t.Track, rel.ReleaseLifecycleState, strings.Join(codes, ","), rel.ReleaseName)
 		}
 	}
 	_ = tw.Flush()
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w)
 }
