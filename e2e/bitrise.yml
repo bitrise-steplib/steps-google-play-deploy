@@ -92,10 +92,20 @@ workflows:
     - set-java-version:
         inputs:
         - set_java_version: "17"
+    - script:
+        title: Set $VERSION_CODE
+        inputs:
+        - content: |-
+            set -ex
+
+            # Every Step run of the e2e suite is on the Linux stack: Google Play keeps one open edit per service
+            # account, so a deploy on another stack at the same time would discard this one's edit. The tests on
+            # this stack take BITRISE_BUILD_NUMBER + 0..8 on the same app; the AAB deploy takes + 3.
+            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 3 ))
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
-        - new_version_code: $BITRISE_BUILD_NUMBER
+        - new_version_code: $VERSION_CODE
         - new_version_name: 0.2.4
     - gradle-runner:
         inputs:
@@ -110,7 +120,7 @@ workflows:
         # Limit running this test to only one stack to avoid parallel testing issues
         # Running E2E tests on all stacks in parallel would cause conflicting deployments in Google Play to the same app
         run_if: |-
-          {{ or (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
@@ -302,6 +312,7 @@ workflows:
 
     - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
     - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - TRACK: apk-testing
     before_run:
     - _setup
     steps:
@@ -309,25 +320,13 @@ workflows:
         inputs:
         - set_java_version: "17"
     - script:
-        title: Set $VERSION_CODE and $TRACK for this stack
+        title: Set $VERSION_CODE
         inputs:
         - content: |-
             set -ex
 
-            # The worker builds of one e2e run get consecutive build numbers, so a small offset on one stack collides
-            # with another stack's code. On Linux this run takes BITRISE_BUILD_NUMBER + 2 on apk-testing (0 and 1 are
-            # taken by the other tests there). On macOS it takes BITRISE_BUILD_NUMBER + 20, beyond the dozen workers,
-            # on internal, as a draft: a draft never becomes the active release, so the next AAB deploy's lower code
-            # still rolls out there. (alpha and beta target no countries and refuse releases.)
-            if [ "$IS_LATEST_STACK_XCODE" = "true" ]; then
-              envman add --key TRACK --value internal
-              envman add --key RELEASE_STATUS --value draft
-              envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 20 ))
-            else
-              envman add --key TRACK --value apk-testing
-              envman add --key RELEASE_STATUS --value ""
-              envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 2 ))
-            fi
+            # The tests on this stack take BITRISE_BUILD_NUMBER + 0..8 on the same app; this one takes + 2.
+            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 2 ))
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
@@ -344,7 +343,7 @@ workflows:
     - script:
         title: Go on this stack
         run_if: |-
-          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - content: |-
             # The Bitrise CLI builds Go Steps with the system Go when it is at least 1.22.12; a go 1.26 module then
@@ -353,16 +352,16 @@ workflows:
             echo "GOTOOLCHAIN=${GOTOOLCHAIN:-<unset>}"
     - git::https://github.com/bitrise-steplib/steps-google-play-deploy.git@SSW-3223-upload-as-draft:
         title: Execute step from its git URL
-        # Both latest stacks: the Linux one has a system Go older than the module's, the macOS one a newer one, so
-        # together they cover both ways the Bitrise CLI's Go toolkit can build the Step.
+        # The Linux stack's system Go is older than the module's, so this also covers Go's toolchain download.
+        # (Building on macOS with a newer system Go was verified by hand; every Step run stays on one stack because
+        # Google Play keeps one open edit per service account.)
         run_if: |-
-          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
         - app_path: $BITRISE_SIGNED_APK_PATH
         - track: $TRACK
-        - status: $RELEASE_STATUS
         - mapping_file: ""
         - user_fraction: ""
         - changes_in_review_behavior: upload_as_draft
