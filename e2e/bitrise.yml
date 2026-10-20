@@ -118,6 +118,7 @@ workflows:
         - track: $TRACK
         - user_fraction: 0.6
         - release_name: Overwritten release name
+        - changes_in_review_behavior: fail
         - verbose_log: true
 
   test_apk_deploy_custom_track:
