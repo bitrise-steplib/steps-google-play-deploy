@@ -302,7 +302,6 @@ workflows:
 
     - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
     - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
-    - TRACK: apk-testing
     before_run:
     - _setup
     steps:
@@ -310,16 +309,22 @@ workflows:
         inputs:
         - set_java_version: "17"
     - script:
-        title: Set $VERSION_CODE
+        title: Set $VERSION_CODE and $TRACK for this stack
         inputs:
         - content: |-
             set -ex
 
-            # The other tests upload BITRISE_BUILD_NUMBER and BITRISE_BUILD_NUMBER + 1 to the same app, and this test
-            # runs on both latest stacks at once, so each stack takes its own code.
-            OFFSET=2
-            if [ "$IS_LATEST_STACK_XCODE" = "true" ]; then OFFSET=3; fi
-            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + OFFSET ))
+            # The worker builds of one e2e run get consecutive build numbers, so a small offset on one stack collides
+            # with another stack's code. Each stack therefore gets its own track, so the codes on a track keep
+            # increasing, and the macOS stack an offset beyond the dozen workers: on Linux BITRISE_BUILD_NUMBER + 2
+            # (0 and 1 are taken by the other tests there) on apk-testing, on macOS BITRISE_BUILD_NUMBER + 20 on alpha.
+            if [ "$IS_LATEST_STACK_XCODE" = "true" ]; then
+              envman add --key TRACK --value alpha
+              envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 20 ))
+            else
+              envman add --key TRACK --value apk-testing
+              envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 2 ))
+            fi
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
