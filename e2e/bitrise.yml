@@ -105,6 +105,14 @@ workflows:
         inputs:
         - android_app: $BITRISE_AAB_PATH
         - use_apk_signer: true
+    - script:
+        title: Play state before the step
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            set -eo pipefail
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "before the step"
     - path::./:
         title: Execute step
         # Limit running this test to only one stack to avoid parallel testing issues
@@ -119,6 +127,15 @@ workflows:
         - user_fraction: 0.6
         - release_name: Overwritten release name
         - verbose_log: true
+    - script:
+        title: Play state after the step
+        is_always_run: true
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            set -eo pipefail
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -lifecycle -tracks internal -label "after the step"
 
   test_apk_deploy_custom_track:
     summary: Tests deploying an APK to a user-defined track
@@ -154,6 +171,14 @@ workflows:
         inputs:
         - android_app: $BITRISE_APK_PATH_LIST
         - use_apk_signer: true
+    - script:
+        title: Play state before the step
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            set -eo pipefail
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "before the step"
     - path::./:
         title: Execute step
         # Limit running this test to only one stack to avoid parallel testing issues
@@ -169,6 +194,16 @@ workflows:
         - user_fraction: ""
         - retry_without_sending_to_review: true
         - verbose_log: true
+    - script:
+        title: Play state after the step
+        is_always_run: true
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            set -eo pipefail
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "after the step"
+
   test_dry_run:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
@@ -264,6 +299,14 @@ workflows:
         inputs:
         - android_app: $BITRISE_APK_PATH_LIST
         - use_apk_signer: true
+    - script:
+        title: Play state before the step
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            set -eo pipefail
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "before the step"
     - path::./:
         title: Execute step
         # Limit running this test to only one stack to avoid parallel testing issues
@@ -279,9 +322,149 @@ workflows:
         - user_fraction: ""
         - retry_without_sending_to_review: true
         - verbose_log: true
+    - script:
+        title: Play state after the step
+        is_always_run: true
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            set -eo pipefail
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "after the step"
+
+  test_exp_e1_flag_in_auto_send_state:
+    summary: |-
+      Experiment E1 (SSW-3223): commit with changes_not_sent_for_review=true while Google auto-sends changes for review.
+      Run A deploys an APK to the apk-testing track with the step's defaults and is expected to succeed, which shows
+      the app is in the auto-send state at that moment. Run B repeats the deploy with a new version code and
+      changes_not_sent_for_review=true, and is expected to fail with
+      "Changes are sent for review automatically. The query parameter changesNotSentForReview must not be set."
+      Run B is skippable so the build stays green; the result is in its log and in the Play state dumps around it.
+    envs:
+    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
+    - BRANCH: master
+
+    - BITRISEIO_ANDROID_KEYSTORE_URL: $SIMPLESAMPLE_ANDROID_KEYSTORE_URL
+    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $SIMPLESAMPLE_ANDROID_KEYSTORE_PASSWORD
+    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $SIMPLESAMPLE_ANDROID_KEY_ALIAS
+    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
+
+    - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
+    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - TRACK: apk-testing
+    before_run:
+    - _setup
+    steps:
+    - set-java-version:
+        inputs:
+        - set_java_version: "17"
+    - script:
+        title: Set version codes for run A and run B
+        inputs:
+        - content: |-
+            set -ex
+
+            # On this stack test_apk_deploy_custom_track uploads BITRISE_BUILD_NUMBER and test_no_track uploads
+            # BITRISE_BUILD_NUMBER + 1 to the same app, so the two runs here take + 2 and + 3.
+            envman add --key VERSION_CODE_A --value $(( $BITRISE_BUILD_NUMBER + 2 ))
+            envman add --key VERSION_CODE_B --value $(( $BITRISE_BUILD_NUMBER + 3 ))
+    - change-android-versioncode-and-versionname:
+        inputs:
+        - build_gradle_path: ./app/build.gradle
+        - new_version_code: $VERSION_CODE_A
+        - new_version_name: 0.2.6-e1a
+    - gradle-runner:
+        inputs:
+        - gradle_task: assembleRelease
+        - gradlew_path: ./gradlew
+    - sign-apk:
+        inputs:
+        - android_app: $BITRISE_APK_PATH_LIST
+        - use_apk_signer: true
+    - script:
+        title: Play state before run A
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            set -eo pipefail
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "before run A"
+    - path::./:
+        title: "Run A: default commit, expected to succeed"
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
+        - package_name: $PACKAGE_NAME
+        - app_path: $BITRISE_SIGNED_APK_PATH
+        - track: $TRACK
+        - mapping_file: ""
+        - user_fraction: ""
+        - changes_not_sent_for_review: false
+        - retry_without_sending_to_review: false
+        - verbose_log: true
+    - script:
+        title: Play state after run A
+        is_always_run: true
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            set -eo pipefail
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -label "after run A"
+    - change-android-versioncode-and-versionname:
+        inputs:
+        - build_gradle_path: ./app/build.gradle
+        - new_version_code: $VERSION_CODE_B
+        - new_version_name: 0.2.6-e1b
+    - gradle-runner:
+        inputs:
+        - gradle_task: assembleRelease
+        - gradlew_path: ./gradlew
+    - sign-apk:
+        inputs:
+        - android_app: $BITRISE_APK_PATH_LIST
+        - use_apk_signer: true
+    - path::./:
+        title: "Run B: changes_not_sent_for_review=true, expected 400 must not be set"
+        is_skippable: true
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
+        - package_name: $PACKAGE_NAME
+        - app_path: $BITRISE_SIGNED_APK_PATH
+        - track: $TRACK
+        - mapping_file: ""
+        - user_fraction: ""
+        - changes_not_sent_for_review: true
+        - retry_without_sending_to_review: false
+        - verbose_log: true
+    - script:
+        title: Play state after run B
+        is_always_run: true
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            set -eo pipefail
+            "$PLAY_STATE_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -lifecycle -tracks apk-testing -label "after run B"
 
   _setup:
     steps:
+    - script:
+        title: Build the Play state tool (e2e/tools/lifecycle)
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            set -ex
+            GO_BIN="$(command -v go || true)"
+            if [ -z "$GO_BIN" ]; then GO_BIN="$HOME/.bitrise/toolkits/go/go/bin/go"; fi
+            "$GO_BIN" version
+            OUT_DIR="$(mktemp -d)"
+            "$GO_BIN" build -mod=vendor -o "$OUT_DIR/play-state" ./e2e/tools/lifecycle
+            envman add --key PLAY_STATE_TOOL --value "$OUT_DIR/play-state"
     - script:
         title: Delete _tmp dir
         inputs:
