@@ -92,10 +92,20 @@ workflows:
     - set-java-version:
         inputs:
         - set_java_version: "17"
+    - script:
+        title: Set $VERSION_CODE
+        inputs:
+        - content: |-
+            set -ex
+
+            # Every Step run of the e2e suite is on the Linux stack: Google Play keeps one open edit per service
+            # account, so a deploy on another stack at the same time would discard this one's edit. The tests on
+            # this stack take BITRISE_BUILD_NUMBER + 0..8 on the same app; the AAB deploy takes + 3.
+            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 3 ))
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
-        - new_version_code: $BITRISE_BUILD_NUMBER
+        - new_version_code: $VERSION_CODE
         - new_version_name: 0.2.4
     - gradle-runner:
         inputs:
@@ -110,7 +120,7 @@ workflows:
         # Limit running this test to only one stack to avoid parallel testing issues
         # Running E2E tests on all stacks in parallel would cause conflicting deployments in Google Play to the same app
         run_if: |-
-          {{ or (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
         inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
@@ -118,7 +128,8 @@ workflows:
         - track: $TRACK
         - user_fraction: 0.6
         - release_name: Overwritten release name
-        - changes_in_review_behavior: fail
+        # Google Play's default: the one commit this test makes also counts against the e2e app's daily commit quota.
+        - changes_in_review_behavior: cancel_and_resubmit
         - verbose_log: true
 
   test_apk_deploy_custom_track:
@@ -169,6 +180,9 @@ workflows:
         - mapping_file: ""
         - user_fraction: ""
         - retry_without_sending_to_review: true
+        # Runs about a minute after the AAB deploy, while Google Play still has that commit "in review", so this
+        # deploy is refused and saved as a draft: the one e2e test of the draft path, at the price of a second commit.
+        - changes_in_review_behavior: upload_as_draft
         - verbose_log: true
   test_dry_run:
     envs:
@@ -279,6 +293,80 @@ workflows:
         - mapping_file: ""
         - user_fraction: ""
         - retry_without_sending_to_review: true
+        - verbose_log: true
+
+  manual_test_git_reference_upload_as_draft:
+    summary: |-
+      Not part of the CI e2e run (no test_ prefix); run it by hand with `bitrise run manual_test_git_reference_upload_as_draft`.
+      Runs the Step from its git URL at this branch, the way a customer tries an unreleased branch, instead of
+      path::./. This proves the Bitrise CLI's Go toolkit can build the go 1.26 module on the stack, and deploys an
+      APK to the apk-testing track with changes_in_review_behavior: upload_as_draft. Point the reference at master
+      once the branch is merged. Google Play's daily commit quota on the e2e app is small, so the CI run keeps to
+      the tests that commit at most once.
+    envs:
+    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
+    - BRANCH: master
+
+    - BITRISEIO_ANDROID_KEYSTORE_URL: $SIMPLESAMPLE_ANDROID_KEYSTORE_URL
+    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $SIMPLESAMPLE_ANDROID_KEYSTORE_PASSWORD
+    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $SIMPLESAMPLE_ANDROID_KEY_ALIAS
+    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
+
+    - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
+    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - TRACK: apk-testing
+    before_run:
+    - _setup
+    steps:
+    - set-java-version:
+        inputs:
+        - set_java_version: "17"
+    - script:
+        title: Set $VERSION_CODE
+        inputs:
+        - content: |-
+            set -ex
+
+            # The tests on this stack take BITRISE_BUILD_NUMBER + 0..8 on the same app; this one takes + 2.
+            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 2 ))
+    - change-android-versioncode-and-versionname:
+        inputs:
+        - build_gradle_path: ./app/build.gradle
+        - new_version_code: $VERSION_CODE
+        - new_version_name: 0.2.7-git
+    - gradle-runner:
+        inputs:
+        - gradle_task: assembleRelease
+        - gradlew_path: ./gradlew
+    - sign-apk:
+        inputs:
+        - android_app: $BITRISE_APK_PATH_LIST
+        - use_apk_signer: true
+    - script:
+        title: Go on this stack
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            # The Bitrise CLI builds Go Steps with the system Go when it is at least 1.22.12; a go 1.26 module then
+            # needs Go's toolchain download (GOTOOLCHAIN=auto, the default) unless the system Go is 1.26 or newer.
+            go version || echo "no go on PATH"
+            echo "GOTOOLCHAIN=${GOTOOLCHAIN:-<unset>}"
+    - git::https://github.com/bitrise-steplib/steps-google-play-deploy.git@SSW-3223-upload-as-draft:
+        title: Execute step from its git URL
+        # The Linux stack's system Go is older than the module's, so this also covers Go's toolchain download.
+        # (Building on macOS with a newer system Go was verified by hand; every Step run stays on one stack because
+        # Google Play keeps one open edit per service account.)
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
+        - package_name: $PACKAGE_NAME
+        - app_path: $BITRISE_SIGNED_APK_PATH
+        - track: $TRACK
+        - mapping_file: ""
+        - user_fraction: ""
+        - changes_in_review_behavior: upload_as_draft
         - verbose_log: true
 
   _setup:
