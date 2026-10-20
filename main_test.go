@@ -17,6 +17,7 @@ import (
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/api/androidpublisher/v3"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -196,6 +197,8 @@ type fakePlay struct {
 	server          *httptest.Server
 	mu              sync.Mutex
 	commitResponses []fakeResponse // consumed in order; the last one repeats
+	trackUpdate     *fakeResponse  // when set, every track update answers with it
+	tracksList      *fakeResponse  // when set, the tracks list answers with it
 	inserts         int
 	uploads         int
 	validates       int
@@ -220,6 +223,8 @@ var (
 	commitOK           = fakeResponse{status: http.StatusOK, body: editBody}
 	commitInReview     = fakeResponse{status: http.StatusBadRequest, body: changesAlreadyInReviewBody}
 	commitManualReview = fakeResponse{status: http.StatusBadRequest, body: cannotBeSentForReviewBody}
+	commitEditLost     = fakeResponse{status: http.StatusBadRequest, body: `{"error":{"code":400,"message":"This edit has expired, please create a new Edit.","status":"FAILED_PRECONDITION"}}`}
+	serverError        = fakeResponse{status: http.StatusInternalServerError, body: `{"error":{"code":500,"message":"Internal error encountered.","status":"INTERNAL"}}`}
 )
 
 func newFakePlay(t *testing.T, commitResponses ...fakeResponse) *fakePlay {
@@ -242,6 +247,13 @@ func (f *fakePlay) handle(w http.ResponseWriter, r *http.Request) {
 	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/upload"+fakeEditsPath+"/edit-1/"):
 		f.uploads++
 		_, _ = w.Write([]byte(`{"versionCode":42}`))
+	case r.Method == http.MethodGet && r.URL.Path == fakeEditsPath+"/edit-1/tracks":
+		if f.tracksList != nil {
+			w.WriteHeader(f.tracksList.status)
+			_, _ = w.Write([]byte(f.tracksList.body))
+			return
+		}
+		_, _ = w.Write([]byte(`{"tracks":[{"track":"internal"},{"track":"production"}]}`))
 	case r.Method == http.MethodPut && strings.HasPrefix(r.URL.Path, fakeEditsPath+"/edit-1/tracks/"):
 		body, _ := io.ReadAll(r.Body)
 		var track androidpublisher.Track
@@ -250,6 +262,11 @@ func (f *fakePlay) handle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		f.trackUpdates = append(f.trackUpdates, track)
+		if f.trackUpdate != nil {
+			w.WriteHeader(f.trackUpdate.status)
+			_, _ = w.Write([]byte(f.trackUpdate.body))
+			return
+		}
 		_, _ = w.Write(body)
 	case r.Method == http.MethodPost && r.URL.Path == fakeEditsPath+"/edit-1:validate":
 		f.validates++
@@ -440,4 +457,57 @@ func TestExecuteEditRetryWithoutReviewThenDraft(t *testing.T) {
 	require.Equal(t, "ERROR_IF_IN_REVIEW", last.Get("changesInReviewBehavior"))
 	require.Len(t, play.trackUpdates, 2)
 	require.Equal(t, releaseStatusDraft, play.trackUpdates[1].Releases[0].Status)
+}
+
+func TestExecuteEditStartsANewEditWhenTheRetriedEditIsLost(t *testing.T) {
+	play := newFakePlay(t, commitManualReview, commitEditLost, commitOK)
+	configs := testConfigs(t)
+	configs.RetryWithoutSendingToReview = true
+
+	require.Equal(t, "", NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
+
+	require.Equal(t, 2, play.inserts, "the deploy is repeated from a new edit")
+	require.Equal(t, 2, play.uploads)
+	require.Len(t, play.commits, 3)
+	require.Equal(t, "true", play.commits[2].Get("changesNotSentForReview"), "the new edit is committed without sending for review from the start")
+}
+
+func TestExecuteEditDoesNotStartANewEditWhenAFirstCommitFails(t *testing.T) {
+	play := newFakePlay(t, commitEditLost)
+	configs := testConfigs(t)
+	configs.RetryWithoutSendingToReview = true
+
+	errorString := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+
+	require.Contains(t, errorString, "Failed to commit edit: ")
+	require.Equal(t, 1, play.inserts, "only the retry without sending for review may lose the edit")
+}
+
+func TestExecuteEditReportsATrackUpdateFailureEvenWhenTracksCannotBeListed(t *testing.T) {
+	play := newFakePlay(t)
+	play.trackUpdate = &fakeResponse{status: http.StatusNotFound, body: `{"error":{"code":404,"message":"Track not found.","status":"NOT_FOUND"}}`}
+	play.tracksList = &serverError
+	configs := testConfigs(t)
+	configs.Track = "no-such-track"
+
+	errorString := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+
+	require.Contains(t, errorString, "Failed to update track")
+	require.Contains(t, errorString, "Track not found")
+	require.Empty(t, play.commits)
+}
+
+func TestIsChangesAlreadyInReview(t *testing.T) {
+	require.True(t, isChangesAlreadyInReview(&googleapi.Error{Code: 400, Message: "x", Details: []interface{}{map[string]interface{}{"reason": "CHANGES_ALREADY_IN_REVIEW"}}}))
+	require.True(t, isChangesAlreadyInReview(&googleapi.Error{Code: 400, Errors: []googleapi.ErrorItem{{Reason: "CHANGES_ALREADY_IN_REVIEW"}}}))
+	require.False(t, isChangesAlreadyInReview(&googleapi.Error{Code: 400, Message: "mentions CHANGES_ALREADY_IN_REVIEW only in the text"}))
+	require.False(t, isChangesAlreadyInReview(errors.New("CHANGES_ALREADY_IN_REVIEW")))
+}
+
+func TestIsEditLost(t *testing.T) {
+	require.True(t, isEditLost(&googleapi.Error{Code: 404, Message: "Requested entity was not found."}))
+	require.True(t, isEditLost(&googleapi.Error{Code: 400, Message: "This Edit has been deleted."}))
+	require.True(t, isEditLost(&googleapi.Error{Code: 400, Message: "A change was made to the application outside of this Edit, please create a new edit."}))
+	require.False(t, isEditLost(&googleapi.Error{Code: 400, Message: "Too many completed releases specified."}))
+	require.False(t, isEditLost(nil))
 }

@@ -118,6 +118,8 @@ workflows:
         - track: $TRACK
         - user_fraction: 0.6
         - release_name: Overwritten release name
+        # Proves Google Play accepts changesInReviewBehavior on a real commit. This cannot make the test flaky: Google
+        # Play never reviews this app, its releases publish seconds after the commit.
         - changes_in_review_behavior: fail
         - verbose_log: true
 
@@ -312,8 +314,11 @@ workflows:
         - content: |-
             set -ex
 
-            # The other tests on this stack upload BITRISE_BUILD_NUMBER and BITRISE_BUILD_NUMBER + 1 to the same app.
-            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 2 ))
+            # The other tests upload BITRISE_BUILD_NUMBER and BITRISE_BUILD_NUMBER + 1 to the same app, and this test
+            # runs on both latest stacks at once, so each stack takes its own code.
+            OFFSET=2
+            if [ "$IS_LATEST_STACK_XCODE" = "true" ]; then OFFSET=3; fi
+            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + OFFSET ))
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
@@ -330,7 +335,7 @@ workflows:
     - script:
         title: Go on this stack
         run_if: |-
-          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
         inputs:
         - content: |-
             # The Bitrise CLI builds Go Steps with the system Go when it is at least 1.22.12; a go 1.26 module then
@@ -339,10 +344,10 @@ workflows:
             echo "GOTOOLCHAIN=${GOTOOLCHAIN:-<unset>}"
     - git::https://github.com/bitrise-steplib/steps-google-play-deploy.git@SSW-3223-upload-as-draft:
         title: Execute step from its git URL
-        # Limit running this test to only one stack to avoid parallel testing issues
-        # Running E2E tests on all stacks in parallel would cause conflicting deployments in Google Play to the same app
+        # Both latest stacks: the Linux one has a system Go older than the module's, the macOS one a newer one, so
+        # together they cover both ways the Bitrise CLI's Go toolkit can build the Step.
         run_if: |-
-          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (enveq "IS_LATEST_STACK_XCODE" "true") (not .IsCI) }}
         inputs:
         - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
         - package_name: $PACKAGE_NAME
