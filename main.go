@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,11 +13,25 @@ import (
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/v2/log"
 	"google.golang.org/api/androidpublisher/v3"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
 const changesNotSentForReviewMessage = "Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true"
 const internalServerError = "googleapi: Error 500"
+
+// Values of the changes_in_review_behavior input.
+const (
+	changesInReviewCancelAndResubmit = "cancel_and_resubmit"
+	changesInReviewFail              = "fail"
+)
+
+// changesAlreadyInReviewReason is the error reason Google Play returns to a commit sent with
+// changesInReviewBehavior=ERROR_IF_IN_REVIEW while an earlier submission of the app is under review.
+const changesAlreadyInReviewReason = "CHANGES_ALREADY_IN_REVIEW"
+const changesAlreadyInReviewHint = "Google Play is still reviewing an earlier submission of this app, so the Step did not commit the changes and left that review untouched. " +
+	"Wait for the review to finish or cancel it in the Google Play Console, then run the Step again. " +
+	"To replace the review in progress with the new changes instead, set the Behavior when a review is in progress (changes_in_review_behavior) input to cancel_and_resubmit; the review then starts over."
 
 // Publisher handles publishing to Google Play with integrated logging
 type Publisher struct {
@@ -277,12 +292,48 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 		// Commit edit
 		fmt.Println()
 		p.logger.Infof("Committing edit")
-		editsCommitCall := editsService.Commit(configs.PackageName, appEdit.Id)
-		editsCommitCall.ChangesNotSentForReview(changesNotSentForReview)
-		if _, err := editsCommitCall.Do(); err != nil {
-			return fmt.Sprintf("Failed to commit edit, error: %s", err)
+		if configs.ChangesInReviewBehavior == changesInReviewFail {
+			p.logger.Printf("A review in progress is not cancelled: the commit fails if Google Play is still reviewing an earlier submission of the app.")
+		}
+		if err := p.commitEdit(editsService, configs, appEdit.Id, changesNotSentForReview); err != nil {
+			return commitErrorMessage(err)
 		}
 		p.logger.Donef("Edit committed")
 	}
 	return ""
+}
+
+// commitEdit commits the edit. changesNotSentForReview and the changes_in_review_behavior input map to the commit
+// call's query parameters; cancel_and_resubmit is Google Play's default, so it is not sent.
+func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, configs Configs, editID string, changesNotSentForReview bool) error {
+	call := editsService.Commit(configs.PackageName, editID)
+	call.ChangesNotSentForReview(changesNotSentForReview)
+	if configs.ChangesInReviewBehavior == changesInReviewFail {
+		call.ChangesInReviewBehavior("ERROR_IF_IN_REVIEW")
+	}
+	_, err := call.Do()
+	return err
+}
+
+// commitErrorMessage turns a failed commit into the Step's error message, with guidance for the cases the Step can
+// explain better than Google Play's own message does.
+func commitErrorMessage(err error) string {
+	msg := fmt.Sprintf("Failed to commit edit, error: %s", err)
+	if isChangesAlreadyInReview(err) {
+		msg += "\n" + changesAlreadyInReviewHint
+	}
+	return msg
+}
+
+// isChangesAlreadyInReview reports whether Google Play refused the commit because a review is in progress. The reason
+// lives in the error's ErrorInfo details, which the client keeps in the raw body.
+func isChangesAlreadyInReview(err error) bool {
+	if err == nil {
+		return false
+	}
+	var apiErr *googleapi.Error
+	if errors.As(err, &apiErr) && strings.Contains(apiErr.Body, changesAlreadyInReviewReason) {
+		return true
+	}
+	return strings.Contains(err.Error(), changesAlreadyInReviewReason)
 }

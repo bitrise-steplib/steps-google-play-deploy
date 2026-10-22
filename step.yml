@@ -179,6 +179,21 @@ inputs:
     value_options:
     - "true"
     - "false"
+- changes_in_review_behavior: cancel_and_resubmit
+  opts:
+    title: Behavior when a review is in progress
+    summary: What to do when Google Play is still reviewing an earlier submission of the app at the time the changes are committed.
+    description: |-
+      What to do when Google Play is still reviewing an earlier submission of the app at the time the changes are committed.
+
+      - `cancel_and_resubmit`: Google Play cancels the review in progress and reviews all pending changes together, so the review starts over. This is Google Play's default behavior.
+      - `fail`: the Step fails without committing the changes, and the review in progress continues untouched. Run the Step again once the review is complete, or cancel the review in the Google Play Console.
+
+      The input has no effect when no review is in progress.
+    is_required: true
+    value_options:
+    - cancel_and_resubmit
+    - fail
 - ack_bundle_installation_warning: "false"
   opts:
     title: Acknowledge Bundle Installation Warning
