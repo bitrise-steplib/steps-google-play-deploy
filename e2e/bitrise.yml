@@ -20,7 +20,7 @@ app:
 # (BITRISE_BUILD_NUMBER + 0..3). manual_ workflows are not run by CI.
 workflows:
   manual_test_wearos_deploy:
-    summary: Builds and deploys a main app and a wearable app as AAB. Manual, as it deploys to a second Play app.
+    summary: Builds and deploys a main app and a wearable app as AAB.
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-wear-os.git
     - BRANCH: master
