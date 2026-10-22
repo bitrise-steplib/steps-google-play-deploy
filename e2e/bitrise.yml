@@ -16,8 +16,8 @@ app:
   - GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
 
 # Google Play limits: one open edit per service account, and a daily commit quota per app. So every Step run is
-# gated to ubuntu-latest-stable, CI deploys only to the sdk22 app, and each test uses its own version code
-# (BITRISE_BUILD_NUMBER + 0..3). manual_ workflows are not run by CI.
+# gated to ubuntu-latest-stable, CI deploys only to the sdk22 app, and each test uses its own version code,
+# BITRISE_BUILD_NUMBER * 10 + 0..3, so codes never repeat across builds. manual_ workflows are not run by CI.
 workflows:
   manual_test_wearos_deploy:
     summary: Builds and deploys a main app and a wearable app as AAB.
@@ -95,10 +95,17 @@ workflows:
     - set-java-version:
         inputs:
         - set_java_version: "17"
+    - script:
+        title: Set $VERSION_CODE
+        inputs:
+        - content: |-
+            set -ex
+
+            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 ))
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
-        - new_version_code: $BITRISE_BUILD_NUMBER
+        - new_version_code: $VERSION_CODE
         - new_version_name: 0.2.4
     - gradle-runner:
         inputs:
@@ -150,8 +157,7 @@ workflows:
         - content: |-
             set -ex
 
-            # test_aab_deploy uses BITRISE_BUILD_NUMBER on the same app.
-            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 1 ))
+            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 + 1 ))
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
@@ -205,8 +211,7 @@ workflows:
         - content: |-
             set -ex
 
-            # The other tests use BITRISE_BUILD_NUMBER + 0..2 on the same app.
-            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 3 ))
+            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 + 2 ))
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
@@ -237,7 +242,7 @@ workflows:
         - retry_without_sending_to_review: true
         - verbose_log: true
 
-  test_no_track:
+  manual_test_no_track:
     summary: Tests an experimental trackless upload (no track assigned)
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
@@ -262,8 +267,7 @@ workflows:
         - content: |-
             set -ex
 
-            # The other tests use BITRISE_BUILD_NUMBER + 0, + 1 and + 3 on the same app.
-            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER + 2 ))
+            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 + 3 ))
     - change-android-versioncode-and-versionname:
         inputs:
         - build_gradle_path: ./app/build.gradle
