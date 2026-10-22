@@ -1,9 +1,23 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
 	"testing"
 
+	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/api/androidpublisher/v3"
+	"google.golang.org/api/googleapi"
+	"google.golang.org/api/option"
 )
 
 func TestParseURI(t *testing.T) {
@@ -70,4 +84,243 @@ func TestParseURI(t *testing.T) {
 		require.Equal(t, "/user/test/key.json", keyPth)
 		require.Equal(t, false, isRemote)
 	}
+}
+
+// fakePlay serves the subset of the Android Publisher API the deploy flow touches and records what it was sent.
+type fakePlay struct {
+	server               *httptest.Server
+	mu                   sync.Mutex
+	commitResponses      []fakeResponse // consumed in order, then commits succeed
+	trackUpdateResponses []fakeResponse // consumed in order, then track updates succeed
+	tracksList           *fakeResponse  // when set, the tracks list answers with it
+	inserts              int
+	uploads              int
+	validates            int
+	commits              []url.Values
+	trackUpdates         []androidpublisher.Track
+}
+
+type fakeResponse struct {
+	status int
+	body   string
+}
+
+const fakeEditsPath = "/androidpublisher/v3/applications/com.example.app/edits"
+
+const (
+	editBody                  = `{"id":"edit-1"}`
+	cannotBeSentForReviewBody = `{"error":{"code":400,"message":"Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true.","status":"INVALID_ARGUMENT"}}`
+)
+
+var (
+	commitOK           = fakeResponse{status: http.StatusOK, body: editBody}
+	commitManualReview = fakeResponse{status: http.StatusBadRequest, body: cannotBeSentForReviewBody}
+	commitEditLost     = fakeResponse{status: http.StatusBadRequest, body: `{"error":{"code":400,"message":"This edit has expired, please create a new Edit.","status":"FAILED_PRECONDITION"}}`}
+	serverError        = fakeResponse{status: http.StatusInternalServerError, body: `{"error":{"code":500,"message":"Internal error encountered.","status":"INTERNAL"}}`}
+)
+
+func newFakePlay(t *testing.T, commitResponses ...fakeResponse) *fakePlay {
+	t.Helper()
+	f := &fakePlay{commitResponses: commitResponses}
+	f.server = httptest.NewServer(http.HandlerFunc(f.handle))
+	t.Cleanup(f.server.Close)
+	return f
+}
+
+func (f *fakePlay) handle(w http.ResponseWriter, r *http.Request) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	w.Header().Set("Content-Type", "application/json")
+
+	switch {
+	case r.Method == http.MethodPost && r.URL.Path == fakeEditsPath:
+		f.inserts++
+		_, _ = w.Write([]byte(editBody))
+	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/upload"+fakeEditsPath+"/edit-1/"):
+		f.uploads++
+		_, _ = w.Write([]byte(`{"versionCode":42}`))
+	case r.Method == http.MethodGet && r.URL.Path == fakeEditsPath+"/edit-1/tracks":
+		if f.tracksList != nil {
+			w.WriteHeader(f.tracksList.status)
+			_, _ = w.Write([]byte(f.tracksList.body))
+			return
+		}
+		_, _ = w.Write([]byte(`{"tracks":[{"track":"internal"},{"track":"production"}]}`))
+	case r.Method == http.MethodPut && strings.HasPrefix(r.URL.Path, fakeEditsPath+"/edit-1/tracks/"):
+		body, _ := io.ReadAll(r.Body)
+		var track androidpublisher.Track
+		if err := json.Unmarshal(body, &track); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if i := len(f.trackUpdates); i < len(f.trackUpdateResponses) {
+			f.trackUpdates = append(f.trackUpdates, track)
+			w.WriteHeader(f.trackUpdateResponses[i].status)
+			_, _ = w.Write([]byte(f.trackUpdateResponses[i].body))
+			return
+		}
+		f.trackUpdates = append(f.trackUpdates, track)
+		_, _ = w.Write(body)
+	case r.Method == http.MethodPost && r.URL.Path == fakeEditsPath+"/edit-1:validate":
+		f.validates++
+		_, _ = w.Write([]byte(editBody))
+	case r.Method == http.MethodPost && r.URL.Path == fakeEditsPath+"/edit-1:commit":
+		resp := commitOK
+		if i := len(f.commits); i < len(f.commitResponses) {
+			resp = f.commitResponses[i]
+		}
+		f.commits = append(f.commits, r.URL.Query())
+		w.WriteHeader(resp.status)
+		_, _ = w.Write([]byte(resp.body))
+	default:
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error":{"code":404,"message":"unexpected call ` + r.Method + " " + r.URL.Path + `"}}`))
+	}
+}
+
+func (f *fakePlay) service(t *testing.T) *androidpublisher.Service {
+	t.Helper()
+	service, err := androidpublisher.NewService(context.Background(), option.WithEndpoint(f.server.URL+"/"), option.WithoutAuthentication())
+	require.NoError(t, err)
+	return service
+}
+
+func testConfigs(t *testing.T) Configs {
+	t.Helper()
+	apk := filepath.Join(t.TempDir(), "app.apk")
+	require.NoError(t, os.WriteFile(apk, []byte("not really an apk"), 0o600))
+	return Configs{
+		PackageName: "com.example.app",
+		AppPath:     apk,
+		Track:       "internal",
+		Logger:      log.NewLogger(),
+	}
+}
+
+func TestExecuteEditCommitsOnce(t *testing.T) {
+	play := newFakePlay(t)
+	configs := testConfigs(t)
+
+	require.Equal(t, "", NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
+
+	require.Equal(t, 1, play.inserts)
+	require.Equal(t, 1, play.uploads)
+	require.Len(t, play.trackUpdates, 1)
+	require.Equal(t, releaseStatusCompleted, play.trackUpdates[0].Releases[0].Status)
+	require.Equal(t, []int64{42}, []int64(play.trackUpdates[0].Releases[0].VersionCodes))
+	require.Len(t, play.commits, 1)
+	require.Equal(t, "false", play.commits[0].Get("changesNotSentForReview"))
+}
+
+func TestExecuteEditDryRunValidatesInsteadOfCommitting(t *testing.T) {
+	play := newFakePlay(t)
+	configs := testConfigs(t)
+	configs.DryRun = true
+
+	require.Equal(t, "", NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
+
+	require.Equal(t, 1, play.validates)
+	require.Empty(t, play.commits)
+}
+
+func TestExecuteEditRetriesWithoutSendingToReviewOnTheSameEdit(t *testing.T) {
+	play := newFakePlay(t, commitManualReview, commitOK)
+	configs := testConfigs(t)
+	configs.RetryWithoutSendingToReview = true
+
+	require.Equal(t, "", NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
+
+	require.Equal(t, 1, play.inserts)
+	require.Equal(t, 1, play.uploads)
+	require.Len(t, play.trackUpdates, 1)
+	require.Len(t, play.commits, 2)
+	require.Equal(t, "false", play.commits[0].Get("changesNotSentForReview"))
+	require.Equal(t, "true", play.commits[1].Get("changesNotSentForReview"))
+}
+
+func TestExecuteEditFailsWithoutRetryWhenChangesCannotBeSentForReview(t *testing.T) {
+	play := newFakePlay(t, commitManualReview)
+	configs := testConfigs(t)
+
+	errorString := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+
+	require.Contains(t, errorString, "Set retry_without_sending_to_review to true")
+	require.Contains(t, errorString, "(Google Play: "+changesNotSentForReviewMessage)
+	require.Len(t, play.commits, 1)
+}
+
+func TestExecuteEditStartsANewEditWhenTheRetriedEditIsLost(t *testing.T) {
+	play := newFakePlay(t, commitManualReview, commitEditLost, commitOK)
+	configs := testConfigs(t)
+	configs.RetryWithoutSendingToReview = true
+
+	require.Equal(t, "", NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
+
+	require.Equal(t, 2, play.inserts, "the deploy is repeated from a new edit")
+	require.Equal(t, 2, play.uploads)
+	require.Len(t, play.commits, 3)
+	require.Equal(t, "true", play.commits[2].Get("changesNotSentForReview"), "the new edit is committed without sending for review from the start")
+}
+
+func TestExecuteEditStartsANewEditWhenGooglePlayDiscardedIt(t *testing.T) {
+	t.Log("discarded before the commit")
+	{
+		play := newFakePlay(t, commitEditLost)
+		configs := testConfigs(t)
+
+		require.Equal(t, "", NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
+
+		require.Equal(t, 2, play.inserts)
+		require.Equal(t, 2, play.uploads)
+		require.Len(t, play.commits, 2)
+		require.Equal(t, "false", play.commits[1].Get("changesNotSentForReview"))
+	}
+
+	t.Log("discarded before the track update")
+	{
+		play := newFakePlay(t)
+		play.trackUpdateResponses = []fakeResponse{{status: http.StatusBadRequest, body: `{"error":{"code":400,"message":"This Edit has been deleted.","status":"FAILED_PRECONDITION"}}`}}
+		configs := testConfigs(t)
+
+		require.Equal(t, "", NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
+
+		require.Equal(t, 2, play.inserts)
+		require.Len(t, play.trackUpdates, 2)
+		require.Len(t, play.commits, 1)
+	}
+
+	t.Log("discarded twice - the Step starts over once")
+	{
+		play := newFakePlay(t, commitEditLost, commitEditLost)
+		configs := testConfigs(t)
+
+		errorString := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+
+		require.Contains(t, errorString, "Failed to commit edit: ")
+		require.Contains(t, errorString, "This edit has expired")
+		require.Equal(t, 2, play.inserts)
+	}
+}
+
+func TestExecuteEditReportsATrackUpdateFailureEvenWhenTracksCannotBeListed(t *testing.T) {
+	play := newFakePlay(t)
+	notFound := fakeResponse{status: http.StatusNotFound, body: `{"error":{"code":404,"message":"Track not found.","status":"NOT_FOUND"}}`}
+	play.trackUpdateResponses = []fakeResponse{notFound, notFound}
+	play.tracksList = &serverError
+	configs := testConfigs(t)
+	configs.Track = "no-such-track"
+
+	errorString := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+
+	require.Contains(t, errorString, "Failed to update track")
+	require.Contains(t, errorString, "Track not found")
+	require.Empty(t, play.commits)
+}
+
+func TestIsEditLost(t *testing.T) {
+	require.True(t, isEditLost(&googleapi.Error{Code: 404, Message: "Requested entity was not found."}))
+	require.True(t, isEditLost(&googleapi.Error{Code: 400, Message: "This Edit has been deleted."}))
+	require.True(t, isEditLost(&googleapi.Error{Code: 400, Message: "A change was made to the application outside of this Edit, please create a new edit."}))
+	require.False(t, isEditLost(&googleapi.Error{Code: 400, Message: "Too many completed releases specified."}))
+	require.False(t, isEditLost(nil))
 }
