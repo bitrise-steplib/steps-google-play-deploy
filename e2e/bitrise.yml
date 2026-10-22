@@ -130,7 +130,7 @@ workflows:
         - release_name: Overwritten release name
         - verbose_log: true
 
-  test_apk_deploy_custom_track:
+  manual_test_apk_deploy_custom_track:
     summary: Tests deploying an APK to a user-defined track
     envs:
 
