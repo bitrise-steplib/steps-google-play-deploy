@@ -15,21 +15,12 @@ app:
 
   - GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
 
-# How these tests stay within Google Play's limits:
-# - The CI controller runs every test_ workflow on every stack it picks for this Step (a dozen Linux and macOS
-#   stacks), and this repo cannot narrow that. So every Step run below is gated to one stack,
-#   ubuntu-latest-stable: Google Play keeps one open edit per service account, so deploys from two stacks at
-#   the same time discard each other's edits ("This Edit has been deleted.").
-# - The tests commit to one app, com.bitrise_io.sample_apps_android_simple_google_play_deploy. Google Play has a
-#   daily commit quota per app ("Daily save quota exceeded."), so the suite commits three times per build.
-# - Each test on that stack uses its own version code: BITRISE_BUILD_NUMBER + 0, + 1, + 2, + 3.
-# - Workflows prefixed manual_ are not run by CI; run them by hand with `bitrise run <workflow>`.
+# Google Play limits: one open edit per service account, and a daily commit quota per app. So every Step run is
+# gated to ubuntu-latest-stable, CI deploys only to the sdk22 app, and each test uses its own version code
+# (BITRISE_BUILD_NUMBER + 0..3). manual_ workflows are not run by CI.
 workflows:
   manual_test_wearos_deploy:
-    summary: |-
-      Builds and deploys a main app and a wearable app as AAB.
-      Manual: it deploys to a second Play app (io.bitrise.android.sample_xyztouristattractions), which CI does not
-      need for coverage, as the same code path is tested on the sdk22 app.
+    summary: Builds and deploys a main app and a wearable app as AAB. Manual, as it deploys to a second Play app.
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-wear-os.git
     - BRANCH: master
