@@ -22,13 +22,13 @@ const (
 const bundleInstallationWarning = "Error 403: The installation of the app bundle may be too large " +
 	"and trigger user warning on some devices, and this needs to be explicitly acknowledged in the request."
 
-const bundleInstallationWarningHint = "To acknowledge this warning, set the Acknowledge Bundle Installation Warning (ack_bundle_installation_warning) input to true."
+const bundleInstallationWarningHint = "To upload the app bundle anyway, set 'Acknowledge Bundle Installation Warning' (ack_bundle_installation_warning) to true."
 
 // uploadExpansionFiles uploads the expansion files for given applications, like .obb files.
 func (p *Publisher) uploadExpansionFiles(service *androidpublisher.Service, expFileEntry string, packageName string, appEditID string, versionCode int64) error {
 	cleanExpFileConfigEntry := strings.TrimSpace(expFileEntry)
 	if !validateExpansionFileConfig(cleanExpFileConfigEntry) {
-		return fmt.Errorf("invalid expansion file config: %s", expFileEntry)
+		return fmt.Errorf("invalid expansion file %s, use main:<path> or patch:<path>", expFileEntry)
 	}
 
 	expFilePth, expFileType, err := p.expFileInfo(cleanExpFileConfigEntry)
@@ -37,7 +37,7 @@ func (p *Publisher) uploadExpansionFiles(service *androidpublisher.Service, expF
 	}
 	expansionFile, err := os.Open(expFilePth)
 	if err != nil {
-		return fmt.Errorf("failed to read expansion file (%v): %w", expansionFile, err)
+		return fmt.Errorf("failed to open expansion file %s: %w", expFilePth, err)
 	}
 	p.logger.Debugf("Uploading expansion file %v with package name '%v', AppEditId '%v', version code '%v'", expansionFile, packageName, appEditID, versionCode)
 	editsExpansionFilesService := androidpublisher.NewEditsExpansionfilesService(service)
@@ -55,7 +55,7 @@ func (p *Publisher) expFileInfo(expFileConfigEntry string) (string, string, erro
 	// "main:/file/path/1.obb"
 	expansionFilePathSplit := strings.Split(expFileConfigEntry, ":")
 	if len(expansionFilePathSplit) < 2 {
-		return "", "", fmt.Errorf("malformed expansion file path: %s", expFileConfigEntry)
+		return "", "", fmt.Errorf("invalid expansion file %s, use main:<path> or patch:<path>", expFileConfigEntry)
 	}
 
 	// "main"
@@ -80,7 +80,7 @@ func (p *Publisher) uploadMappingFile(service *androidpublisher.Service, appEdit
 	p.logger.Debugf("Getting mapping file from %v", filePath)
 	mappingFile, err := os.Open(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to read mapping file (%s): %w", filePath, err)
+		return fmt.Errorf("failed to open mapping file %s: %w", filePath, err)
 	}
 	p.logger.Debugf("Uploading mapping file %v with package name '%v', AppEditId '%v', version code '%v'", filePath, packageName, appEditID, versionCode)
 	editsDeobfuscationFilesService := androidpublisher.NewEditsDeobfuscationfilesService(service)
@@ -137,7 +137,7 @@ func (p *Publisher) updateListing(whatsNewsDir string, release *androidpublisher
 
 		recentChangesMap, err := p.readLocalisedRecentChanges(whatsNewsDir)
 		if err != nil {
-			return fmt.Errorf("failed to read whatsnews: %w", err)
+			return fmt.Errorf("failed to read what's new files: %w", err)
 		}
 
 		var releaseNotes []*androidpublisher.LocalizedText
@@ -215,7 +215,7 @@ func (p *Publisher) createTrackRelease(config Configs, versionCodes googleapi.In
 	}
 
 	if err := p.updateListing(config.WhatsnewsDir, newRelease); err != nil {
-		return nil, fmt.Errorf("failed to update listing: %w", err)
+		return nil, fmt.Errorf("failed to set release notes: %w", err)
 	}
 
 	return newRelease, nil

@@ -22,10 +22,10 @@ const changesNotSentForReviewMessage = "Changes cannot be sent for review automa
 const internalServerError = "googleapi: Error 500"
 
 const changesNotSentForReviewHint = "Google Play does not send this app's changes for review automatically, so nothing was committed. " +
-	"Set retry_without_sending_to_review to true to commit without sending for review, then send the changes for review from the Google Play Console."
+	"Set 'Retry changes without sending to review' (retry_without_sending_to_review) to true to commit without sending for review, then send the changes for review from the Google Play Console."
 
-const internalServerErrorHint = "Google Play API responded with an unknown error\n" +
-	"Suggestion: create a release manually in Google Play Console because the UI has the capability to present the underlying error in certain cases"
+const internalServerErrorHint = "Google Play returned an internal error without details. " +
+	"Create the release manually in Google Play Console, which can show the underlying error."
 
 // Publisher handles publishing to Google Play with integrated logging
 type Publisher struct {
@@ -79,7 +79,7 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 		versionCode := int64(0)
 		appFile, err := os.Open(appPath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to open app (%s): %w", appPath, err)
+			return nil, fmt.Errorf("failed to open app %s: %w", appPath, err)
 		}
 
 		if strings.ToLower(filepath.Ext(appPath)) == ".aab" {
@@ -150,7 +150,7 @@ func (p *Publisher) updateTracks(configs Configs, service *androidpublisher.Serv
 		p.listTracks(configs, service, appEdit)
 		p.logger.Println()
 
-		return fmt.Errorf("update call failed: %w", googleError(err))
+		return googleError(err)
 	}
 
 	p.logger.Printf(" updated track: %s", track.Track)
@@ -164,7 +164,7 @@ func (p *Publisher) listTracks(configs Configs, service *androidpublisher.Servic
 
 	tracks, err := listTracksCall.Do()
 	if err != nil {
-		p.logger.Warnf("Unable to fetch track list: %s", err)
+		p.logger.Warnf("Failed to list tracks: %s", err)
 		return
 	}
 
@@ -195,7 +195,7 @@ func main() {
 	logger.Infof("Getting configuration")
 	var configs Configs
 	if err := stepconf.Parse(&configs); err != nil {
-		publisher.fail(fmt.Errorf("couldn't create config: %w", err))
+		publisher.fail(fmt.Errorf("failed to read inputs: %w", err))
 	}
 	stepconf.Print(configs)
 	logger = log.NewLogger(log.WithDebugLog(configs.IsDebugLog))
@@ -212,11 +212,11 @@ func main() {
 	logger.Infof("Authenticating")
 	client, err := publisher.createHTTPClient(string(configs.JSONKeyPath))
 	if err != nil {
-		publisher.fail(fmt.Errorf("failed to create HTTP client: %w", err))
+		publisher.fail(fmt.Errorf("failed to authenticate: %w", err))
 	}
 	service, err := androidpublisher.NewService(context.TODO(), option.WithHTTPClient(client))
 	if err != nil {
-		publisher.fail(fmt.Errorf("failed to create publisher service: %w", err))
+		publisher.fail(fmt.Errorf("failed to create Google Play client: %w", err))
 	}
 	logger.Donef("Authenticated client created")
 
@@ -230,7 +230,7 @@ func main() {
 		fmt.Println()
 		logger.Infof("Export outputs")
 		if exportErr := tools.ExportEnvironmentWithEnvman("FAILURE_REASON", reason); exportErr != nil {
-			logger.Warnf("Unable to export failure reason")
+			logger.Warnf("Failed to export FAILURE_REASON: %s", exportErr)
 		} else {
 			logger.Donef("Failure reason exported")
 		}
@@ -255,7 +255,7 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 
 	versionCodes, err := p.uploadArtifacts(configs, service, appEdit)
 	if err != nil {
-		return failureReasonOf(err), fmt.Errorf("failed to upload application(s): %w", err)
+		return failureReasonOf(err), fmt.Errorf("failed to upload apps: %w", err)
 	}
 
 	if strings.TrimSpace(configs.Track) == "" {
@@ -275,7 +275,7 @@ func (p *Publisher) createEdit(editsService *androidpublisher.EditsService, conf
 	p.logger.Infof("Create new edit")
 	appEdit, err := editsService.Insert(configs.PackageName, &androidpublisher.AppEdit{}).Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to perform edit insert call: %w", googleError(err))
+		return nil, fmt.Errorf("failed to create edit: %w", googleError(err))
 	}
 	p.logger.Printf(" editID: %s", appEdit.Id)
 	p.logger.Donef("Edit insert created")
