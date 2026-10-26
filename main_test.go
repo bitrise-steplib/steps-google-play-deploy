@@ -261,7 +261,7 @@ func TestDeployCommitsOnce(t *testing.T) {
 	play := newFakePlay(t)
 	configs := testConfigs(t)
 
-	require.Equal(t, "", NewPublisher(log.NewLogger()).deploy(play.service(t), configs))
+	require.Equal(t, "", deployErrorString(t, play, configs))
 
 	require.Equal(t, 1, play.inserts)
 	require.Equal(t, 1, play.uploads)
@@ -277,7 +277,7 @@ func TestDeployDryRunValidatesInsteadOfCommitting(t *testing.T) {
 	configs := testConfigs(t)
 	configs.DryRun = true
 
-	require.Equal(t, "", NewPublisher(log.NewLogger()).deploy(play.service(t), configs))
+	require.Equal(t, "", deployErrorString(t, play, configs))
 
 	require.Equal(t, 1, play.validates)
 	require.Empty(t, play.commits)
@@ -288,7 +288,7 @@ func TestDeployRetriesWithoutSendingToReviewOnTheSameEdit(t *testing.T) {
 	configs := testConfigs(t)
 	configs.RetryWithoutSendingToReview = true
 
-	require.Equal(t, "", NewPublisher(log.NewLogger()).deploy(play.service(t), configs))
+	require.Equal(t, "", deployErrorString(t, play, configs))
 
 	require.Equal(t, 1, play.inserts, "the refused commit leaves the edit valid, it is reused")
 	require.Equal(t, 1, play.uploads, "the artifact is not uploaded again")
@@ -302,7 +302,7 @@ func TestDeployFailsWithoutRetryWhenChangesCannotBeSentForReview(t *testing.T) {
 	play := newFakePlay(t, commitManualReview)
 	configs := testConfigs(t)
 
-	errorString := NewPublisher(log.NewLogger()).deploy(play.service(t), configs)
+	errorString := deployErrorString(t, play, configs)
 
 	require.Contains(t, errorString, "Failed to commit edit, error: ")
 	require.Contains(t, errorString, changesNotSentForReviewMessage)
@@ -317,7 +317,7 @@ func TestDeployReportsATrackUpdateFailureEvenWhenTracksCannotBeListed(t *testing
 	configs := testConfigs(t)
 	configs.Track = "no-such-track"
 
-	errorString := NewPublisher(log.NewLogger()).deploy(play.service(t), configs)
+	errorString := deployErrorString(t, play, configs)
 
 	require.Contains(t, errorString, "Failed to update track")
 	require.Contains(t, errorString, "Track not found")
@@ -331,7 +331,7 @@ func TestDeployStartsANewEditWhenGooglePlayDiscardedIt(t *testing.T) {
 		play := newFakePlay(t, commitEditLost)
 		configs := testConfigs(t)
 
-		require.Equal(t, "", NewPublisher(log.NewLogger()).deploy(play.service(t), configs))
+		require.Equal(t, "", deployErrorString(t, play, configs))
 
 		require.Equal(t, 2, play.inserts)
 		require.Equal(t, 2, play.uploads)
@@ -345,7 +345,7 @@ func TestDeployStartsANewEditWhenGooglePlayDiscardedIt(t *testing.T) {
 		play.trackUpdateResponses = []fakeResponse{{status: http.StatusBadRequest, body: `{"error":{"code":400,"message":"This Edit has been deleted.","status":"FAILED_PRECONDITION"}}`}}
 		configs := testConfigs(t)
 
-		require.Equal(t, "", NewPublisher(log.NewLogger()).deploy(play.service(t), configs))
+		require.Equal(t, "", deployErrorString(t, play, configs))
 
 		require.Equal(t, 2, play.inserts)
 		require.Len(t, play.trackUpdates, 2)
@@ -357,7 +357,7 @@ func TestDeployStartsANewEditWhenGooglePlayDiscardedIt(t *testing.T) {
 		play := newFakePlay(t, commitEditLost, commitEditLost)
 		configs := testConfigs(t)
 
-		errorString := NewPublisher(log.NewLogger()).deploy(play.service(t), configs)
+		errorString := deployErrorString(t, play, configs)
 
 		require.Contains(t, errorString, "Failed to commit edit, error: ")
 		require.Contains(t, errorString, "This edit has expired")
@@ -370,7 +370,7 @@ func TestDeployStartsANewEditWithoutReviewWhenTheRetriedEditIsLost(t *testing.T)
 	configs := testConfigs(t)
 	configs.RetryWithoutSendingToReview = true
 
-	require.Equal(t, "", NewPublisher(log.NewLogger()).deploy(play.service(t), configs))
+	require.Equal(t, "", deployErrorString(t, play, configs))
 
 	require.Equal(t, 2, play.inserts)
 	require.Equal(t, 2, play.uploads)
@@ -384,7 +384,7 @@ func TestDeployDryRunStartsANewEditWhenGooglePlayDiscardedIt(t *testing.T) {
 	configs := testConfigs(t)
 	configs.DryRun = true
 
-	require.Equal(t, "", NewPublisher(log.NewLogger()).deploy(play.service(t), configs))
+	require.Equal(t, "", deployErrorString(t, play, configs))
 
 	require.Equal(t, 2, play.inserts)
 	require.Equal(t, 2, play.validates)
@@ -400,36 +400,42 @@ func TestIsEditLost(t *testing.T) {
 	require.False(t, isEditLost(nil))
 }
 
-func TestDeployExportsFailureReasonOnlyWhenTheUploadFailsForGood(t *testing.T) {
+func TestDeployReturnsAFailureReasonOnlyWhenTheUploadFailsForGood(t *testing.T) {
 	editDeleted := fakeResponse{status: http.StatusBadRequest, body: `{"error":{"code":400,"message":"This Edit has been deleted.","status":"FAILED_PRECONDITION"}}`}
 	versionCodeUsed := fakeResponse{status: http.StatusForbidden, body: `{"error":{"code":403,"message":"Version code 42 has already been used.","status":"PERMISSION_DENIED"}}`}
 
 	tests := []struct {
-		name            string
-		uploadResponses []fakeResponse
-		wantExported    []string
+		name              string
+		uploadResponses   []fakeResponse
+		wantFailureReason string
 	}{
-		{"lost edit, the restart succeeds", []fakeResponse{editDeleted}, nil},
-		{"lost edit twice", []fakeResponse{editDeleted, editDeleted}, []string{"This Edit has been deleted."}},
-		{"upload refused", []fakeResponse{versionCodeUsed}, []string{"Version code 42 has already been used."}},
+		{"lost edit, the restart succeeds", []fakeResponse{editDeleted}, ""},
+		{"lost edit twice", []fakeResponse{editDeleted, editDeleted}, "This Edit has been deleted."},
+		{"upload refused", []fakeResponse{versionCodeUsed}, "Version code 42 has already been used."},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			play := newFakePlay(t)
 			play.uploadResponses = tt.uploadResponses
-			publisher := NewPublisher(log.NewLogger())
-			var exported []string
-			publisher.exportFailureReason = func(reason string) error {
-				exported = append(exported, reason)
-				return nil
-			}
 
-			publisher.deploy(play.service(t), testConfigs(t))
+			_, failureReason := NewPublisher(log.NewLogger()).deploy(play.service(t), testConfigs(t))
 
-			require.Len(t, exported, len(tt.wantExported))
-			for i, want := range tt.wantExported {
-				require.Contains(t, exported[i], want)
+			if tt.wantFailureReason == "" {
+				require.Empty(t, failureReason)
+			} else {
+				require.Contains(t, failureReason, tt.wantFailureReason)
 			}
 		})
 	}
+}
+
+// deployErrorString runs the deploy and returns its error string; it fails the test if a failure reason comes
+// without an error.
+func deployErrorString(t *testing.T, play *fakePlay, configs Configs) string {
+	t.Helper()
+	errorString, failureReason := NewPublisher(log.NewLogger()).deploy(play.service(t), configs)
+	if errorString == "" {
+		require.Empty(t, failureReason)
+	}
+	return errorString
 }

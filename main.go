@@ -26,18 +26,12 @@ const changesNotSentForReviewHint = "Google Play does not send this app's change
 
 // Publisher handles publishing to Google Play with integrated logging
 type Publisher struct {
-	logger              log.Logger
-	exportFailureReason func(reason string) error
+	logger log.Logger
 }
 
 // NewPublisher creates a new Publisher instance with the given logger
 func NewPublisher(logger log.Logger) *Publisher {
-	return &Publisher{
-		logger: logger,
-		exportFailureReason: func(reason string) error {
-			return tools.ExportEnvironmentWithEnvman("FAILURE_REASON", reason)
-		},
-	}
+	return &Publisher{logger: logger}
 }
 
 func (p *Publisher) failf(format string, v ...interface{}) {
@@ -208,7 +202,18 @@ func main() {
 	}
 	logger.Donef("Authenticated client created")
 
-	errorString := publisher.deploy(service, configs)
+	errorString, failureReason := publisher.deploy(service, configs)
+
+	if failureReason != "" {
+		fmt.Println()
+		logger.Infof("Export outputs")
+		if err := tools.ExportEnvironmentWithEnvman("FAILURE_REASON", failureReason); err != nil {
+			logger.Warnf("Unable to export failure reason")
+		} else {
+			logger.Donef("Failure reason exported")
+		}
+	}
+
 	if errorString == "" {
 		return
 	}
@@ -221,51 +226,45 @@ func main() {
 
 // deploy runs the edit, and runs it once more from a new edit if Google Play discarded the edit before the commit
 // (another edit opened with the same service account, or a Play Console change).
-func (p *Publisher) deploy(service *androidpublisher.Service, configs Configs) (errorString string) {
-	errorString, editLost, changesNotSentForReview := p.executeEdit(service, configs, false, false)
+// The failure reason is the upload error of the last attempt, for the FAILURE_REASON output.
+func (p *Publisher) deploy(service *androidpublisher.Service, configs Configs) (errorString string, failureReason string) {
+	errorString, failureReason, editLost, changesNotSentForReview := p.executeEdit(service, configs, false)
 	if editLost {
 		p.logger.Warnf("%s", errorString)
 		p.logger.Warnf("Google Play discarded the edit before it was committed. This can happen if another deploy uses the same service account at the same time, or if you change the app in Google Play Console during the deploy. Starting over with a new edit.")
-		errorString, _, _ = p.executeEdit(service, configs, changesNotSentForReview, true)
+		errorString, failureReason, _, _ = p.executeEdit(service, configs, changesNotSentForReview)
 	}
-	return errorString
+	return errorString, failureReason
 }
 
-// executeEdit runs one edit: create, upload, update the track, then validate (dry run) or commit. It returns
-// whether the edit was lost before the commit, and the without-review flag in use at the end. An upload failure is
-// exported as FAILURE_REASON unless the edit was lost and the deploy will start over (lastAttempt is false).
-func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool, lastAttempt bool) (errorString string, editLost bool, notSentForReview bool) {
+// executeEdit runs one edit: create, upload, update the track, then validate (dry run) or commit. It returns the
+// upload error as the failure reason, whether the edit was lost before the commit, and the without-review flag in use
+// at the end.
+func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool) (errorString string, failureReason string, editLost bool, notSentForReview bool) {
 	editsService := androidpublisher.NewEditsService(service)
 
 	appEdit, errorString := p.createEdit(editsService, configs)
 	if errorString != "" {
-		return errorString, false, changesNotSentForReview
+		return errorString, "", false, changesNotSentForReview
 	}
 
 	versionCodes, err := p.uploadArtifacts(configs, service, appEdit)
 	if err != nil {
-		lost := isEditLost(err)
-		if !lost || lastAttempt {
-			if exportErr := p.exportFailureReason(err.Error()); exportErr != nil {
-				p.logger.Warnf("Unable to export failure reason")
-			} else {
-				p.logger.Donef("Failure reason exported")
-			}
-		}
-		return fmt.Sprintf("Failed to upload application(s): %v", err), lost, changesNotSentForReview
+		return fmt.Sprintf("Failed to upload application(s): %v", err), err.Error(), isEditLost(err), changesNotSentForReview
 	}
 
 	if strings.TrimSpace(configs.Track) == "" {
 		p.logger.Infof("Skipping track update")
 	} else if err := p.updateTrack(configs, service, appEdit, p.versionCodeMapToSlice(versionCodes)); err != nil {
-		return fmt.Sprintf("Failed to update track, reason: %v", err), isEditLost(err), changesNotSentForReview
+		return fmt.Sprintf("Failed to update track, reason: %v", err), "", isEditLost(err), changesNotSentForReview
 	}
 
 	if configs.DryRun {
 		errorString, editLost := p.validateEdit(editsService, configs, appEdit)
-		return errorString, editLost, changesNotSentForReview
+		return errorString, "", editLost, changesNotSentForReview
 	}
-	return p.commitWithRetries(editsService, configs, appEdit, changesNotSentForReview)
+	errorString, editLost, changesNotSentForReview = p.commitWithRetries(editsService, configs, appEdit, changesNotSentForReview)
+	return errorString, "", editLost, changesNotSentForReview
 }
 
 func (p *Publisher) createEdit(editsService *androidpublisher.EditsService, configs Configs) (*androidpublisher.AppEdit, string) {
