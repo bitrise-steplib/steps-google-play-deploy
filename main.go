@@ -18,6 +18,9 @@ import (
 const changesNotSentForReviewMessage = "Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true"
 const internalServerError = "googleapi: Error 500"
 
+const changesNotSentForReviewHint = "Google Play does not send this app's changes for review automatically, so nothing was committed. " +
+	"Set retry_without_sending_to_review to true to commit without sending for review, then send the changes for review from the Google Play Console."
+
 // Publisher handles publishing to Google Play with integrated logging
 type Publisher struct {
 	logger log.Logger
@@ -138,6 +141,7 @@ func (p *Publisher) listTracks(configs Configs, service *androidpublisher.Servic
 	tracks, err := listTracksCall.Do()
 	if err != nil {
 		p.logger.Warnf("Unable to fetch track list, error: %s", err)
+		return
 	}
 
 	for _, track := range tracks.Tracks {
@@ -197,15 +201,14 @@ func main() {
 		return
 	}
 	if strings.Contains(errorString, changesNotSentForReviewMessage) {
-		if configs.RetryWithoutSendingToReview {
-			logger.Warnf(errorString)
-			logger.Warnf("Trying to commit edit with setting changesNotSentForReview to true. Please make sure to send the changes to review from Google Play Console UI.")
-			errorString = publisher.executeEdit(service, configs, true, false)
-			if errorString == "" {
-				return
-			}
-		} else {
-			logger.Warnf("Sending the edit to review failed. Please change \"Retry changes without sending to review\" input to true if you wish to send the changes with the changesNotSentForReview flag. Please note that in that case the review has to be manually initiated from Google Play Console UI")
+		if !configs.RetryWithoutSendingToReview {
+			publisher.failf("%s\n%s", errorString, changesNotSentForReviewHint)
+		}
+		logger.Warnf(errorString)
+		logger.Warnf("Google Play does not send this app's changes for review automatically. Committing again without sending for review; send the changes for review from the Google Play Console once the Step finishes.")
+		errorString = publisher.executeEdit(service, configs, true, false)
+		if errorString == "" {
+			return
 		}
 	}
 	if strings.Contains(errorString, internalServerError) {
