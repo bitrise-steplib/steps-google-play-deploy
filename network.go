@@ -34,12 +34,12 @@ func (p *Publisher) createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 		}
 		authConfig, authConfErr = google.JWTConfigFromJSON(jsonContent, androidpublisher.AndroidpublisherScope)
 		if authConfErr != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to create auth config from the downloaded json key file, error: %s", authConfErr)
 		}
 	} else {
 		authConfig, authConfErr = jwtConfigFromJSONKeyFile(jsonKeyPth)
 		if authConfErr != nil {
-			return nil, fmt.Errorf("failed to create auth config from json key file %v, error: %s", jsonKeyPth, err)
+			return nil, fmt.Errorf("failed to create auth config from json key file %v, error: %s", jsonKeyPth, authConfErr)
 		}
 	}
 
