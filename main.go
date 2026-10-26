@@ -101,14 +101,10 @@ func (p *Publisher) uploadApplications(configs Configs, service *androidpublishe
 	return versionCodes, nil
 }
 
-// updateTracks updates the given track with a new release with the given version codes.
-func (p *Publisher) updateTracks(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) error {
+// updateTracks puts the release on the configured track. When Google Play refuses it, the tracks it knows are listed,
+// as a track name that does not exist is the most common cause.
+func (p *Publisher) updateTracks(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, release *androidpublisher.TrackRelease) error {
 	editsTracksService := androidpublisher.NewEditsTracksService(service)
-
-	newRelease, err := p.createTrackRelease(configs, versionCodes)
-	if err != nil {
-		return err
-	}
 
 	// Note we get error if we creating multiple instances of a release with the Completed status.
 	// Example: "error: googleapi: Error 400: Too many completed releases specified., releasesTooManyCompletedReleases".
@@ -122,10 +118,15 @@ func (p *Publisher) updateTracks(configs Configs, service *androidpublisher.Serv
 	p.logger.Infof("%s track will be updated.", configs.Track)
 	editsTracksUpdateCall := editsTracksService.Update(configs.PackageName, appEdit.Id, configs.Track, &androidpublisher.Track{
 		Track:    configs.Track,
-		Releases: []*androidpublisher.TrackRelease{newRelease},
+		Releases: []*androidpublisher.TrackRelease{release},
 	})
 	track, err := editsTracksUpdateCall.Do()
 	if err != nil {
+		fmt.Println()
+		p.logger.Infof("Available tracks on Google Play:")
+		p.listTracks(configs, service, appEdit)
+		p.logger.Println()
+
 		return fmt.Errorf("update call failed, error: %s", err)
 	}
 
@@ -196,20 +197,9 @@ func main() {
 	}
 	logger.Donef("Authenticated client created")
 
-	errorString := publisher.executeEdit(service, configs, false, configs.DryRun)
+	errorString := publisher.deploy(service, configs)
 	if errorString == "" {
 		return
-	}
-	if strings.Contains(errorString, changesNotSentForReviewMessage) {
-		if !configs.RetryWithoutSendingToReview {
-			publisher.failf("%s\n%s", errorString, changesNotSentForReviewHint)
-		}
-		logger.Warnf(errorString)
-		logger.Warnf("Google Play does not send this app's changes for review automatically. Committing again without sending for review; send the changes for review from the Google Play Console once the Step finishes.")
-		errorString = publisher.executeEdit(service, configs, true, false)
-		if errorString == "" {
-			return
-		}
 	}
 	if strings.Contains(errorString, internalServerError) {
 		logger.Warnf("Google Play API responded with an unknown error")
@@ -218,22 +208,61 @@ func main() {
 	publisher.failf(errorString)
 }
 
+// deploy runs the edit, and runs it again from a new edit without sending for review when Google Play cannot send the
+// app's changes for review automatically and retry_without_sending_to_review allows it.
+func (p *Publisher) deploy(service *androidpublisher.Service, configs Configs) (errorString string) {
+	errorString = p.executeEdit(service, configs, false, configs.DryRun)
+	if errorString == "" || !strings.Contains(errorString, changesNotSentForReviewMessage) {
+		return errorString
+	}
+	if !configs.RetryWithoutSendingToReview {
+		return fmt.Sprintf("%s\n%s", errorString, changesNotSentForReviewHint)
+	}
+	p.logger.Warnf(errorString)
+	p.logger.Warnf("Google Play does not send this app's changes for review automatically. Committing again without sending for review; send the changes for review from the Google Play Console once the Step finishes.")
+	return p.executeEdit(service, configs, true, false)
+}
+
+// executeEdit runs one edit: it is created, the artifacts are uploaded, the track is updated, then the edit is
+// validated (dry run) or committed.
 func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool, dryRun bool) (errorString string) {
 	editsService := androidpublisher.NewEditsService(service)
-	//
-	// Create insert edit
+
+	appEdit, errorString := p.createEdit(editsService, configs)
+	if errorString != "" {
+		return errorString
+	}
+
+	versionCodes, errorString := p.uploadArtifacts(configs, service, appEdit)
+	if errorString != "" {
+		return errorString
+	}
+
+	if strings.TrimSpace(configs.Track) == "" {
+		p.logger.Infof("Skipping track update")
+	} else if errorString := p.updateTrack(configs, service, appEdit, p.versionCodeMapToSlice(versionCodes)); errorString != "" {
+		return errorString
+	}
+
+	if dryRun {
+		return p.validateEdit(editsService, configs, appEdit)
+	}
+	return p.commitEdit(editsService, configs, appEdit, changesNotSentForReview)
+}
+
+func (p *Publisher) createEdit(editsService *androidpublisher.EditsService, configs Configs) (*androidpublisher.AppEdit, string) {
 	fmt.Println()
 	p.logger.Infof("Create new edit")
-	editsInsertCall := editsService.Insert(configs.PackageName, &androidpublisher.AppEdit{})
-	appEdit, err := editsInsertCall.Do()
+	appEdit, err := editsService.Insert(configs.PackageName, &androidpublisher.AppEdit{}).Do()
 	if err != nil {
-		return fmt.Sprintf("Failed to perform edit insert call, error: %s", err)
+		return nil, fmt.Sprintf("Failed to perform edit insert call, error: %s", err)
 	}
 	p.logger.Printf(" editID: %s", appEdit.Id)
 	p.logger.Donef("Edit insert created")
+	return appEdit, ""
+}
 
-	//
-	// Upload applications
+func (p *Publisher) uploadArtifacts(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (map[int64]int, string) {
 	fmt.Println()
 	p.logger.Infof("Upload apks or app bundles")
 	versionCodes, err := p.uploadApplications(configs, service, appEdit)
@@ -243,49 +272,44 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 		} else {
 			p.logger.Donef("Failure reason exported")
 		}
-		return fmt.Sprintf("Failed to upload application(s): %v", err)
+		return nil, fmt.Sprintf("Failed to upload application(s): %v", err)
 	}
 	p.logger.Donef("Applications uploaded")
+	return versionCodes, ""
+}
 
-	if strings.TrimSpace(configs.Track) == "" {
-		p.logger.Infof("Skipping track update")
-	} else {
-		// Update track
-		fmt.Println()
-		p.logger.Infof("Update track")
-		versionCodeSlice := p.versionCodeMapToSlice(versionCodes)
-		if err := p.updateTracks(configs, service, appEdit, versionCodeSlice); err != nil {
-			fmt.Println()
-			p.logger.Infof("Available tracks on Google Play:")
-			p.listTracks(configs, service, appEdit)
-			p.logger.Println()
-
-			return fmt.Sprintf("Failed to update track, reason: %v", err)
-		}
-		p.logger.Donef("Track updated")
+func (p *Publisher) updateTrack(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) string {
+	fmt.Println()
+	p.logger.Infof("Update track")
+	release, err := p.createTrackRelease(configs, versionCodes)
+	if err != nil {
+		return fmt.Sprintf("Failed to update track, reason: %v", err)
 	}
-
-	if dryRun {
-		//
-		// Validate edit
-		fmt.Println()
-		p.logger.Infof("Dry run: validating edit without committing")
-		validateEditCall := editsService.Validate(configs.PackageName, appEdit.Id)
-		if _, err := validateEditCall.Do(); err != nil {
-			return fmt.Sprintf("Failed to validate edit, error: %s", err)
-		}
-		p.logger.Donef("Edit validated")
-	} else {
-		//
-		// Commit edit
-		fmt.Println()
-		p.logger.Infof("Committing edit")
-		editsCommitCall := editsService.Commit(configs.PackageName, appEdit.Id)
-		editsCommitCall.ChangesNotSentForReview(changesNotSentForReview)
-		if _, err := editsCommitCall.Do(); err != nil {
-			return fmt.Sprintf("Failed to commit edit, error: %s", err)
-		}
-		p.logger.Donef("Edit committed")
+	if err := p.updateTracks(configs, service, appEdit, release); err != nil {
+		return fmt.Sprintf("Failed to update track, reason: %v", err)
 	}
+	p.logger.Donef("Track updated")
+	return ""
+}
+
+func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) string {
+	fmt.Println()
+	p.logger.Infof("Dry run: validating edit without committing")
+	if _, err := editsService.Validate(configs.PackageName, appEdit.Id).Do(); err != nil {
+		return fmt.Sprintf("Failed to validate edit, error: %s", err)
+	}
+	p.logger.Donef("Edit validated")
+	return ""
+}
+
+func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit, changesNotSentForReview bool) string {
+	fmt.Println()
+	p.logger.Infof("Committing edit")
+	call := editsService.Commit(configs.PackageName, appEdit.Id)
+	call.ChangesNotSentForReview(changesNotSentForReview)
+	if _, err := call.Do(); err != nil {
+		return fmt.Sprintf("Failed to commit edit, error: %s", err)
+	}
+	p.logger.Donef("Edit committed")
 	return ""
 }
