@@ -18,6 +18,12 @@ import (
 const changesNotSentForReviewMessage = "Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true"
 const internalServerError = "googleapi: Error 500"
 
+// targetSDKTooLowError is Google Play's refusal of an artifact that targets an API level below its current minimum.
+// The number Google Play appends is the artifact's version code, not an API level.
+const targetSDKTooLowError = "Target SDK of artifact is too low"
+const targetSDKTooLowHint = "Google Play requires a higher target API level than the uploaded app targets. The number in the error is the app's version code, not an API level. " +
+	"Raise targetSdkVersion in your app's build configuration and build the app again. See https://developer.android.com/google/play/requirements/target-sdk"
+
 // Publisher handles publishing to Google Play with integrated logging
 type Publisher struct {
 	logger log.Logger
@@ -211,6 +217,9 @@ func main() {
 	if strings.Contains(errorString, internalServerError) {
 		logger.Warnf("Google Play API responded with an unknown error")
 		logger.Warnf("Suggestion: create a release manually in Google Play Console because the UI has the capability to present the underlying error in certain cases")
+	}
+	if strings.Contains(errorString, targetSDKTooLowError) {
+		logger.Warnf(targetSDKTooLowHint)
 	}
 	publisher.failf(errorString)
 }
