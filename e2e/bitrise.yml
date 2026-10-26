@@ -130,6 +130,102 @@ workflows:
         - release_name: Overwritten release name
         - verbose_log: true
 
+  test_restart_on_lost_edit:
+    summary: |-
+      The Step loses its edit mid-deploy and starts over from a new edit. A helper waits until the Step logs its edit ID,
+      then opens another edit with the same service account, which discards the Step's edit the way a parallel deploy
+      does. The test passes when the Step logs the lost edit, starts over and commits.
+    envs:
+    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
+    - BRANCH: master
+
+    - BITRISEIO_ANDROID_KEYSTORE_URL: $SIMPLESAMPLE_ANDROID_KEYSTORE_URL
+    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $SIMPLESAMPLE_ANDROID_KEYSTORE_PASSWORD
+    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $SIMPLESAMPLE_ANDROID_KEY_ALIAS
+    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
+
+    - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
+    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    - TRACK: apk-testing
+    before_run:
+    - _setup
+    steps:
+    - set-java-version:
+        inputs:
+        - set_java_version: "17"
+    - script:
+        title: Set $VERSION_CODE
+        inputs:
+        - content: |-
+            set -ex
+
+            envman add --key VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 + 1 ))
+    - change-android-versioncode-and-versionname:
+        inputs:
+        - build_gradle_path: ./app/build.gradle
+        - new_version_code: $VERSION_CODE
+        - new_version_name: 0.2.4
+    - gradle-runner:
+        inputs:
+        - gradle_task: assembleRelease
+        - gradlew_path: ./gradlew
+    - sign-apk:
+        inputs:
+        - android_app: $BITRISE_APK_PATH_LIST
+        - use_apk_signer: true
+    - script:
+        title: Run the Step and discard its edit mid-deploy
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            set -eo pipefail
+
+            WORK="$(mktemp -d)"
+            (cd "$STEP_REPO_DIR" && go build -mod=vendor -o "$WORK/discard-edit" ./e2e/tools/discard-edit)
+
+            cat > "$WORK/inner.yml" <<YML
+            format_version: "11"
+            workflows:
+              deploy:
+                steps:
+                - path::$STEP_REPO_DIR:
+                    inputs:
+                    - service_account_json_key_path: \$SERVICE_ACCOUNT_KEY_URL
+                    - package_name: \$PACKAGE_NAME
+                    - app_path: \$BITRISE_SIGNED_APK_PATH
+                    - track: \$TRACK
+                    - mapping_file: ""
+                    - user_fraction: ""
+                    - verbose_log: true
+            YML
+
+            LOG="$WORK/step.log"
+            : > "$LOG"
+            bitrise run --config "$WORK/inner.yml" deploy > "$LOG" 2>&1 &
+            STEP_PID=$!
+
+            # Wait for the Step's first edit, then open another one with the same service account.
+            for _ in $(seq 1 600); do
+              grep -q "editID:" "$LOG" && break
+              kill -0 "$STEP_PID" 2>/dev/null || break
+              sleep 0.1
+            done
+            "$WORK/discard-edit" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL"
+
+            set +e
+            wait "$STEP_PID"
+            STEP_EXIT=$?
+            set -e
+            cat "$LOG"
+            echo "-----"
+            echo "Step exit code: $STEP_EXIT"
+            grep -c "Create new edit" "$LOG" | sed 's/^/edits created: /'
+            grep -q "Google Play discarded the edit before it was committed" "$LOG" || { echo "FAIL: the Step did not report the lost edit"; exit 1; }
+            grep -q "Edit committed" "$LOG" || { echo "FAIL: the Step did not commit after starting over"; exit 1; }
+            [ "$STEP_EXIT" = "0" ] || { echo "FAIL: the Step failed"; exit 1; }
+            echo "PASS: the Step lost its edit, started over and committed"
+
   manual_test_apk_deploy_custom_track:
     summary: Tests deploying an APK to a user-defined track
     envs:
@@ -299,6 +395,10 @@ workflows:
 
   _setup:
     steps:
+    - script:
+        title: Remember the step repo dir
+        inputs:
+        - content: envman add --key STEP_REPO_DIR --value "$(pwd)"
     - script:
         title: Delete _tmp dir
         inputs:
