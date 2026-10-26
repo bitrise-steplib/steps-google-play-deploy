@@ -213,10 +213,8 @@ func main() {
 	publisher.failf(errorString)
 }
 
-// deploy runs the edit. Google Play keeps an edit valid after a refused commit, so the retry without sending for
-// review (retry_without_sending_to_review) commits the same edit again. Google Play discards an open edit when another
-// edit is opened with the same service account (a parallel deploy) or the app is changed in the Play Console; when
-// that happens before the commit, nothing was committed and the deploy is repeated once from a new edit.
+// deploy runs the edit, and runs it once more from a new edit if Google Play discarded the edit before the commit
+// (another edit opened with the same service account, or a Play Console change).
 func (p *Publisher) deploy(service *androidpublisher.Service, configs Configs) (errorString string) {
 	errorString, editLost, changesNotSentForReview := p.executeEdit(service, configs, false)
 	if editLost {
@@ -227,10 +225,8 @@ func (p *Publisher) deploy(service *androidpublisher.Service, configs Configs) (
 	return errorString
 }
 
-// executeEdit runs one edit: it is created, the artifacts are uploaded, the track is updated, then the edit is
-// validated (dry run) or committed with the retries the inputs allow. changesNotSentForReview is the flag the first
-// commit is sent with; the returned flag is the one in use when the run ended. editLost reports that Google Play
-// discarded the edit before it was committed, so the caller can start over.
+// executeEdit runs one edit: create, upload, update the track, then validate (dry run) or commit. It returns
+// whether the edit was lost before the commit, and the without-review flag in use at the end.
 func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool) (errorString string, editLost bool, notSentForReview bool) {
 	editsService := androidpublisher.NewEditsService(service)
 
@@ -309,8 +305,8 @@ func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, co
 	return "", false
 }
 
-// commitWithRetries commits the edit. A commit Google Play cannot send for review automatically is repeated once, on
-// the same edit, without sending for review (retry_without_sending_to_review).
+// commitWithRetries commits the edit, and repeats a commit Google Play cannot send for review automatically once on the
+// same edit without sending for review (retry_without_sending_to_review); a refused commit leaves the edit valid.
 func (p *Publisher) commitWithRetries(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit, changesNotSentForReview bool) (errorString string, editLost bool, notSentForReview bool) {
 	for {
 		err := p.commitEdit(editsService, configs, appEdit, changesNotSentForReview)
@@ -343,8 +339,7 @@ func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, conf
 	return nil
 }
 
-// googleMessage returns Google Play's own message for an API error, without the HTTP code and the details block the
-// client appends, or the whole error when it is not an API error.
+// googleMessage returns Google Play's own message for an API error, or the whole error otherwise.
 func googleMessage(err error) string {
 	var apiErr *googleapi.Error
 	if errors.As(err, &apiErr) && apiErr.Message != "" {
@@ -353,19 +348,15 @@ func googleMessage(err error) string {
 	return err.Error()
 }
 
-// isChangesNotSentForReviewRequired reports whether Google Play refused the commit because the app is in the state
-// where changes are not sent for review automatically (after a rejection) and the flag has to be set.
+// isChangesNotSentForReviewRequired reports whether the commit needs changesNotSentForReview=true (after a rejection).
 func isChangesNotSentForReviewRequired(err error) bool {
 	return err != nil && strings.Contains(googleMessage(err), changesNotSentForReviewMessage)
 }
 
-// editLostPattern matches Google Play's refusals of an edit it no longer accepts: deleted, expired, or superseded by
-// a change made outside the edit.
+// editLostPattern matches Google Play's messages for an edit it no longer accepts.
 var editLostPattern = regexp.MustCompile(`(?i)create a new edit|edit has been deleted|edit has expired|edit not found`)
 
-// isEditLost reports whether a call failed because the edit itself is gone rather than because of its content. It
-// matches Google Play's messages only: a 404 can also mean a missing resource inside a valid edit, such as an unknown
-// track, which a new edit would not fix.
+// isEditLost reports whether the edit itself is gone. It matches messages only: a 404 can also mean an unknown track.
 func isEditLost(err error) bool {
 	return err != nil && editLostPattern.MatchString(googleMessage(err))
 }
