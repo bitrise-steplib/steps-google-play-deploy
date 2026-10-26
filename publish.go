@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -23,6 +22,8 @@ const (
 const bundleInstallationWarning = "Error 403: The installation of the app bundle may be too large " +
 	"and trigger user warning on some devices, and this needs to be explicitly acknowledged in the request."
 
+const bundleInstallationWarningHint = "To acknowledge this warning, set the Acknowledge Bundle Installation Warning (ack_bundle_installation_warning) input to true."
+
 // uploadExpansionFiles uploads the expansion files for given applications, like .obb files.
 func (p *Publisher) uploadExpansionFiles(service *androidpublisher.Service, expFileEntry string, packageName string, appEditID string, versionCode int64) error {
 	cleanExpFileConfigEntry := strings.TrimSpace(expFileEntry)
@@ -36,14 +37,14 @@ func (p *Publisher) uploadExpansionFiles(service *androidpublisher.Service, expF
 	}
 	expansionFile, err := os.Open(expFilePth)
 	if err != nil {
-		return fmt.Errorf("failed to read expansion file (%v), error: %s", expansionFile, err)
+		return fmt.Errorf("failed to read expansion file (%v): %w", expansionFile, err)
 	}
 	p.logger.Debugf("Uploading expansion file %v with package name '%v', AppEditId '%v', version code '%v'", expansionFile, packageName, appEditID, versionCode)
 	editsExpansionFilesService := androidpublisher.NewEditsExpansionfilesService(service)
 	editsExpansionFilesCall := editsExpansionFilesService.Upload(packageName, appEditID, versionCode, expFileType)
 	editsExpansionFilesCall.Media(expansionFile, googleapi.ContentType("application/octet-stream"))
 	if _, err := editsExpansionFilesCall.Do(); err != nil {
-		return fmt.Errorf("failed to upload expansion file, error: %s", err)
+		return fmt.Errorf("failed to upload expansion file: %w", googleError(err))
 	}
 	p.logger.Infof("Uploaded expansion file %v", expansionFile)
 	return nil
@@ -79,7 +80,7 @@ func (p *Publisher) uploadMappingFile(service *androidpublisher.Service, appEdit
 	p.logger.Debugf("Getting mapping file from %v", filePath)
 	mappingFile, err := os.Open(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to read mapping file (%s), error: %s", filePath, err)
+		return fmt.Errorf("failed to read mapping file (%s): %w", filePath, err)
 	}
 	p.logger.Debugf("Uploading mapping file %v with package name '%v', AppEditId '%v', version code '%v'", filePath, packageName, appEditID, versionCode)
 	editsDeobfuscationFilesService := androidpublisher.NewEditsDeobfuscationfilesService(service)
@@ -87,7 +88,7 @@ func (p *Publisher) uploadMappingFile(service *androidpublisher.Service, appEdit
 	editsDeobfuscationFilesUploadCall.Media(mappingFile, googleapi.ContentType("application/octet-stream"))
 
 	if _, err = editsDeobfuscationFilesUploadCall.Do(); err != nil {
-		return fmt.Errorf("failed to upload mapping file, error: %s", err)
+		return fmt.Errorf("failed to upload mapping file: %w", googleError(err))
 	}
 
 	p.logger.Printf(" uploaded mapping file for apk version: %d", versionCode)
@@ -105,11 +106,7 @@ func (p *Publisher) uploadAppBundle(service *androidpublisher.Service, packageNa
 
 	bundle, err := editsBundlesUploadCall.Do()
 	if err != nil {
-		msg := fmt.Sprintf("failed to upload app bundle, error: %s", err)
-		if strings.Contains(err.Error(), bundleInstallationWarning) {
-			msg = fmt.Sprintf("%s\nTo acknowledge this warning, set the Acknowledge Bundle Installation Warning (ack_bundle_installation_warning) input to true.", msg)
-		}
-		return nil, errors.New(msg)
+		return nil, fmt.Errorf("failed to upload app bundle: %w", googleError(err))
 	}
 	p.logger.Infof("Uploaded app bundle version: %d", bundle.VersionCode)
 	return bundle, nil
@@ -125,7 +122,7 @@ func (p *Publisher) uploadAppApk(service *androidpublisher.Service, packageName 
 
 	apk, err := editsApksUploadCall.Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to upload apk, error: %s", err)
+		return nil, fmt.Errorf("failed to upload apk: %w", googleError(err))
 	}
 	p.logger.Infof("Uploaded apk version: %d", apk.VersionCode)
 	return apk, nil
@@ -140,7 +137,7 @@ func (p *Publisher) updateListing(whatsNewsDir string, release *androidpublisher
 
 		recentChangesMap, err := p.readLocalisedRecentChanges(whatsNewsDir)
 		if err != nil {
-			return fmt.Errorf("failed to read whatsnews, error: %s", err)
+			return fmt.Errorf("failed to read whatsnews: %w", err)
 		}
 
 		var releaseNotes []*androidpublisher.LocalizedText
@@ -218,7 +215,7 @@ func (p *Publisher) createTrackRelease(config Configs, versionCodes googleapi.In
 	}
 
 	if err := p.updateListing(config.WhatsnewsDir, newRelease); err != nil {
-		return nil, fmt.Errorf("failed to update listing, reason: %v", err)
+		return nil, fmt.Errorf("failed to update listing: %w", err)
 	}
 
 	return newRelease, nil
