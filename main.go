@@ -202,8 +202,12 @@ func main() {
 	}
 	logger.Donef("Authenticated client created")
 
+	//
+	// Deploy
 	errorString, failureReason := publisher.deploy(service, configs)
 
+	//
+	// Export outputs
 	if failureReason != "" {
 		fmt.Println()
 		logger.Infof("Export outputs")
@@ -214,6 +218,8 @@ func main() {
 		}
 	}
 
+	//
+	// Report the result
 	if errorString == "" {
 		return
 	}
