@@ -102,7 +102,7 @@ type decoder struct {
 }
 
 // newError returns an error object with position info.
-func (d decoder) newError(pos int, f string, x ...interface{}) error {
+func (d decoder) newError(pos int, f string, x ...any) error {
 	line, column := d.Position(pos)
 	head := fmt.Sprintf("(line %d:%d): ", line, column)
 	return errors.New(head+f, x...)
@@ -114,7 +114,7 @@ func (d decoder) unexpectedTokenError(tok json.Token) error {
 }
 
 // syntaxError returns a syntax error for given position.
-func (d decoder) syntaxError(pos int, f string, x ...interface{}) error {
+func (d decoder) syntaxError(pos int, f string, x ...any) error {
 	line, column := d.Position(pos)
 	head := fmt.Sprintf("syntax error (line %d:%d): ", line, column)
 	return errors.New(head+f, x...)
@@ -190,11 +190,6 @@ func (d decoder) unmarshalMessage(m protoreflect.Message, skipTypeURL bool) erro
 			fd = fieldDescs.ByJSONName(name)
 			if fd == nil {
 				fd = fieldDescs.ByTextName(name)
-			}
-		}
-		if flags.ProtoLegacy {
-			if fd != nil && fd.IsWeak() && fd.Message().IsPlaceholder() {
-				fd = nil // reset since the weak reference is not linked in
 			}
 		}
 
@@ -351,7 +346,7 @@ func (d decoder) unmarshalScalar(fd protoreflect.FieldDescriptor) (protoreflect.
 		panic(fmt.Sprintf("unmarshalScalar: invalid scalar kind %v", kind))
 	}
 
-	return protoreflect.Value{}, d.newError(tok.Pos(), "invalid value for %v type: %v", kind, tok.RawString())
+	return protoreflect.Value{}, d.newError(tok.Pos(), "invalid value for %v field %v: %v", kind, fd.JSONName(), tok.RawString())
 }
 
 func unmarshalInt(tok json.Token, bitSize int) (protoreflect.Value, bool) {
@@ -368,6 +363,10 @@ func unmarshalInt(tok json.Token, bitSize int) (protoreflect.Value, bool) {
 		dec := json.NewDecoder([]byte(s))
 		tok, err := dec.Read()
 		if err != nil {
+			return protoreflect.Value{}, false
+		}
+		// Ensure there is no non-number content in this string.
+		if next, err := dec.Read(); err != nil || next.Kind() != json.EOF {
 			return protoreflect.Value{}, false
 		}
 		return getInt(tok, bitSize)
@@ -400,6 +399,10 @@ func unmarshalUint(tok json.Token, bitSize int) (protoreflect.Value, bool) {
 		dec := json.NewDecoder([]byte(s))
 		tok, err := dec.Read()
 		if err != nil {
+			return protoreflect.Value{}, false
+		}
+		// Ensure there is no non-number content in this string.
+		if next, err := dec.Read(); err != nil || next.Kind() != json.EOF {
 			return protoreflect.Value{}, false
 		}
 		return getUint(tok, bitSize)
@@ -450,6 +453,10 @@ func unmarshalFloat(tok json.Token, bitSize int) (protoreflect.Value, bool) {
 		dec := json.NewDecoder([]byte(s))
 		tok, err := dec.Read()
 		if err != nil {
+			return protoreflect.Value{}, false
+		}
+		// Ensure there is no non-number content in this string.
+		if next, err := dec.Read(); err != nil || next.Kind() != json.EOF {
 			return protoreflect.Value{}, false
 		}
 		return getFloat(tok, bitSize)
