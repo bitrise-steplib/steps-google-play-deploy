@@ -26,12 +26,18 @@ const changesNotSentForReviewHint = "Google Play does not send this app's change
 
 // Publisher handles publishing to Google Play with integrated logging
 type Publisher struct {
-	logger log.Logger
+	logger              log.Logger
+	exportFailureReason func(reason string) error
 }
 
 // NewPublisher creates a new Publisher instance with the given logger
 func NewPublisher(logger log.Logger) *Publisher {
-	return &Publisher{logger: logger}
+	return &Publisher{
+		logger: logger,
+		exportFailureReason: func(reason string) error {
+			return tools.ExportEnvironmentWithEnvman("FAILURE_REASON", reason)
+		},
+	}
 }
 
 func (p *Publisher) failf(format string, v ...interface{}) {
@@ -216,18 +222,19 @@ func main() {
 // deploy runs the edit, and runs it once more from a new edit if Google Play discarded the edit before the commit
 // (another edit opened with the same service account, or a Play Console change).
 func (p *Publisher) deploy(service *androidpublisher.Service, configs Configs) (errorString string) {
-	errorString, editLost, changesNotSentForReview := p.executeEdit(service, configs, false)
+	errorString, editLost, changesNotSentForReview := p.executeEdit(service, configs, false, false)
 	if editLost {
 		p.logger.Warnf("%s", errorString)
-		p.logger.Warnf("Google Play discarded the edit before it was committed. This happens when another edit is opened with the same service account, for example by a parallel deploy of the app, or when the app is changed in the Google Play Console meanwhile. Starting over with a new edit.")
-		errorString, _, _ = p.executeEdit(service, configs, changesNotSentForReview)
+		p.logger.Warnf("Google Play discarded the edit before it was committed. This can happen if another deploy uses the same service account at the same time, or if you change the app in Google Play Console during the deploy. Starting over with a new edit.")
+		errorString, _, _ = p.executeEdit(service, configs, changesNotSentForReview, true)
 	}
 	return errorString
 }
 
 // executeEdit runs one edit: create, upload, update the track, then validate (dry run) or commit. It returns
-// whether the edit was lost before the commit, and the without-review flag in use at the end.
-func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool) (errorString string, editLost bool, notSentForReview bool) {
+// whether the edit was lost before the commit, and the without-review flag in use at the end. An upload failure is
+// exported as FAILURE_REASON unless the edit was lost and the deploy will start over (lastAttempt is false).
+func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool, lastAttempt bool) (errorString string, editLost bool, notSentForReview bool) {
 	editsService := androidpublisher.NewEditsService(service)
 
 	appEdit, errorString := p.createEdit(editsService, configs)
@@ -237,7 +244,15 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 
 	versionCodes, err := p.uploadArtifacts(configs, service, appEdit)
 	if err != nil {
-		return fmt.Sprintf("Failed to upload application(s): %v", err), isEditLost(err), changesNotSentForReview
+		lost := isEditLost(err)
+		if !lost || lastAttempt {
+			if exportErr := p.exportFailureReason(err.Error()); exportErr != nil {
+				p.logger.Warnf("Unable to export failure reason")
+			} else {
+				p.logger.Donef("Failure reason exported")
+			}
+		}
+		return fmt.Sprintf("Failed to upload application(s): %v", err), lost, changesNotSentForReview
 	}
 
 	if strings.TrimSpace(configs.Track) == "" {
@@ -270,11 +285,6 @@ func (p *Publisher) uploadArtifacts(configs Configs, service *androidpublisher.S
 	p.logger.Infof("Upload apks or app bundles")
 	versionCodes, err := p.uploadApplications(configs, service, appEdit)
 	if err != nil {
-		if failureReason := tools.ExportEnvironmentWithEnvman("FAILURE_REASON", err.Error()); failureReason != nil {
-			p.logger.Warnf("Unable to export failure reason")
-		} else {
-			p.logger.Donef("Failure reason exported")
-		}
 		return nil, err
 	}
 	p.logger.Donef("Applications uploaded")

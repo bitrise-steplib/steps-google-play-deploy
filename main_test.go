@@ -141,6 +141,7 @@ type fakePlay struct {
 	commitResponses      []fakeResponse // consumed in order, then commits succeed
 	trackUpdateResponses []fakeResponse // consumed in order, then track updates succeed
 	validateResponses    []fakeResponse // consumed in order, then validations succeed
+	uploadResponses      []fakeResponse // consumed in order, then uploads succeed
 	tracksList           *fakeResponse  // when set, the tracks list answers with it
 	inserts              int
 	uploads              int
@@ -187,6 +188,11 @@ func (f *fakePlay) handle(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(editBody))
 	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/upload"+fakeEditsPath+"/edit-1/"):
 		f.uploads++
+		if i := f.uploads - 1; i < len(f.uploadResponses) {
+			w.WriteHeader(f.uploadResponses[i].status)
+			_, _ = w.Write([]byte(f.uploadResponses[i].body))
+			return
+		}
 		_, _ = w.Write([]byte(`{"versionCode":42}`))
 	case r.Method == http.MethodGet && r.URL.Path == fakeEditsPath+"/edit-1/tracks":
 		if f.tracksList != nil {
@@ -392,4 +398,38 @@ func TestIsEditLost(t *testing.T) {
 	require.False(t, isEditLost(&googleapi.Error{Code: 404, Message: "Track not found."}), "a 404 is not enough on its own")
 	require.False(t, isEditLost(&googleapi.Error{Code: 400, Message: "Too many completed releases specified."}))
 	require.False(t, isEditLost(nil))
+}
+
+func TestDeployExportsFailureReasonOnlyWhenTheUploadFailsForGood(t *testing.T) {
+	editDeleted := fakeResponse{status: http.StatusBadRequest, body: `{"error":{"code":400,"message":"This Edit has been deleted.","status":"FAILED_PRECONDITION"}}`}
+	versionCodeUsed := fakeResponse{status: http.StatusForbidden, body: `{"error":{"code":403,"message":"Version code 42 has already been used.","status":"PERMISSION_DENIED"}}`}
+
+	tests := []struct {
+		name            string
+		uploadResponses []fakeResponse
+		wantExported    []string
+	}{
+		{"lost edit, the restart succeeds", []fakeResponse{editDeleted}, nil},
+		{"lost edit twice", []fakeResponse{editDeleted, editDeleted}, []string{"This Edit has been deleted."}},
+		{"upload refused", []fakeResponse{versionCodeUsed}, []string{"Version code 42 has already been used."}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			play := newFakePlay(t)
+			play.uploadResponses = tt.uploadResponses
+			publisher := NewPublisher(log.NewLogger())
+			var exported []string
+			publisher.exportFailureReason = func(reason string) error {
+				exported = append(exported, reason)
+				return nil
+			}
+
+			publisher.deploy(play.service(t), testConfigs(t))
+
+			require.Len(t, exported, len(tt.wantExported))
+			for i, want := range tt.wantExported {
+				require.Contains(t, exported[i], want)
+			}
+		})
+	}
 }
