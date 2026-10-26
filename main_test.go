@@ -115,7 +115,7 @@ func TestCreateHTTPClientReportsAnInvalidKey(t *testing.T) {
 
 		require.Error(t, err, "a key that downloads but does not parse is reported, not swallowed")
 		require.Nil(t, client)
-		require.Contains(t, err.Error(), "downloaded json key file")
+		require.Contains(t, err.Error(), "downloaded service account JSON key")
 	}
 }
 
@@ -307,7 +307,7 @@ func TestDeployFailsWithoutRetryWhenChangesCannotBeSentForReview(t *testing.T) {
 
 	require.ErrorContains(t, err, "failed to commit edit: ")
 	require.ErrorContains(t, err, changesNotSentForReviewMessage)
-	require.Contains(t, hint(err), "Set retry_without_sending_to_review to true")
+	require.Contains(t, hint(err), "Set 'Retry changes without sending to review' (retry_without_sending_to_review) to true")
 	require.Len(t, play.commits, 1)
 }
 
@@ -354,7 +354,7 @@ func TestDeployReturnsAFailureReasonOnlyWhenTheUploadFails(t *testing.T) {
 
 func TestHint(t *testing.T) {
 	apiError := func(code int, message string) error {
-		return fmt.Errorf("failed to upload application(s): %w", &googleapi.Error{Code: code, Message: message})
+		return fmt.Errorf("failed to upload apps: %w", &googleapi.Error{Code: code, Message: message})
 	}
 
 	require.Equal(t, changesNotSentForReviewHint, hint(fmt.Errorf("failed to commit edit: %w", &googleapi.Error{Code: 400, Message: changesNotSentForReviewMessage})))
@@ -364,7 +364,7 @@ func TestHint(t *testing.T) {
 }
 
 func TestFailureReasonEndsWithTheHint(t *testing.T) {
-	err := fmt.Errorf("failed to upload application(s): %w", &googleapi.Error{Code: 500, Message: "Internal error encountered."})
+	err := fmt.Errorf("failed to upload apps: %w", &googleapi.Error{Code: 500, Message: "Internal error encountered."})
 
 	require.Equal(t, err.Error()+"\n"+internalServerErrorHint, failureReasonOf(err))
 	require.Equal(t, "no hint", failureReasonOf(errors.New("no hint")))
@@ -373,9 +373,9 @@ func TestFailureReasonEndsWithTheHint(t *testing.T) {
 func TestGoogleErrorIsTheLastCause(t *testing.T) {
 	inner := &googleapi.Error{Code: 400, Message: "This edit has expired, please create a new Edit."}
 	inner.Wrap(errors.New(inner.Error()))
-	err := fmt.Errorf("failed to upload application(s): %w", fmt.Errorf("failed to upload apk: %w", googleError(inner)))
+	err := fmt.Errorf("failed to upload apps: %w", fmt.Errorf("failed to upload apk: %w", googleError(inner)))
 
-	require.Equal(t, "failed to upload application(s):\n  failed to upload apk:\n    googleapi: Error 400: This edit has expired, please create a new Edit.", errorutil.FormattedError(err))
+	require.Equal(t, "failed to upload apps:\n  failed to upload apk:\n    googleapi: Error 400: This edit has expired, please create a new Edit.", errorutil.FormattedError(err))
 	var apiErr *googleapi.Error
 	require.ErrorAs(t, err, &apiErr)
 	require.Equal(t, 400, apiErr.Code)

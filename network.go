@@ -22,7 +22,7 @@ import (
 func (p *Publisher) createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 	jsonKeyPth, isRemote, err := parseURI(string(jsonKeyPth))
 	if err != nil {
-		return nil, fmt.Errorf("failed to prepare key path (%s): %w", jsonKeyPth, err)
+		return nil, fmt.Errorf("invalid 'Service Account JSON key file path' (service_account_json_key_path): %w", err)
 	}
 
 	var authConfig *jwt.Config
@@ -30,16 +30,16 @@ func (p *Publisher) createHTTPClient(jsonKeyPth string) (*http.Client, error) {
 	if isRemote {
 		jsonContent, err := p.downloadContentWithRetry(jsonKeyPth, 3, 3*time.Second)
 		if err != nil {
-			return nil, fmt.Errorf("failed to download json key file: %w", err)
+			return nil, fmt.Errorf("failed to download service account JSON key: %w", err)
 		}
 		authConfig, authConfErr = google.JWTConfigFromJSON(jsonContent, androidpublisher.AndroidpublisherScope)
 		if authConfErr != nil {
-			return nil, fmt.Errorf("failed to create auth config from the downloaded json key file: %w", authConfErr)
+			return nil, fmt.Errorf("failed to parse the downloaded service account JSON key: %w", authConfErr)
 		}
 	} else {
 		authConfig, authConfErr = jwtConfigFromJSONKeyFile(jsonKeyPth)
 		if authConfErr != nil {
-			return nil, fmt.Errorf("failed to create auth config from json key file %v: %w", jsonKeyPth, authConfErr)
+			return nil, fmt.Errorf("failed to parse service account JSON key %s: %w", jsonKeyPth, authConfErr)
 		}
 	}
 
@@ -85,7 +85,7 @@ func jwtConfigFromJSONKeyFile(pth string) (*jwt.Config, error) {
 func parseURI(keyURI string) (string, bool, error) {
 	jsonURL, err := url.Parse(keyURI)
 	if err != nil {
-		return "", false, fmt.Errorf("failed to parse url (%s): %w", keyURI, err)
+		return "", false, err
 	}
 
 	return strings.TrimPrefix(keyURI, "file://"), jsonURL.Scheme == "http" || jsonURL.Scheme == "https", nil
@@ -100,17 +100,17 @@ func (p *Publisher) downloadContentWithRetry(downloadURL string, numberOfRetries
 
 	resp, err := retryClient.Get(downloadURL)
 	if err != nil {
-		return []byte{}, fmt.Errorf("failed to download from (%s): %w", downloadURL, err)
+		return []byte{}, err
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			p.logger.Warnf("failed to close (%s) body", downloadURL)
+			p.logger.Warnf("Failed to close response body: %s", err)
 		}
 	}()
 
 	contentBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return []byte{}, fmt.Errorf("failed to read received content: %w", err)
+		return []byte{}, fmt.Errorf("failed to read response: %w", err)
 	}
 
 	return contentBytes, nil
