@@ -92,6 +92,7 @@ type fakePlay struct {
 	mu                   sync.Mutex
 	commitResponses      []fakeResponse // consumed in order, then commits succeed
 	trackUpdateResponses []fakeResponse // consumed in order, then track updates succeed
+	validateResponses    []fakeResponse // consumed in order, then validations succeed
 	tracksList           *fakeResponse  // when set, the tracks list answers with it
 	inserts              int
 	uploads              int
@@ -163,6 +164,11 @@ func (f *fakePlay) handle(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(body)
 	case r.Method == http.MethodPost && r.URL.Path == fakeEditsPath+"/edit-1:validate":
 		f.validates++
+		if i := f.validates - 1; i < len(f.validateResponses) {
+			w.WriteHeader(f.validateResponses[i].status)
+			_, _ = w.Write([]byte(f.validateResponses[i].body))
+			return
+		}
 		_, _ = w.Write([]byte(editBody))
 	case r.Method == http.MethodPost && r.URL.Path == fakeEditsPath+"/edit-1:commit":
 		resp := commitOK
@@ -305,7 +311,7 @@ func TestExecuteEditStartsANewEditWhenGooglePlayDiscardedIt(t *testing.T) {
 func TestExecuteEditReportsATrackUpdateFailureEvenWhenTracksCannotBeListed(t *testing.T) {
 	play := newFakePlay(t)
 	notFound := fakeResponse{status: http.StatusNotFound, body: `{"error":{"code":404,"message":"Track not found.","status":"NOT_FOUND"}}`}
-	play.trackUpdateResponses = []fakeResponse{notFound, notFound}
+	play.trackUpdateResponses = []fakeResponse{notFound}
 	play.tracksList = &serverError
 	configs := testConfigs(t)
 	configs.Track = "no-such-track"
@@ -315,12 +321,26 @@ func TestExecuteEditReportsATrackUpdateFailureEvenWhenTracksCannotBeListed(t *te
 	require.Contains(t, errorString, "Failed to update track")
 	require.Contains(t, errorString, "Track not found")
 	require.Empty(t, play.commits)
+	require.Equal(t, 1, play.inserts, "a 404 for a missing track does not start over from a new edit")
 }
 
 func TestIsEditLost(t *testing.T) {
-	require.True(t, isEditLost(&googleapi.Error{Code: 404, Message: "Requested entity was not found."}))
+	require.False(t, isEditLost(&googleapi.Error{Code: 404, Message: "Track not found."}), "a 404 is not enough on its own")
 	require.True(t, isEditLost(&googleapi.Error{Code: 400, Message: "This Edit has been deleted."}))
 	require.True(t, isEditLost(&googleapi.Error{Code: 400, Message: "A change was made to the application outside of this Edit, please create a new edit."}))
 	require.False(t, isEditLost(&googleapi.Error{Code: 400, Message: "Too many completed releases specified."}))
 	require.False(t, isEditLost(nil))
+}
+
+func TestExecuteEditDryRunStartsANewEditWhenGooglePlayDiscardedIt(t *testing.T) {
+	play := newFakePlay(t)
+	play.validateResponses = []fakeResponse{commitEditLost}
+	configs := testConfigs(t)
+	configs.DryRun = true
+
+	require.Equal(t, "", NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
+
+	require.Equal(t, 2, play.inserts)
+	require.Equal(t, 2, play.validates)
+	require.Empty(t, play.commits)
 }

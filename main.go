@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -123,10 +122,12 @@ func (p *Publisher) updateTracks(configs Configs, service *androidpublisher.Serv
 	})
 	track, err := editsTracksUpdateCall.Do()
 	if err != nil {
-		fmt.Println()
-		p.logger.Infof("Available tracks on Google Play:")
-		p.listTracks(configs, service, appEdit)
-		p.logger.Println()
+		if !isEditLost(err) {
+			fmt.Println()
+			p.logger.Infof("Available tracks on Google Play:")
+			p.listTracks(configs, service, appEdit)
+			p.logger.Println()
+		}
 
 		return fmt.Errorf("update call failed, error: %s", err)
 	}
@@ -275,19 +276,20 @@ func (p *Publisher) runEdit(service *androidpublisher.Service, configs Configs, 
 	}
 
 	if configs.DryRun {
-		return p.validateEdit(editsService, configs, appEdit), false, changesNotSentForReview
+		errorString, editLost := p.validateEdit(editsService, configs, appEdit)
+		return errorString, editLost, changesNotSentForReview
 	}
 	return p.commitWithRetries(editsService, configs, appEdit, changesNotSentForReview)
 }
 
-func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) (errorString string) {
+func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) (errorString string, editLost bool) {
 	fmt.Println()
 	p.logger.Infof("Dry run: validating edit without committing")
 	if _, err := editsService.Validate(configs.PackageName, appEdit.Id).Do(); err != nil {
-		return fmt.Sprintf("Failed to validate edit, error: %s", err)
+		return fmt.Sprintf("Failed to validate edit, error: %s", err), isEditLost(err)
 	}
 	p.logger.Donef("Edit validated")
-	return ""
+	return "", false
 }
 
 // commitWithRetries commits the edit. A commit Google Play cannot send for review automatically is repeated once,
@@ -337,18 +339,16 @@ func googleMessage(err error) string {
 // isChangesNotSentForReviewRequired reports whether Google Play refused the commit because the app is in the state
 // where changes are not sent for review automatically (after a rejection) and the flag has to be set.
 func isChangesNotSentForReviewRequired(err error) bool {
-	return err != nil && strings.Contains(err.Error(), changesNotSentForReviewMessage)
+	return err != nil && strings.Contains(googleMessage(err), changesNotSentForReviewMessage)
 }
 
 // editLostPattern matches Google Play's refusals of an edit it no longer accepts: deleted, expired, or superseded by
 // a change made outside the edit.
 var editLostPattern = regexp.MustCompile(`(?i)create a new edit|edit has been deleted|edit has expired|edit not found`)
 
-// isEditLost reports whether a call failed because the edit itself is gone rather than because of its content.
+// isEditLost reports whether a call failed because the edit itself is gone rather than because of its content. It
+// matches Google Play's messages only: a 404 can also mean a missing resource inside a valid edit, such as an unknown
+// track, which a new edit would not fix.
 func isEditLost(err error) bool {
-	var apiErr *googleapi.Error
-	if errors.As(err, &apiErr) && apiErr.Code == http.StatusNotFound {
-		return true
-	}
 	return err != nil && editLostPattern.MatchString(googleMessage(err))
 }
