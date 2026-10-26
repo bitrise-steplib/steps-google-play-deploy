@@ -262,7 +262,7 @@ func TestDeployCommitsOnce(t *testing.T) {
 	play := newFakePlay(t)
 	configs := testConfigs(t)
 
-	require.NoError(t, deployError(t, play, configs))
+	require.NoError(t, NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
 
 	require.Equal(t, 1, play.inserts)
 	require.Equal(t, 1, play.uploads)
@@ -278,7 +278,7 @@ func TestDeployDryRunValidatesInsteadOfCommitting(t *testing.T) {
 	configs := testConfigs(t)
 	configs.DryRun = true
 
-	require.NoError(t, deployError(t, play, configs))
+	require.NoError(t, NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
 
 	require.Equal(t, 1, play.validates)
 	require.Empty(t, play.commits)
@@ -289,7 +289,7 @@ func TestDeployRetriesWithoutSendingToReviewOnTheSameEdit(t *testing.T) {
 	configs := testConfigs(t)
 	configs.RetryWithoutSendingToReview = true
 
-	require.NoError(t, deployError(t, play, configs))
+	require.NoError(t, NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
 
 	require.Equal(t, 1, play.inserts, "the refused commit leaves the edit valid, it is reused")
 	require.Equal(t, 1, play.uploads, "the artifact is not uploaded again")
@@ -303,7 +303,7 @@ func TestDeployFailsWithoutRetryWhenChangesCannotBeSentForReview(t *testing.T) {
 	play := newFakePlay(t, commitManualReview)
 	configs := testConfigs(t)
 
-	err := deployError(t, play, configs)
+	err := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
 
 	require.ErrorContains(t, err, "failed to commit edit: ")
 	require.ErrorContains(t, err, changesNotSentForReviewMessage)
@@ -318,14 +318,14 @@ func TestDeployReportsATrackUpdateFailureEvenWhenTracksCannotBeListed(t *testing
 	configs := testConfigs(t)
 	configs.Track = "no-such-track"
 
-	err := deployError(t, play, configs)
+	err := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
 
 	require.ErrorContains(t, err, "failed to update track")
 	require.ErrorContains(t, err, "Track not found")
 	require.Empty(t, play.commits)
 }
 
-func TestDeployReturnsAFailureReasonOnlyWhenTheUploadFails(t *testing.T) {
+func TestDeployReportsAFailureReasonOnlyWhenTheUploadFails(t *testing.T) {
 	versionCodeUsed := fakeResponse{status: http.StatusForbidden, body: `{"error":{"code":403,"message":"Version code 42 has already been used.","status":"PERMISSION_DENIED"}}`}
 
 	tests := []struct {
@@ -341,12 +341,12 @@ func TestDeployReturnsAFailureReasonOnlyWhenTheUploadFails(t *testing.T) {
 			play := newFakePlay(t)
 			play.uploadResponses = tt.uploadResponses
 
-			failureReason, _ := NewPublisher(log.NewLogger()).executeEdit(play.service(t), testConfigs(t))
+			err := NewPublisher(log.NewLogger()).executeEdit(play.service(t), testConfigs(t))
 
 			if tt.wantFailureReason == "" {
-				require.Empty(t, failureReason)
+				require.Empty(t, failureReason(err))
 			} else {
-				require.Contains(t, failureReason, tt.wantFailureReason)
+				require.Contains(t, failureReason(err), tt.wantFailureReason)
 			}
 		})
 	}
@@ -363,17 +363,19 @@ func TestHint(t *testing.T) {
 	require.Empty(t, hint(apiError(403, "Version code 42 has already been used.")))
 }
 
-func TestFailureReasonEndsWithTheHint(t *testing.T) {
-	err := fmt.Errorf("failed to upload apps: %w", &googleapi.Error{Code: 500, Message: "Internal error encountered."})
+func TestFailureReasonIsTheUploadErrorWithItsHint(t *testing.T) {
+	cause := fmt.Errorf("failed to upload apk: %w", googleError(&googleapi.Error{Code: 500, Message: "Internal error encountered."}))
 
-	require.Equal(t, err.Error()+"\n"+internalServerErrorHint, failureReasonOf(err))
-	require.Equal(t, "no hint", failureReasonOf(errors.New("no hint")))
+	require.Equal(t, cause.Error()+"\n"+internalServerErrorHint, failureReason(uploadError{err: cause}))
+	require.Equal(t, "version code used", failureReason(uploadError{err: errors.New("version code used")}))
+	require.Empty(t, failureReason(errors.New("failed to commit edit: refused")), "only upload errors are failure reasons")
+	require.Empty(t, failureReason(nil))
 }
 
 func TestGoogleErrorIsTheLastCause(t *testing.T) {
 	inner := &googleapi.Error{Code: 400, Message: "This edit has expired, please create a new Edit."}
 	inner.Wrap(errors.New(inner.Error()))
-	err := fmt.Errorf("failed to upload apps: %w", fmt.Errorf("failed to upload apk: %w", googleError(inner)))
+	err := uploadError{err: fmt.Errorf("failed to upload apk: %w", googleError(inner))}
 
 	require.Equal(t, "failed to upload apps:\n  failed to upload apk:\n    googleapi: Error 400: This edit has expired, please create a new Edit.", errorutil.FormattedError(err))
 	var apiErr *googleapi.Error
@@ -382,14 +384,4 @@ func TestGoogleErrorIsTheLastCause(t *testing.T) {
 
 	plain := errors.New("connection reset")
 	require.Equal(t, plain, googleError(plain))
-}
-
-// deployError runs the edit and returns its error; it fails the test if a failure reason comes without an error.
-func deployError(t *testing.T, play *fakePlay, configs Configs) error {
-	t.Helper()
-	failureReason, err := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
-	if err == nil {
-		require.Empty(t, failureReason)
-	}
-	return err
 }

@@ -222,11 +222,11 @@ func main() {
 
 	//
 	// Deploy
-	reason, err := publisher.executeEdit(service, configs)
+	err = publisher.executeEdit(service, configs)
 
 	//
 	// Export outputs
-	if reason != "" {
+	if reason := failureReason(err); reason != "" {
 		fmt.Println()
 		logger.Infof("Export outputs")
 		if exportErr := tools.ExportEnvironmentWithEnvman("FAILURE_REASON", reason); exportErr != nil {
@@ -243,31 +243,30 @@ func main() {
 	}
 }
 
-// executeEdit runs one edit: create, upload, update the track, then validate (dry run) or commit. It returns the
-// upload error with its hint as the failure reason.
-func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Configs) (failureReason string, err error) {
+// executeEdit runs one edit: create, upload, update the track, then validate (dry run) or commit.
+func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Configs) error {
 	editsService := androidpublisher.NewEditsService(service)
 
 	appEdit, err := p.createEdit(editsService, configs)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	versionCodes, err := p.uploadArtifacts(configs, service, appEdit)
 	if err != nil {
-		return failureReasonOf(err), fmt.Errorf("failed to upload apps: %w", err)
+		return uploadError{err: err}
 	}
 
 	if strings.TrimSpace(configs.Track) == "" {
 		p.logger.Infof("Skipping track update")
 	} else if err := p.updateTrack(configs, service, appEdit, p.versionCodeMapToSlice(versionCodes)); err != nil {
-		return "", fmt.Errorf("failed to update track: %w", err)
+		return fmt.Errorf("failed to update track: %w", err)
 	}
 
 	if configs.DryRun {
-		return "", p.validateEdit(editsService, configs, appEdit)
+		return p.validateEdit(editsService, configs, appEdit)
 	}
-	return "", p.commitWithRetries(editsService, configs, appEdit)
+	return p.commitWithRetries(editsService, configs, appEdit)
 }
 
 func (p *Publisher) createEdit(editsService *androidpublisher.EditsService, configs Configs) (*androidpublisher.AppEdit, error) {
@@ -342,12 +341,26 @@ func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, conf
 	return nil
 }
 
-// failureReasonOf is the exported FAILURE_REASON for an error: the error, followed by the hint for it if there is one.
-func failureReasonOf(err error) string {
-	if h := hint(err); h != "" {
-		return err.Error() + "\n" + h
+// uploadError is an error from uploading the apps. The Step exports it as FAILURE_REASON.
+type uploadError struct {
+	err error
+}
+
+func (e uploadError) Error() string { return "failed to upload apps: " + e.err.Error() }
+
+func (e uploadError) Unwrap() error { return e.err }
+
+// failureReason is the FAILURE_REASON output for a deploy error: the upload error followed by the hint for it if
+// there is one, or an empty string if the upload did not fail.
+func failureReason(err error) string {
+	var uploadErr uploadError
+	if !errors.As(err, &uploadErr) {
+		return ""
 	}
-	return err.Error()
+	if h := hint(uploadErr.err); h != "" {
+		return uploadErr.err.Error() + "\n" + h
+	}
+	return uploadErr.err.Error()
 }
 
 // apiError is a Google API error as the last cause of an error chain. *googleapi.Error unwraps to an error with the
