@@ -192,7 +192,7 @@ func main() {
 	}
 	logger.Donef("Authenticated client created")
 
-	errorString := publisher.executeEdit(service, configs, false, configs.DryRun)
+	errorString := publisher.executeEdit(service, configs, configs.ChangesNotSentForReview, configs.DryRun)
 	if errorString == "" {
 		return
 	}

@@ -168,6 +168,19 @@ inputs:
       Empty by default, because an app bundle built with minification already contains its own mapping file: Google Play reads it from the bundle, so uploading one is redundant. Set this input — to `$BITRISE_MAPPING_PATH`, for example — when you deploy APKs, or when your bundle carries no mapping file.
 
       In case of deploying [multiple artifacts](https://developer.android.com/google/play/publishing/multiple-apks.html), you can specify multiple mapping.txt files as a newline (`\n`) or pipe (`|`) separated list. The order of mapping files should match the list of APK or AAB files in the `app_path` input.
+- changes_not_sent_for_review: "false"
+  opts:
+    title: Do not send changes to review
+    description: |-
+      If set to `true`, the edit is committed with the `changesNotSentForReview` flag on the first attempt, so the
+      uploaded build is added to the track but the changes in the edit (including any pending changes, such as
+      store listing updates) are not sent to review until they are manually sent from the Google Play Console UI.
+      Use this to upload builds from automation without starting or resetting a review.
+      If set to `false`, the changes are sent to review automatically when the edit is committed.
+    is_required: true
+    value_options:
+    - "true"
+    - "false"
 - retry_without_sending_to_review: "false"
   opts:
     title: Retry changes without sending to review
