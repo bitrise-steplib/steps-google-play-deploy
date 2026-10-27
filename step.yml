@@ -179,6 +179,23 @@ inputs:
     value_options:
     - "true"
     - "false"
+- changes_in_review_behavior: cancel_and_resubmit
+  opts:
+    title: Behavior when a review is in progress
+    summary: What to do when Google Play is still reviewing an earlier submission of the app at the time the changes are committed.
+    description: |-
+      What to do when Google Play is still reviewing an earlier submission of the app at the time the changes are committed.
+
+      - `cancel_and_resubmit`: Google Play cancels the review in progress and reviews all pending changes together, so the review starts over. This is Google Play's default behavior.
+      - `fail`: the Step fails without committing the changes, and the review in progress continues untouched. Run the Step again once the review is complete, or cancel the review in the Google Play Console.
+      - `upload_as_draft`: the Step saves the release as a draft on the track instead, without sending anything for review, and leaves the review in progress untouched. Roll the draft out from the Google Play Console once the review is complete. The Step fails if Google Play refuses the draft as well, if the release is a draft already (`status` is `draft`) or if no `track` is set. Google Play does not document whether a draft can be saved while a review is in progress; on this path the Step never asks Google Play to cancel the review.
+
+      The input has no effect when no review is in progress.
+    is_required: true
+    value_options:
+    - cancel_and_resubmit
+    - fail
+    - upload_as_draft
 - ack_bundle_installation_warning: "false"
   opts:
     title: Acknowledge Bundle Installation Warning
