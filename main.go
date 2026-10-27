@@ -5,9 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
+	"time"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-steputils/tools"
@@ -24,17 +27,28 @@ const internalServerError = "googleapi: Error 500"
 const changesNotSentForReviewHint = "Google Play does not send this app's changes for review automatically, so nothing was committed. " +
 	"Set 'Retry changes without sending to review' (retry_without_sending_to_review) to true to commit without sending for review, then send the changes for review from the Google Play Console."
 
+// editLostRetries is how many times the deploy starts over from a new edit when Google Play discards the edit.
+const editLostRetries = 2
+
+// The wait before a new edit is random, so that parallel deploys using the same service account stop discarding each
+// other's edits.
+const (
+	editLostMinWait = 10 * time.Second
+	editLostMaxWait = 30 * time.Second
+)
+
 const internalServerErrorHint = "Google Play returned an internal error without details. " +
 	"Create the release manually in Google Play Console, which can show the underlying error."
 
 // Publisher handles publishing to Google Play with integrated logging
 type Publisher struct {
 	logger log.Logger
+	sleep  func(time.Duration)
 }
 
 // NewPublisher creates a new Publisher instance with the given logger
 func NewPublisher(logger log.Logger) *Publisher {
-	return &Publisher{logger: logger}
+	return &Publisher{logger: logger, sleep: time.Sleep}
 }
 
 // fail logs the error with its causes on separate lines, followed by the hint for it if there is one, and exits.
@@ -145,10 +159,12 @@ func (p *Publisher) updateTracks(configs Configs, service *androidpublisher.Serv
 	})
 	track, err := editsTracksUpdateCall.Do()
 	if err != nil {
-		fmt.Println()
-		p.logger.Infof("Available tracks on Google Play:")
-		p.listTracks(configs, service, appEdit)
-		p.logger.Println()
+		if !isEditLost(err) {
+			fmt.Println()
+			p.logger.Infof("Available tracks on Google Play:")
+			p.listTracks(configs, service, appEdit)
+			p.logger.Println()
+		}
 
 		return googleError(err)
 	}
@@ -222,7 +238,7 @@ func main() {
 
 	//
 	// Deploy
-	err = publisher.executeEdit(service, configs)
+	err = publisher.deploy(service, configs, editLostRetries)
 
 	//
 	// Export outputs
@@ -241,6 +257,20 @@ func main() {
 	if err != nil {
 		publisher.fail(err)
 	}
+}
+
+// deploy runs the edit, and starts over from a new edit up to retryNum times if Google Play discarded the edit before
+// the commit (another edit opened with the same service account, or a Play Console change).
+func (p *Publisher) deploy(service *androidpublisher.Service, configs Configs, retryNum int) error {
+	err := p.executeEdit(service, configs)
+	for retry := 1; retry <= retryNum && isEditLost(err); retry++ {
+		wait := editLostMinWait + rand.N(editLostMaxWait-editLostMinWait)
+		p.logger.Warnf("%s", errorutil.FormattedError(err))
+		p.logger.Warnf("Google Play discarded the edit before it was committed. This can happen if another deploy uses the same service account at the same time, or if you change the app in Google Play Console during the deploy. Starting over with a new edit in %s (retry %d of %d).", wait.Round(time.Second), retry, retryNum)
+		p.sleep(wait)
+		err = p.executeEdit(service, configs)
+	}
+	return err
 }
 
 // executeEdit runs one edit: create, upload, update the track, then validate (dry run) or commit.
@@ -401,4 +431,12 @@ func googleMessage(err error) string {
 // isChangesNotSentForReviewRequired reports whether the commit needs changesNotSentForReview=true (after a rejection).
 func isChangesNotSentForReviewRequired(err error) bool {
 	return err != nil && strings.Contains(googleMessage(err), changesNotSentForReviewMessage)
+}
+
+// editLostPattern matches Google Play's messages for an edit it no longer accepts.
+var editLostPattern = regexp.MustCompile(`(?i)create a new edit|edit has been deleted|edit has expired|edit not found`)
+
+// isEditLost reports whether the edit itself is gone. It matches messages only: a 404 can also mean an unknown track.
+func isEditLost(err error) bool {
+	return err != nil && editLostPattern.MatchString(googleMessage(err))
 }
