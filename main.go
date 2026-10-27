@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
@@ -125,12 +124,10 @@ func (p *Publisher) updateTracks(configs Configs, service *androidpublisher.Serv
 	})
 	track, err := editsTracksUpdateCall.Do()
 	if err != nil {
-		if !isEditLost(err) {
-			fmt.Println()
-			p.logger.Infof("Available tracks on Google Play:")
-			p.listTracks(configs, service, appEdit)
-			p.logger.Println()
-		}
+		fmt.Println()
+		p.logger.Infof("Available tracks on Google Play:")
+		p.listTracks(configs, service, appEdit)
+		p.logger.Println()
 
 		return fmt.Errorf("update call failed, error: %s", err)
 	}
@@ -204,7 +201,7 @@ func main() {
 
 	//
 	// Deploy
-	errorString, failureReason := publisher.deploy(service, configs)
+	errorString, failureReason := publisher.executeEdit(service, configs)
 
 	//
 	// Export outputs
@@ -230,45 +227,31 @@ func main() {
 	publisher.failf(errorString)
 }
 
-// deploy runs the edit, and runs it once more from a new edit if Google Play discarded the edit before the commit
-// (another edit opened with the same service account, or a Play Console change).
-// The failure reason is the upload error of the last attempt, for the FAILURE_REASON output.
-func (p *Publisher) deploy(service *androidpublisher.Service, configs Configs) (errorString string, failureReason string) {
-	errorString, failureReason, changesNotSentForReview := p.executeEdit(service, configs, false)
-	if isEditLostMessage(errorString) {
-		p.logger.Warnf("%s", errorString)
-		p.logger.Warnf("Google Play discarded the edit before it was committed. This can happen if another deploy uses the same service account at the same time, or if you change the app in Google Play Console during the deploy. Starting over with a new edit.")
-		errorString, failureReason, _ = p.executeEdit(service, configs, changesNotSentForReview)
-	}
-	return errorString, failureReason
-}
-
 // executeEdit runs one edit: create, upload, update the track, then validate (dry run) or commit. It returns the
-// upload error as the failure reason, and the without-review flag in use at the end.
-func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool) (errorString string, failureReason string, notSentForReview bool) {
+// upload error as the failure reason, for the FAILURE_REASON output.
+func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Configs) (errorString string, failureReason string) {
 	editsService := androidpublisher.NewEditsService(service)
 
 	appEdit, errorString := p.createEdit(editsService, configs)
 	if errorString != "" {
-		return errorString, "", changesNotSentForReview
+		return errorString, ""
 	}
 
 	versionCodes, err := p.uploadArtifacts(configs, service, appEdit)
 	if err != nil {
-		return fmt.Sprintf("Failed to upload application(s): %v", err), err.Error(), changesNotSentForReview
+		return fmt.Sprintf("Failed to upload application(s): %v", err), err.Error()
 	}
 
 	if strings.TrimSpace(configs.Track) == "" {
 		p.logger.Infof("Skipping track update")
 	} else if err := p.updateTrack(configs, service, appEdit, p.versionCodeMapToSlice(versionCodes)); err != nil {
-		return fmt.Sprintf("Failed to update track, reason: %v", err), "", changesNotSentForReview
+		return fmt.Sprintf("Failed to update track, reason: %v", err), ""
 	}
 
 	if configs.DryRun {
-		return p.validateEdit(editsService, configs, appEdit), "", changesNotSentForReview
+		return p.validateEdit(editsService, configs, appEdit), ""
 	}
-	errorString, changesNotSentForReview = p.commitWithRetries(editsService, configs, appEdit, changesNotSentForReview)
-	return errorString, "", changesNotSentForReview
+	return p.commitWithRetries(editsService, configs, appEdit), ""
 }
 
 func (p *Publisher) createEdit(editsService *androidpublisher.EditsService, configs Configs) (*androidpublisher.AppEdit, string) {
@@ -320,22 +303,21 @@ func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, co
 
 // commitWithRetries commits the edit. If Google Play cannot send the changes for review automatically, it commits the
 // same edit once more without sending for review (retry_without_sending_to_review); a refused commit leaves the edit
-// valid. It returns the without-review flag in use at the end.
-func (p *Publisher) commitWithRetries(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit, changesNotSentForReview bool) (errorString string, notSentForReview bool) {
-	err := p.commitEdit(editsService, configs, appEdit, changesNotSentForReview)
-	if !changesNotSentForReview && isChangesNotSentForReviewRequired(err) {
+// valid.
+func (p *Publisher) commitWithRetries(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) (errorString string) {
+	err := p.commitEdit(editsService, configs, appEdit, false)
+	if isChangesNotSentForReviewRequired(err) {
 		if !configs.RetryWithoutSendingToReview {
-			return fmt.Sprintf("Failed to commit edit, error: %s\n%s", err, changesNotSentForReviewHint), changesNotSentForReview
+			return fmt.Sprintf("Failed to commit edit, error: %s\n%s", err, changesNotSentForReviewHint)
 		}
 		p.logger.Warnf("Failed to commit edit, error: %s", err)
 		p.logger.Warnf("Google Play does not send this app's changes for review automatically. Committing again without sending for review; send the changes for review from the Google Play Console once the Step finishes.")
-		changesNotSentForReview = true
-		err = p.commitEdit(editsService, configs, appEdit, changesNotSentForReview)
+		err = p.commitEdit(editsService, configs, appEdit, true)
 	}
 	if err != nil {
-		return fmt.Sprintf("Failed to commit edit, error: %s", err), changesNotSentForReview
+		return fmt.Sprintf("Failed to commit edit, error: %s", err)
 	}
-	return "", changesNotSentForReview
+	return ""
 }
 
 func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit, changesNotSentForReview bool) error {
@@ -362,17 +344,4 @@ func googleMessage(err error) string {
 // isChangesNotSentForReviewRequired reports whether the commit needs changesNotSentForReview=true (after a rejection).
 func isChangesNotSentForReviewRequired(err error) bool {
 	return err != nil && strings.Contains(googleMessage(err), changesNotSentForReviewMessage)
-}
-
-// editLostPattern matches Google Play's messages for an edit it no longer accepts.
-var editLostPattern = regexp.MustCompile(`(?i)create a new edit|edit has been deleted|edit has expired|edit not found`)
-
-// isEditLost reports whether the edit itself is gone. It matches messages only: a 404 can also mean an unknown track.
-func isEditLost(err error) bool {
-	return err != nil && isEditLostMessage(googleMessage(err))
-}
-
-// isEditLostMessage reports whether an error message says the edit itself is gone.
-func isEditLostMessage(message string) bool {
-	return editLostPattern.MatchString(message)
 }
