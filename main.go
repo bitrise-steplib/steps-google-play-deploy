@@ -291,7 +291,7 @@ func (p *Publisher) updateTrack(configs Configs, service *androidpublisher.Servi
 	return nil
 }
 
-func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) (errorString string) {
+func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) string {
 	fmt.Println()
 	p.logger.Infof("Dry run: validating edit without committing")
 	if _, err := editsService.Validate(configs.PackageName, appEdit.Id).Do(); err != nil {
@@ -304,7 +304,7 @@ func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, co
 // commitWithRetries commits the edit. If Google Play cannot send the changes for review automatically, it commits the
 // same edit once more without sending for review (retry_without_sending_to_review); a refused commit leaves the edit
 // valid.
-func (p *Publisher) commitWithRetries(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) (errorString string) {
+func (p *Publisher) commitWithRetries(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) string {
 	err := p.commitEdit(editsService, configs, appEdit, false)
 	if isChangesNotSentForReviewRequired(err) {
 		if !configs.RetryWithoutSendingToReview {
