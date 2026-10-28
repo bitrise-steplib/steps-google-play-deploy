@@ -433,7 +433,12 @@ func isChangesNotSentForReviewRequired(err error) bool {
 	return err != nil && strings.Contains(googleMessage(err), changesNotSentForReviewMessage)
 }
 
-// editLostPattern matches Google Play's messages for an edit it no longer accepts.
+// editLostPattern matches Google Play's messages for an edit it no longer accepts. Opening a new edit or changing the
+// app in Google Play Console invalidates an open edit, and an edit expires
+// (https://developers.google.com/android-publisher/edits/workflow). Messages seen:
+//   - "This Edit has been deleted." (https://github.com/fastlane/fastlane/issues/13689)
+//   - "This edit has expired, please create a new Edit." (https://github.com/fastlane/fastlane/issues/20938)
+//   - "A change was made to the application outside of this Edit, please create a new edit."
 var editLostPattern = regexp.MustCompile(`(?i)create a new edit|edit has been deleted|edit has expired|edit not found`)
 
 // isEditLost reports whether the edit itself is gone. It matches messages only: a 404 can also mean an unknown track.
