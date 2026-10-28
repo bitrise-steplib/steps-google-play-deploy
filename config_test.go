@@ -114,7 +114,7 @@ func TestConfigs_appPaths(t *testing.T) {
 				Logger:  log.NewLogger(),
 			},
 			wantApps:     []string{"app.aab"},
-			wantWarnings: []string{"Both .aab and .apk files provided, using the .aab file(s): app.aab"},
+			wantWarnings: []string{"'App file path' (app_path) has both .aab and .apk files, uploading the .aab files only: app.aab"},
 		},
 		{
 			name: "multiple .aab",
@@ -131,7 +131,7 @@ func TestConfigs_appPaths(t *testing.T) {
 				Logger:  log.NewLogger(),
 			},
 			wantApps:     nil,
-			wantWarnings: []string{"unknown app path extension in path: mapping.txt, supported extensions: .apk, .aab"},
+			wantWarnings: []string{"Skipping mapping.txt: 'App file path' (app_path) accepts .apk and .aab files only"},
 		},
 		{
 			name: "newline (\n) as a character",

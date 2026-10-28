@@ -56,9 +56,9 @@ func (c Configs) validateJSONKeyPath() error {
 
 	pth := strings.TrimPrefix(string(c.JSONKeyPath), "file://")
 	if exist, err := pathutil.IsPathExists(pth); err != nil {
-		return fmt.Errorf("failed to check if json key path exist at: %s, error: %s", pth, err)
+		return fmt.Errorf("failed to check the service account JSON key at %s: %w", pth, err)
 	} else if !exist {
-		return errors.New("json key path not exist at: " + pth)
+		return fmt.Errorf("no service account JSON key at %s, check 'Service Account JSON key file path' (service_account_json_key_path)", pth)
 	}
 	return nil
 }
@@ -70,9 +70,9 @@ func (c Configs) validateWhatsnewsDir() error {
 	}
 
 	if exist, err := pathutil.IsDirExists(c.WhatsnewsDir); err != nil {
-		return fmt.Errorf("failed to check if what's new directory exist at: %s, error: %s", c.WhatsnewsDir, err)
+		return fmt.Errorf("failed to check the what's new directory at %s: %w", c.WhatsnewsDir, err)
 	} else if !exist {
-		return errors.New("what's new directory not exist at: " + c.WhatsnewsDir)
+		return fmt.Errorf("no what's new directory at %s, check 'Directory of localized what's new files' (whatsnews_dir)", c.WhatsnewsDir)
 	}
 
 	c.Logger.Infof("Using what's new data from: %v", c.WhatsnewsDir)
@@ -87,9 +87,9 @@ func (c Configs) validateMappingFile() error {
 
 	for _, path := range c.parseInputList(c.MappingFile) {
 		if exist, err := pathutil.IsPathExists(path); err != nil {
-			return fmt.Errorf("failed to check if mapping file exist at: %s, error: %s", path, err)
+			return fmt.Errorf("failed to check the mapping file at %s: %w", path, err)
 		} else if !exist {
-			return errors.New("mapping file doesn't exist at: " + path)
+			return fmt.Errorf("no mapping file at %s, check 'Mapping txt file path' (mapping_file)", path)
 		}
 
 		c.Logger.Infof("Using mapping file from: %v", path)
@@ -138,12 +138,12 @@ func (c Configs) appPaths() ([]string, []string) {
 		case ".apk":
 			apks = append(apks, pth)
 		default:
-			warnings = append(warnings, fmt.Sprintf("unknown app path extension in path: %s, supported extensions: .apk, .aab", pth))
+			warnings = append(warnings, fmt.Sprintf("Skipping %s: 'App file path' (app_path) accepts .apk and .aab files only", pth))
 		}
 	}
 
 	if len(aabs) > 0 && len(apks) > 0 {
-		warnings = append(warnings, fmt.Sprintf("Both .aab and .apk files provided, using the .aab file(s): %s", strings.Join(aabs, ",")))
+		warnings = append(warnings, fmt.Sprintf("'App file path' (app_path) has both .aab and .apk files, uploading the .aab files only: %s", strings.Join(aabs, ", ")))
 	}
 
 	if len(aabs) > 0 {
@@ -172,14 +172,14 @@ func (c Configs) validateApps() error {
 	}
 
 	if len(apps) == 0 {
-		return fmt.Errorf("no app provided")
+		return errors.New("no .apk or .aab file to upload, check 'App file path' (app_path)")
 	}
 
 	for _, pth := range apps {
 		if exist, err := pathutil.IsPathExists(pth); err != nil {
-			return fmt.Errorf("failed to check if app exist at: %s, error: %s", pth, err)
+			return fmt.Errorf("failed to check the app at %s: %w", pth, err)
 		} else if !exist {
-			return errors.New("app not exist at: " + pth)
+			return fmt.Errorf("no app at %s, check 'App file path' (app_path)", pth)
 		}
 		c.Logger.Infof("Using app from: %v", pth)
 	}
@@ -196,7 +196,7 @@ func (c Configs) expansionFiles(appPaths []string) ([]string, error) {
 		expansionFileEntries = strings.Split(c.ExpansionfilePath, "|")
 
 		if len(appPaths) != len(expansionFileEntries) {
-			return []string{}, fmt.Errorf("mismatching number of APKs(%d) and Expansionfiles(%d)", len(appPaths), len(expansionFileEntries))
+			return []string{}, fmt.Errorf("%d APKs but %d expansion files, set one 'Expansion file Path' (expansionfile_path) entry for each APK", len(appPaths), len(expansionFileEntries))
 		}
 
 		c.Logger.Infof("Found %v expansion file(s) to upload.", len(expansionFileEntries))
