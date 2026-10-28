@@ -258,7 +258,7 @@ func TestDeployCommitsOnce(t *testing.T) {
 	play := newFakePlay(t)
 	configs := testConfigs(t)
 
-	require.Equal(t, "", deployErrorString(t, play, configs))
+	require.Equal(t, "", executeEditErrorString(t, play, configs))
 
 	require.Equal(t, 1, play.inserts)
 	require.Equal(t, 1, play.uploads)
@@ -274,7 +274,7 @@ func TestDeployDryRunValidatesInsteadOfCommitting(t *testing.T) {
 	configs := testConfigs(t)
 	configs.DryRun = true
 
-	require.Equal(t, "", deployErrorString(t, play, configs))
+	require.Equal(t, "", executeEditErrorString(t, play, configs))
 
 	require.Equal(t, 1, play.validates)
 	require.Empty(t, play.commits)
@@ -285,7 +285,7 @@ func TestDeployRetriesWithoutSendingToReviewOnTheSameEdit(t *testing.T) {
 	configs := testConfigs(t)
 	configs.RetryWithoutSendingToReview = true
 
-	require.Equal(t, "", deployErrorString(t, play, configs))
+	require.Equal(t, "", executeEditErrorString(t, play, configs))
 
 	require.Equal(t, 1, play.inserts, "the refused commit leaves the edit valid, it is reused")
 	require.Equal(t, 1, play.uploads, "the artifact is not uploaded again")
@@ -299,7 +299,7 @@ func TestDeployFailsWithoutRetryWhenChangesCannotBeSentForReview(t *testing.T) {
 	play := newFakePlay(t, commitManualReview)
 	configs := testConfigs(t)
 
-	errorString := deployErrorString(t, play, configs)
+	errorString := executeEditErrorString(t, play, configs)
 
 	require.Contains(t, errorString, "Failed to commit edit, error: ")
 	require.Contains(t, errorString, changesNotSentForReviewMessage)
@@ -314,39 +314,71 @@ func TestDeployReportsATrackUpdateFailureEvenWhenTracksCannotBeListed(t *testing
 	configs := testConfigs(t)
 	configs.Track = "no-such-track"
 
-	errorString := deployErrorString(t, play, configs)
+	errorString := executeEditErrorString(t, play, configs)
 
 	require.Contains(t, errorString, "Failed to update track")
 	require.Contains(t, errorString, "Track not found")
 	require.Empty(t, play.commits)
 }
 
+func TestDeployFailsWhenTheCommitWithoutSendingForReviewIsRefusedToo(t *testing.T) {
+	play := newFakePlay(t, commitManualReview, commitManualReview)
+	configs := testConfigs(t)
+	configs.RetryWithoutSendingToReview = true
+
+	errorString := executeEditErrorString(t, play, configs)
+
+	require.Contains(t, errorString, "Failed to commit edit, error: ")
+	require.Contains(t, errorString, changesNotSentForReviewMessage)
+	require.Len(t, play.commits, 2, "the Step retries once")
+}
+
+func TestDeployDryRunFailsWithoutCommittingWhenTheValidationFails(t *testing.T) {
+	play := newFakePlay(t)
+	play.validateResponses = []fakeResponse{serverError}
+	configs := testConfigs(t)
+	configs.DryRun = true
+
+	errorString := executeEditErrorString(t, play, configs)
+
+	require.Contains(t, errorString, "Failed to validate edit")
+	require.Equal(t, 1, play.validates)
+	require.Empty(t, play.commits)
+}
+
 func TestDeployReturnsTheUploadErrorAsTheFailureReason(t *testing.T) {
-	t.Log("upload refused")
-	{
-		play := newFakePlay(t)
-		play.uploadResponses = []fakeResponse{{status: http.StatusForbidden, body: `{"error":{"code":403,"message":"Version code 42 has already been used.","status":"PERMISSION_DENIED"}}`}}
+	versionCodeUsed := fakeResponse{status: http.StatusForbidden, body: `{"error":{"code":403,"message":"Version code 42 has already been used.","status":"PERMISSION_DENIED"}}`}
 
-		errorString, failureReason := NewPublisher(log.NewLogger()).executeEdit(play.service(t), testConfigs(t))
-
-		require.Contains(t, errorString, "Failed to upload application(s)")
-		require.Contains(t, failureReason, "Version code 42 has already been used.")
+	tests := []struct {
+		name              string
+		uploadResponses   []fakeResponse
+		commitResponses   []fakeResponse
+		wantError         string
+		wantFailureReason string
+	}{
+		{"upload refused", []fakeResponse{versionCodeUsed}, nil, "Failed to upload application(s)", "Version code 42 has already been used."},
+		{"commit refused", nil, []fakeResponse{commitManualReview}, "Failed to commit edit", ""},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			play := newFakePlay(t, tt.commitResponses...)
+			play.uploadResponses = tt.uploadResponses
 
-	t.Log("commit refused")
-	{
-		play := newFakePlay(t, commitManualReview)
+			errorString, failureReason := NewPublisher(log.NewLogger()).executeEdit(play.service(t), testConfigs(t))
 
-		errorString, failureReason := NewPublisher(log.NewLogger()).executeEdit(play.service(t), testConfigs(t))
-
-		require.Contains(t, errorString, "Failed to commit edit")
-		require.Empty(t, failureReason, "only an upload error is a failure reason")
+			require.Contains(t, errorString, tt.wantError)
+			if tt.wantFailureReason == "" {
+				require.Empty(t, failureReason, "only an upload error is a failure reason")
+			} else {
+				require.Contains(t, failureReason, tt.wantFailureReason)
+			}
+		})
 	}
 }
 
-// deployErrorString runs the edit and returns its error string; it fails the test if a failure reason comes
+// executeEditErrorString runs the edit and returns its error string; it fails the test if a failure reason comes
 // without an error.
-func deployErrorString(t *testing.T, play *fakePlay, configs Configs) string {
+func executeEditErrorString(t *testing.T, play *fakePlay, configs Configs) string {
 	t.Helper()
 	errorString, failureReason := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
 	if errorString == "" {
