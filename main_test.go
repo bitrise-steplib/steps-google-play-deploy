@@ -139,6 +139,7 @@ type fakePlay struct {
 	commitResponses      []fakeResponse // consumed in order, then commits succeed
 	trackUpdateResponses []fakeResponse // consumed in order, then track updates succeed
 	validateResponses    []fakeResponse // consumed in order, then validations succeed
+	uploadResponses      []fakeResponse // consumed in order, then uploads succeed
 	tracksList           *fakeResponse  // when set, the tracks list answers with it
 	inserts              int
 	uploads              int
@@ -184,6 +185,11 @@ func (f *fakePlay) handle(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(editBody))
 	case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/upload"+fakeEditsPath+"/edit-1/"):
 		f.uploads++
+		if i := f.uploads - 1; i < len(f.uploadResponses) {
+			w.WriteHeader(f.uploadResponses[i].status)
+			_, _ = w.Write([]byte(f.uploadResponses[i].body))
+			return
+		}
 		_, _ = w.Write([]byte(`{"versionCode":42}`))
 	case r.Method == http.MethodGet && r.URL.Path == fakeEditsPath+"/edit-1/tracks":
 		if f.tracksList != nil {
@@ -252,7 +258,7 @@ func TestDeployCommitsOnce(t *testing.T) {
 	play := newFakePlay(t)
 	configs := testConfigs(t)
 
-	require.Equal(t, "", NewPublisher(log.NewLogger()).deploy(play.service(t), configs))
+	require.Equal(t, "", executeEditErrorString(t, play, configs))
 
 	require.Equal(t, 1, play.inserts)
 	require.Equal(t, 1, play.uploads)
@@ -268,21 +274,22 @@ func TestDeployDryRunValidatesInsteadOfCommitting(t *testing.T) {
 	configs := testConfigs(t)
 	configs.DryRun = true
 
-	require.Equal(t, "", NewPublisher(log.NewLogger()).deploy(play.service(t), configs))
+	require.Equal(t, "", executeEditErrorString(t, play, configs))
 
 	require.Equal(t, 1, play.validates)
 	require.Empty(t, play.commits)
 }
 
-func TestDeployRetriesWithoutSendingToReviewFromANewEdit(t *testing.T) {
+func TestDeployRetriesWithoutSendingToReviewOnTheSameEdit(t *testing.T) {
 	play := newFakePlay(t, commitManualReview, commitOK)
 	configs := testConfigs(t)
 	configs.RetryWithoutSendingToReview = true
 
-	require.Equal(t, "", NewPublisher(log.NewLogger()).deploy(play.service(t), configs))
+	require.Equal(t, "", executeEditErrorString(t, play, configs))
 
-	require.Equal(t, 2, play.inserts, "the retry runs the whole edit again")
-	require.Equal(t, 2, play.uploads)
+	require.Equal(t, 1, play.inserts, "the refused commit leaves the edit valid, it is reused")
+	require.Equal(t, 1, play.uploads, "the artifact is not uploaded again")
+	require.Len(t, play.trackUpdates, 1)
 	require.Len(t, play.commits, 2)
 	require.Equal(t, "false", play.commits[0].Get("changesNotSentForReview"))
 	require.Equal(t, "true", play.commits[1].Get("changesNotSentForReview"))
@@ -292,7 +299,7 @@ func TestDeployFailsWithoutRetryWhenChangesCannotBeSentForReview(t *testing.T) {
 	play := newFakePlay(t, commitManualReview)
 	configs := testConfigs(t)
 
-	errorString := NewPublisher(log.NewLogger()).deploy(play.service(t), configs)
+	errorString := executeEditErrorString(t, play, configs)
 
 	require.Contains(t, errorString, "Failed to commit edit, error: ")
 	require.Contains(t, errorString, changesNotSentForReviewMessage)
@@ -307,9 +314,75 @@ func TestDeployReportsATrackUpdateFailureEvenWhenTracksCannotBeListed(t *testing
 	configs := testConfigs(t)
 	configs.Track = "no-such-track"
 
-	errorString := NewPublisher(log.NewLogger()).deploy(play.service(t), configs)
+	errorString := executeEditErrorString(t, play, configs)
 
 	require.Contains(t, errorString, "Failed to update track")
 	require.Contains(t, errorString, "Track not found")
 	require.Empty(t, play.commits)
+}
+
+func TestDeployFailsWhenTheCommitWithoutSendingForReviewIsRefusedToo(t *testing.T) {
+	play := newFakePlay(t, commitManualReview, commitManualReview)
+	configs := testConfigs(t)
+	configs.RetryWithoutSendingToReview = true
+
+	errorString := executeEditErrorString(t, play, configs)
+
+	require.Contains(t, errorString, "Failed to commit edit, error: ")
+	require.Contains(t, errorString, changesNotSentForReviewMessage)
+	require.Len(t, play.commits, 2, "the Step retries once")
+}
+
+func TestDeployDryRunFailsWithoutCommittingWhenTheValidationFails(t *testing.T) {
+	play := newFakePlay(t)
+	play.validateResponses = []fakeResponse{serverError}
+	configs := testConfigs(t)
+	configs.DryRun = true
+
+	errorString := executeEditErrorString(t, play, configs)
+
+	require.Contains(t, errorString, "Failed to validate edit")
+	require.Equal(t, 1, play.validates)
+	require.Empty(t, play.commits)
+}
+
+func TestDeployReturnsTheUploadErrorAsTheFailureReason(t *testing.T) {
+	versionCodeUsed := fakeResponse{status: http.StatusForbidden, body: `{"error":{"code":403,"message":"Version code 42 has already been used.","status":"PERMISSION_DENIED"}}`}
+
+	tests := []struct {
+		name              string
+		uploadResponses   []fakeResponse
+		commitResponses   []fakeResponse
+		wantError         string
+		wantFailureReason string
+	}{
+		{"upload refused", []fakeResponse{versionCodeUsed}, nil, "Failed to upload application(s)", "Version code 42 has already been used."},
+		{"commit refused", nil, []fakeResponse{commitManualReview}, "Failed to commit edit", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			play := newFakePlay(t, tt.commitResponses...)
+			play.uploadResponses = tt.uploadResponses
+
+			errorString, failureReason := NewPublisher(log.NewLogger()).executeEdit(play.service(t), testConfigs(t))
+
+			require.Contains(t, errorString, tt.wantError)
+			if tt.wantFailureReason == "" {
+				require.Empty(t, failureReason, "only an upload error is a failure reason")
+			} else {
+				require.Contains(t, failureReason, tt.wantFailureReason)
+			}
+		})
+	}
+}
+
+// executeEditErrorString runs the edit and returns its error string; it fails the test if a failure reason comes
+// without an error.
+func executeEditErrorString(t *testing.T, play *fakePlay, configs Configs) string {
+	t.Helper()
+	errorString, failureReason := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+	if errorString == "" {
+		require.Empty(t, failureReason)
+	}
+	return errorString
 }

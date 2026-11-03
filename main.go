@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/v2/log"
 	"google.golang.org/api/androidpublisher/v3"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 )
 
@@ -197,7 +199,24 @@ func main() {
 	}
 	logger.Donef("Authenticated client created")
 
-	errorString := publisher.deploy(service, configs)
+	//
+	// Deploy
+	errorString, failureReason := publisher.executeEdit(service, configs)
+
+	//
+	// Export outputs
+	if failureReason != "" {
+		fmt.Println()
+		logger.Infof("Export outputs")
+		if err := tools.ExportEnvironmentWithEnvman("FAILURE_REASON", failureReason); err != nil {
+			logger.Warnf("Unable to export failure reason")
+		} else {
+			logger.Donef("Failure reason exported")
+		}
+	}
+
+	//
+	// Report the result
 	if errorString == "" {
 		return
 	}
@@ -208,46 +227,31 @@ func main() {
 	publisher.failf(errorString)
 }
 
-// deploy runs the edit, and runs it again from a new edit without sending for review when Google Play cannot send the
-// app's changes for review automatically and retry_without_sending_to_review allows it.
-func (p *Publisher) deploy(service *androidpublisher.Service, configs Configs) (errorString string) {
-	errorString = p.executeEdit(service, configs, false, configs.DryRun)
-	if errorString == "" || !strings.Contains(errorString, changesNotSentForReviewMessage) {
-		return errorString
-	}
-	if !configs.RetryWithoutSendingToReview {
-		return fmt.Sprintf("%s\n%s", errorString, changesNotSentForReviewHint)
-	}
-	p.logger.Warnf(errorString)
-	p.logger.Warnf("Google Play does not send this app's changes for review automatically. Committing again without sending for review; send the changes for review from the Google Play Console once the Step finishes.")
-	return p.executeEdit(service, configs, true, false)
-}
-
-// executeEdit runs one edit: it is created, the artifacts are uploaded, the track is updated, then the edit is
-// validated (dry run) or committed.
-func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Configs, changesNotSentForReview bool, dryRun bool) (errorString string) {
+// executeEdit runs one edit: create, upload, update the track, then validate (dry run) or commit. It returns the
+// upload error as the failure reason, for the FAILURE_REASON output.
+func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Configs) (errorString string, failureReason string) {
 	editsService := androidpublisher.NewEditsService(service)
 
 	appEdit, errorString := p.createEdit(editsService, configs)
 	if errorString != "" {
-		return errorString
+		return errorString, ""
 	}
 
-	versionCodes, errorString := p.uploadArtifacts(configs, service, appEdit)
-	if errorString != "" {
-		return errorString
+	versionCodes, err := p.uploadArtifacts(configs, service, appEdit)
+	if err != nil {
+		return fmt.Sprintf("Failed to upload application(s): %v", err), err.Error()
 	}
 
 	if strings.TrimSpace(configs.Track) == "" {
 		p.logger.Infof("Skipping track update")
-	} else if errorString := p.updateTrack(configs, service, appEdit, p.versionCodeMapToSlice(versionCodes)); errorString != "" {
-		return errorString
+	} else if err := p.updateTrack(configs, service, appEdit, p.versionCodeMapToSlice(versionCodes)); err != nil {
+		return fmt.Sprintf("Failed to update track, reason: %v", err), ""
 	}
 
-	if dryRun {
-		return p.validateEdit(editsService, configs, appEdit)
+	if configs.DryRun {
+		return p.validateEdit(editsService, configs, appEdit), ""
 	}
-	return p.commitEdit(editsService, configs, appEdit, changesNotSentForReview)
+	return p.commitWithRetries(editsService, configs, appEdit), ""
 }
 
 func (p *Publisher) createEdit(editsService *androidpublisher.EditsService, configs Configs) (*androidpublisher.AppEdit, string) {
@@ -262,34 +266,29 @@ func (p *Publisher) createEdit(editsService *androidpublisher.EditsService, conf
 	return appEdit, ""
 }
 
-func (p *Publisher) uploadArtifacts(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (map[int64]int, string) {
+func (p *Publisher) uploadArtifacts(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit) (map[int64]int, error) {
 	fmt.Println()
 	p.logger.Infof("Upload apks or app bundles")
 	versionCodes, err := p.uploadApplications(configs, service, appEdit)
 	if err != nil {
-		if failureReason := tools.ExportEnvironmentWithEnvman("FAILURE_REASON", err.Error()); failureReason != nil {
-			p.logger.Warnf("Unable to export failure reason")
-		} else {
-			p.logger.Donef("Failure reason exported")
-		}
-		return nil, fmt.Sprintf("Failed to upload application(s): %v", err)
+		return nil, err
 	}
 	p.logger.Donef("Applications uploaded")
-	return versionCodes, ""
+	return versionCodes, nil
 }
 
-func (p *Publisher) updateTrack(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) string {
+func (p *Publisher) updateTrack(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) error {
 	fmt.Println()
 	p.logger.Infof("Update track")
 	release, err := p.createTrackRelease(configs, versionCodes)
 	if err != nil {
-		return fmt.Sprintf("Failed to update track, reason: %v", err)
+		return err
 	}
 	if err := p.updateTracks(configs, service, appEdit, release); err != nil {
-		return fmt.Sprintf("Failed to update track, reason: %v", err)
+		return err
 	}
 	p.logger.Donef("Track updated")
-	return ""
+	return nil
 }
 
 func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) string {
@@ -302,14 +301,47 @@ func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, co
 	return ""
 }
 
-func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit, changesNotSentForReview bool) string {
+// commitWithRetries commits the edit. If Google Play cannot send the changes for review automatically, it commits the
+// same edit once more without sending for review (retry_without_sending_to_review); a refused commit leaves the edit
+// valid.
+func (p *Publisher) commitWithRetries(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) string {
+	err := p.commitEdit(editsService, configs, appEdit, false)
+	if isChangesNotSentForReviewRequired(err) {
+		if !configs.RetryWithoutSendingToReview {
+			return fmt.Sprintf("Failed to commit edit, error: %s\n%s", err, changesNotSentForReviewHint)
+		}
+		p.logger.Warnf("Failed to commit edit, error: %s", err)
+		p.logger.Warnf("Google Play does not send this app's changes for review automatically. Committing again without sending for review; send the changes for review from the Google Play Console once the Step finishes.")
+		err = p.commitEdit(editsService, configs, appEdit, true)
+	}
+	if err != nil {
+		return fmt.Sprintf("Failed to commit edit, error: %s", err)
+	}
+	return ""
+}
+
+func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit, changesNotSentForReview bool) error {
 	fmt.Println()
 	p.logger.Infof("Committing edit")
 	call := editsService.Commit(configs.PackageName, appEdit.Id)
 	call.ChangesNotSentForReview(changesNotSentForReview)
 	if _, err := call.Do(); err != nil {
-		return fmt.Sprintf("Failed to commit edit, error: %s", err)
+		return err
 	}
 	p.logger.Donef("Edit committed")
-	return ""
+	return nil
+}
+
+// googleMessage returns Google Play's own message for an API error, or the whole error otherwise.
+func googleMessage(err error) string {
+	var apiErr *googleapi.Error
+	if errors.As(err, &apiErr) && apiErr.Message != "" {
+		return apiErr.Message
+	}
+	return err.Error()
+}
+
+// isChangesNotSentForReviewRequired reports whether the commit needs changesNotSentForReview=true (after a rejection).
+func isChangesNotSentForReviewRequired(err error) bool {
+	return err != nil && strings.Contains(googleMessage(err), changesNotSentForReviewMessage)
 }
