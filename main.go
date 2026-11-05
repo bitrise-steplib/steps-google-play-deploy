@@ -24,6 +24,20 @@ const internalServerError = "googleapi: Error 500"
 const changesNotSentForReviewHint = "Google Play does not send this app's changes for review automatically, so nothing was committed. " +
 	"Set retry_without_sending_to_review to true to commit without sending for review, then send the changes for review from the Google Play Console."
 
+// Values of the changes_in_review_behavior input.
+const (
+	changesInReviewCancelAndResubmit = "cancel_and_resubmit"
+	changesInReviewFail              = "fail"
+)
+
+// changesAlreadyInReviewReason is the error reason Google Play returns to a commit sent with
+// changesInReviewBehavior=ERROR_IF_IN_REVIEW while an earlier submission of the app is in review.
+const changesAlreadyInReviewReason = "CHANGES_ALREADY_IN_REVIEW"
+
+const changesAlreadyInReviewHint = "Google Play is still reviewing an earlier submission of this app, so nothing was committed and the review continues. " +
+	"Run the Step again after the review is complete, or cancel the review in the Google Play Console. " +
+	"To cancel the review and submit the new changes instead, set 'Behavior when a review is in progress' (changes_in_review_behavior) to cancel_and_resubmit."
+
 const internalServerErrorHint = "Google Play API responded with an unknown error\n" +
 	"Suggestion: create a release manually in Google Play Console because the UI has the capability to present the underlying error in certain cases"
 
@@ -322,15 +336,18 @@ func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, co
 // valid.
 func (p *Publisher) commitWithRetries(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) error {
 	err := p.commitEdit(editsService, configs, appEdit, false)
-	if !isChangesNotSentForReviewRequired(err) {
-		return err
+	if isChangesNotSentForReviewRequired(err) {
+		if !configs.RetryWithoutSendingToReview {
+			return hintedError{err: err, hint: changesNotSentForReviewHint}
+		}
+		p.logger.Warnf("%s", errorutil.FormattedError(err))
+		p.logger.Warnf("Google Play does not send this app's changes for review automatically. Committing again without sending for review; send the changes for review from the Google Play Console once the Step finishes.")
+		err = p.commitEdit(editsService, configs, appEdit, true)
 	}
-	if !configs.RetryWithoutSendingToReview {
-		return hintedError{err: err, hint: changesNotSentForReviewHint}
+	if isChangesAlreadyInReview(err) {
+		return hintedError{err: err, hint: changesAlreadyInReviewHint}
 	}
-	p.logger.Warnf("%s", errorutil.FormattedError(err))
-	p.logger.Warnf("Google Play does not send this app's changes for review automatically. Committing again without sending for review; send the changes for review from the Google Play Console once the Step finishes.")
-	return p.commitEdit(editsService, configs, appEdit, true)
+	return err
 }
 
 func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit, changesNotSentForReview bool) error {
@@ -338,6 +355,11 @@ func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, conf
 	p.logger.Infof("Committing edit")
 	call := editsService.Commit(configs.PackageName, appEdit.Id)
 	call.ChangesNotSentForReview(changesNotSentForReview)
+	// cancel_and_resubmit is Google Play's default, so it is not sent.
+	if configs.ChangesInReviewBehavior == changesInReviewFail {
+		p.logger.Printf(" A review in progress is not cancelled: the commit fails if Google Play is still reviewing an earlier submission.")
+		call.ChangesInReviewBehavior("ERROR_IF_IN_REVIEW")
+	}
 	if _, err := call.Do(); err != nil {
 		return fmt.Errorf("failed to commit edit: %w", googleError(err))
 	}
@@ -411,6 +433,13 @@ func googleMessage(err error) string {
 		return apiErr.Message
 	}
 	return err.Error()
+}
+
+// isChangesAlreadyInReview reports whether Google Play refused the commit because a review is in progress. The reason
+// is in the error's ErrorInfo details, which the client keeps in the raw body.
+func isChangesAlreadyInReview(err error) bool {
+	var apiErr *googleapi.Error
+	return errors.As(err, &apiErr) && strings.Contains(apiErr.Body, changesAlreadyInReviewReason)
 }
 
 // isChangesNotSentForReviewRequired reports whether the commit needs changesNotSentForReview=true (after a rejection).
