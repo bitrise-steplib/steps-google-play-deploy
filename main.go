@@ -48,9 +48,10 @@ func (p *Publisher) fail(err error) {
 
 // hint returns what to do about an error with a known fix, or an empty string.
 func hint(err error) string {
+	var hinted hintedError
 	switch {
-	case isChangesNotSentForReviewRequired(err):
-		return changesNotSentForReviewHint
+	case errors.As(err, &hinted):
+		return hinted.hint
 	case strings.Contains(err.Error(), bundleInstallationWarning):
 		return bundleInstallationWarningHint
 	case strings.Contains(err.Error(), internalServerError):
@@ -321,12 +322,15 @@ func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, co
 // valid.
 func (p *Publisher) commitWithRetries(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) error {
 	err := p.commitEdit(editsService, configs, appEdit, false)
-	if isChangesNotSentForReviewRequired(err) && configs.RetryWithoutSendingToReview {
-		p.logger.Warnf("%s", errorutil.FormattedError(err))
-		p.logger.Warnf("Google Play does not send this app's changes for review automatically. Committing again without sending for review; send the changes for review from the Google Play Console once the Step finishes.")
-		err = p.commitEdit(editsService, configs, appEdit, true)
+	if !isChangesNotSentForReviewRequired(err) {
+		return err
 	}
-	return err
+	if !configs.RetryWithoutSendingToReview {
+		return hintedError{err: err, hint: changesNotSentForReviewHint}
+	}
+	p.logger.Warnf("%s", errorutil.FormattedError(err))
+	p.logger.Warnf("Google Play does not send this app's changes for review automatically. Committing again without sending for review; send the changes for review from the Google Play Console once the Step finishes.")
+	return p.commitEdit(editsService, configs, appEdit, true)
 }
 
 func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit, changesNotSentForReview bool) error {
@@ -340,6 +344,17 @@ func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, conf
 	p.logger.Donef("Edit committed")
 	return nil
 }
+
+// hintedError is an error with what to do about it, for an error whose fix depends on where it happened. It takes the
+// place of err in the chain, so errorutil.FormattedError prints err's own text once.
+type hintedError struct {
+	err  error
+	hint string
+}
+
+func (e hintedError) Error() string { return e.err.Error() }
+
+func (e hintedError) Unwrap() error { return errors.Unwrap(e.err) }
 
 // uploadError is an error from uploading the apps. The Step exports it as FAILURE_REASON.
 type uploadError struct {

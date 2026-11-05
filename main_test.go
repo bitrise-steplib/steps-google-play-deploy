@@ -307,7 +307,8 @@ func TestDeployFailsWithoutRetryWhenChangesCannotBeSentForReview(t *testing.T) {
 
 	require.ErrorContains(t, err, "failed to commit edit: ")
 	require.ErrorContains(t, err, changesNotSentForReviewMessage)
-	require.Contains(t, hint(err), "Set retry_without_sending_to_review to true")
+	require.Equal(t, changesNotSentForReviewHint, hint(err))
+	require.Equal(t, "failed to commit edit:\n  googleapi: Error 400: "+changesNotSentForReviewMessage+".", errorutil.FormattedError(err), "the hint does not add a level")
 	require.Len(t, play.commits, 1)
 }
 
@@ -334,6 +335,7 @@ func TestDeployFailsWhenTheCommitWithoutSendingForReviewIsRefusedToo(t *testing.
 
 	require.ErrorContains(t, err, "failed to commit edit: ")
 	require.ErrorContains(t, err, changesNotSentForReviewMessage)
+	require.Empty(t, hint(err), "the retry input is already set")
 	require.Len(t, play.commits, 2, "the Step retries once")
 }
 
@@ -361,6 +363,7 @@ func TestDeployDryRunDoesNotRetryIntoACommitWhenChangesCannotBeSentForReview(t *
 
 	require.ErrorContains(t, err, "failed to validate edit")
 	require.ErrorContains(t, err, changesNotSentForReviewMessage)
+	require.Empty(t, hint(err), "the retry input does not apply to a dry run")
 	require.Equal(t, 1, play.validates)
 	require.Empty(t, play.commits, "a dry run never commits, not even without sending for review")
 }
@@ -371,14 +374,16 @@ func TestDeployReportsAFailureReasonOnlyWhenTheUploadFails(t *testing.T) {
 	tests := []struct {
 		name              string
 		uploadResponses   []fakeResponse
+		commitResponses   []fakeResponse
 		wantFailureReason string
 	}{
-		{"upload succeeds", nil, ""},
-		{"upload refused", []fakeResponse{versionCodeUsed}, "Version code 42 has already been used."},
+		{"upload succeeds", nil, nil, ""},
+		{"upload refused", []fakeResponse{versionCodeUsed}, nil, "Version code 42 has already been used."},
+		{"commit refused", nil, []fakeResponse{commitManualReview}, ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			play := newFakePlay(t)
+			play := newFakePlay(t, tt.commitResponses...)
 			play.uploadResponses = tt.uploadResponses
 
 			err := NewPublisher(log.NewLogger()).executeEdit(play.service(t), testConfigs(t))
@@ -393,14 +398,15 @@ func TestDeployReportsAFailureReasonOnlyWhenTheUploadFails(t *testing.T) {
 }
 
 func TestHint(t *testing.T) {
-	apiError := func(code int, message string) error {
+	wrappedGoogleError := func(code int, message string) error {
 		return fmt.Errorf("failed to upload application(s): %w", &googleapi.Error{Code: code, Message: message})
 	}
 
-	require.Equal(t, changesNotSentForReviewHint, hint(fmt.Errorf("failed to commit edit: %w", &googleapi.Error{Code: 400, Message: changesNotSentForReviewMessage})))
-	require.Equal(t, bundleInstallationWarningHint, hint(apiError(403, "The installation of the app bundle may be too large and trigger user warning on some devices, and this needs to be explicitly acknowledged in the request.")))
-	require.Equal(t, internalServerErrorHint, hint(apiError(500, "Internal error encountered.")))
-	require.Empty(t, hint(apiError(403, "Version code 42 has already been used.")))
+	require.Empty(t, hint(wrappedGoogleError(400, changesNotSentForReviewMessage)), "only the commit flow knows whether the retry input helps")
+	require.Equal(t, "set the input", hint(fmt.Errorf("failed to commit edit: %w", hintedError{err: errors.New("refused"), hint: "set the input"})))
+	require.Equal(t, bundleInstallationWarningHint, hint(wrappedGoogleError(403, "The installation of the app bundle may be too large and trigger user warning on some devices, and this needs to be explicitly acknowledged in the request.")))
+	require.Equal(t, internalServerErrorHint, hint(wrappedGoogleError(500, "Internal error encountered.")))
+	require.Empty(t, hint(wrappedGoogleError(403, "Version code 42 has already been used.")))
 }
 
 func TestFailureReasonIsTheUploadErrorWithItsHint(t *testing.T) {
