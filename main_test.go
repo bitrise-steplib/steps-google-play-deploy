@@ -165,6 +165,7 @@ const (
 )
 
 var (
+	commitInReview = fakeResponse{status: http.StatusBadRequest, body: `{"error":{"code":400,"message":"You already have changes in review. Cancel this review or wait for it to complete before you try again.","status":"FAILED_PRECONDITION","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"CHANGES_ALREADY_IN_REVIEW","domain":"androidpublisher.googleapis.com","metadata":{"editId":"edit-1","method":"edits.commit"}}]}}`}
 	commitOK           = fakeResponse{status: http.StatusOK, body: editBody}
 	commitManualReview = fakeResponse{status: http.StatusBadRequest, body: cannotBeSentForReviewBody}
 	serverError        = fakeResponse{status: http.StatusInternalServerError, body: `{"error":{"code":500,"message":"Internal error encountered.","status":"INTERNAL"}}`}
@@ -366,6 +367,61 @@ func TestDeployDryRunDoesNotRetryIntoACommitWhenChangesCannotBeSentForReview(t *
 	require.Empty(t, hint(err), "the retry input does not apply to a dry run")
 	require.Equal(t, 1, play.validates)
 	require.Empty(t, play.commits, "a dry run never commits, not even without sending for review")
+}
+
+func TestDeploySendsChangesInReviewBehaviorOnlyForFail(t *testing.T) {
+	tests := []struct {
+		name     string
+		behavior string
+		want     []string
+	}{
+		{"default", "", []string{""}},
+		{"cancel_and_resubmit", changesInReviewCancelAndResubmit, []string{""}},
+		{"fail", changesInReviewFail, []string{"ERROR_IF_IN_REVIEW"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			play := newFakePlay(t)
+			configs := testConfigs(t)
+			configs.ChangesInReviewBehavior = tt.behavior
+
+			require.NoError(t, NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
+
+			var got []string
+			for _, commit := range play.commits {
+				got = append(got, commit.Get("changesInReviewBehavior"))
+			}
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestDeployLeavesAReviewInProgressUntouchedWithFail(t *testing.T) {
+	play := newFakePlay(t, commitInReview)
+	configs := testConfigs(t)
+	configs.ChangesInReviewBehavior = changesInReviewFail
+
+	err := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+
+	require.ErrorContains(t, err, "You already have changes in review.")
+	require.Equal(t, changesAlreadyInReviewHint, hint(err))
+	require.True(t, strings.HasPrefix(errorutil.FormattedError(err), "failed to commit edit:\n  googleapi: Error 400: You already have changes in review."), "the hint does not add a level")
+	require.Empty(t, failureReason(err), "only an upload error is a failure reason")
+	require.Len(t, play.commits, 1)
+}
+
+func TestDeployKeepsChangesInReviewBehaviorOnTheRetryWithoutSendingToReview(t *testing.T) {
+	play := newFakePlay(t, commitManualReview, commitInReview)
+	configs := testConfigs(t)
+	configs.RetryWithoutSendingToReview = true
+	configs.ChangesInReviewBehavior = changesInReviewFail
+
+	err := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+
+	require.Equal(t, changesAlreadyInReviewHint, hint(err))
+	require.Len(t, play.commits, 2)
+	require.Equal(t, "true", play.commits[1].Get("changesNotSentForReview"))
+	require.Equal(t, "ERROR_IF_IN_REVIEW", play.commits[1].Get("changesInReviewBehavior"))
 }
 
 func TestDeployReportsAFailureReasonOnlyWhenTheUploadFails(t *testing.T) {
