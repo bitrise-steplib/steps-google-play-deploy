@@ -350,6 +350,21 @@ func TestDeployDryRunFailsWithoutCommittingWhenTheValidationFails(t *testing.T) 
 	require.Empty(t, play.commits)
 }
 
+func TestDeployDryRunDoesNotRetryIntoACommitWhenChangesCannotBeSentForReview(t *testing.T) {
+	play := newFakePlay(t)
+	play.validateResponses = []fakeResponse{commitManualReview}
+	configs := testConfigs(t)
+	configs.DryRun = true
+	configs.RetryWithoutSendingToReview = true
+
+	err := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+
+	require.ErrorContains(t, err, "failed to validate edit")
+	require.ErrorContains(t, err, changesNotSentForReviewMessage)
+	require.Equal(t, 1, play.validates)
+	require.Empty(t, play.commits, "a dry run never commits, not even without sending for review")
+}
+
 func TestDeployReportsAFailureReasonOnlyWhenTheUploadFails(t *testing.T) {
 	versionCodeUsed := fakeResponse{status: http.StatusForbidden, body: `{"error":{"code":403,"message":"Version code 42 has already been used.","status":"PERMISSION_DENIED"}}`}
 
