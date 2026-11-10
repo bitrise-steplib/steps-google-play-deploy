@@ -165,7 +165,7 @@ const (
 )
 
 var (
-	commitInReview = fakeResponse{status: http.StatusBadRequest, body: `{"error":{"code":400,"message":"You already have changes in review. Cancel this review or wait for it to complete before you try again.","status":"FAILED_PRECONDITION","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"CHANGES_ALREADY_IN_REVIEW","domain":"androidpublisher.googleapis.com","metadata":{"editId":"edit-1","method":"edits.commit"}}]}}`}
+	commitInReview     = fakeResponse{status: http.StatusBadRequest, body: `{"error":{"code":400,"message":"You already have changes in review. Cancel this review or wait for it to complete before you try again.","status":"FAILED_PRECONDITION","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"CHANGES_ALREADY_IN_REVIEW","domain":"androidpublisher.googleapis.com","metadata":{"editId":"edit-1","method":"edits.commit"}}]}}`}
 	commitOK           = fakeResponse{status: http.StatusOK, body: editBody}
 	commitManualReview = fakeResponse{status: http.StatusBadRequest, body: cannotBeSentForReviewBody}
 	serverError        = fakeResponse{status: http.StatusInternalServerError, body: `{"error":{"code":500,"message":"Internal error encountered.","status":"INTERNAL"}}`}
@@ -376,7 +376,7 @@ func TestDeploySendsChangesInReviewBehaviorOnlyForFail(t *testing.T) {
 		want     []string
 	}{
 		{"default", "", []string{""}},
-		{"cancel_and_resubmit", changesInReviewCancelAndResubmit, []string{""}},
+		{"cancel_and_resubmit", "cancel_and_resubmit", []string{""}},
 		{"fail", changesInReviewFail, []string{"ERROR_IF_IN_REVIEW"}},
 	}
 	for _, tt := range tests {
@@ -405,7 +405,14 @@ func TestDeployLeavesAReviewInProgressUntouchedWithFail(t *testing.T) {
 
 	require.ErrorContains(t, err, "You already have changes in review.")
 	require.Equal(t, changesAlreadyInReviewHint, hint(err))
-	require.True(t, strings.HasPrefix(errorutil.FormattedError(err), "failed to commit edit:\n  googleapi: Error 400: You already have changes in review."), "the hint does not add a level")
+	// The hint does not add a level. Google Play's ErrorInfo details follow its message, flattened by FormattedError.
+	require.Equal(t, "failed to commit edit:\n"+
+		"  googleapi: Error 400: You already have changes in review. Cancel this review or wait for it to complete before you try again.\n"+
+		"  Details:\n  [\n  {\n"+
+		"  \"@type\": \"type.googleapis.com/google.rpc.ErrorInfo\",\n"+
+		"  \"domain\": \"androidpublisher.googleapis.com\",\n"+
+		"  \"metadata\": {\n  \"editId\": \"edit-1\",\n  \"method\": \"edits.commit\"\n  },\n"+
+		"  \"reason\": \"CHANGES_ALREADY_IN_REVIEW\"\n  }\n  ]", errorutil.FormattedError(err))
 	require.Empty(t, failureReason(err), "only an upload error is a failure reason")
 	require.Len(t, play.commits, 1)
 }
