@@ -369,7 +369,7 @@ func TestDeployDryRunDoesNotRetryIntoACommitWhenChangesCannotBeSentForReview(t *
 	require.Empty(t, play.commits, "a dry run never commits, not even without sending for review")
 }
 
-func TestDeploySendsChangesInReviewBehaviorOnlyForFail(t *testing.T) {
+func TestDeploySendsChangesInReviewBehaviorOnlyToLeaveAReviewUntouched(t *testing.T) {
 	tests := []struct {
 		name     string
 		behavior string
@@ -378,6 +378,7 @@ func TestDeploySendsChangesInReviewBehaviorOnlyForFail(t *testing.T) {
 		{"default", "", []string{""}},
 		{"cancel_and_resubmit", "cancel_and_resubmit", []string{""}},
 		{"fail", changesInReviewFail, []string{"ERROR_IF_IN_REVIEW"}},
+		{"upload_as_draft", changesInReviewUploadAsDraft, []string{"ERROR_IF_IN_REVIEW"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -429,6 +430,101 @@ func TestDeployKeepsChangesInReviewBehaviorOnTheRetryWithoutSendingToReview(t *t
 	require.Len(t, play.commits, 2)
 	require.Equal(t, "true", play.commits[1].Get("changesNotSentForReview"))
 	require.Equal(t, "ERROR_IF_IN_REVIEW", play.commits[1].Get("changesInReviewBehavior"))
+}
+
+func TestDeploySavesTheReleaseAsADraftWhenAReviewIsInProgress(t *testing.T) {
+	play := newFakePlay(t, commitInReview, commitOK)
+	configs := testConfigs(t)
+	configs.ChangesInReviewBehavior = changesInReviewUploadAsDraft
+	configs.UserFraction = 0.5
+	configs.ReleaseName = "1.2.3"
+	configs.UpdatePriority = 3
+
+	require.NoError(t, NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
+
+	require.Equal(t, 1, play.inserts, "the refused commit leaves the edit valid, so it is reused")
+	require.Equal(t, 1, play.uploads, "the app is not uploaded again")
+	require.Len(t, play.trackUpdates, 2)
+	release, draft := play.trackUpdates[0].Releases[0], play.trackUpdates[1].Releases[0]
+	require.Equal(t, releaseStatusInProgress, release.Status)
+	require.Equal(t, 0.5, release.UserFraction)
+	require.Equal(t, releaseStatusDraft, draft.Status)
+	require.Zero(t, draft.UserFraction, "a draft has no user fraction")
+	require.Equal(t, release.VersionCodes, draft.VersionCodes)
+	require.Equal(t, "1.2.3", draft.Name)
+	require.Equal(t, int64(3), draft.InAppUpdatePriority)
+	require.Len(t, play.commits, 2)
+	for _, commit := range play.commits {
+		require.Equal(t, "ERROR_IF_IN_REVIEW", commit.Get("changesInReviewBehavior"), "the draft never cancels the review in progress")
+	}
+}
+
+func TestDeployFailsWhenTheDraftIsRefusedToo(t *testing.T) {
+	play := newFakePlay(t, commitInReview, commitInReview)
+	configs := testConfigs(t)
+	configs.ChangesInReviewBehavior = changesInReviewUploadAsDraft
+
+	err := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+
+	require.ErrorContains(t, err, "You already have changes in review.")
+	require.Equal(t, draftRefusedHint, hint(err))
+	require.Len(t, play.commits, 2, "the draft is tried once")
+	require.Len(t, play.trackUpdates, 2)
+}
+
+func TestDeployFailsWhenTheDraftTrackUpdateFails(t *testing.T) {
+	play := newFakePlay(t, commitInReview)
+	play.trackUpdateResponses = []fakeResponse{{status: http.StatusOK, body: `{"track":"internal"}`}, serverError}
+	configs := testConfigs(t)
+	configs.ChangesInReviewBehavior = changesInReviewUploadAsDraft
+
+	err := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+
+	require.ErrorContains(t, err, "failed to save the release as a draft")
+	require.Len(t, play.commits, 1)
+}
+
+func TestDeployDoesNotFallBackToADraft(t *testing.T) {
+	tests := []struct {
+		name             string
+		prepare          func(*Configs)
+		wantTrackUpdates int
+		wantHint         string
+	}{
+		{"no track is set", func(c *Configs) { c.Track = "" }, 0, draftWithoutTrackHint},
+		{"the release is a draft already", func(c *Configs) { c.Status = releaseStatusDraft }, 1, draftAlreadyHint},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			play := newFakePlay(t, commitInReview)
+			configs := testConfigs(t)
+			configs.ChangesInReviewBehavior = changesInReviewUploadAsDraft
+			tt.prepare(&configs)
+
+			err := NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs)
+
+			require.Equal(t, tt.wantHint, hint(err))
+			require.Len(t, play.commits, 1)
+			require.Len(t, play.trackUpdates, tt.wantTrackUpdates)
+		})
+	}
+}
+
+func TestDeployRetriesWithoutSendingToReviewThenSavesADraft(t *testing.T) {
+	play := newFakePlay(t, commitManualReview, commitInReview, commitOK)
+	configs := testConfigs(t)
+	configs.RetryWithoutSendingToReview = true
+	configs.ChangesInReviewBehavior = changesInReviewUploadAsDraft
+
+	require.NoError(t, NewPublisher(log.NewLogger()).executeEdit(play.service(t), configs))
+
+	require.Equal(t, 1, play.inserts)
+	require.Len(t, play.commits, 3)
+	last := play.commits[2]
+	require.Equal(t, "true", last.Get("changesNotSentForReview"), "the draft commit stays without sending for review")
+	require.Equal(t, "ERROR_IF_IN_REVIEW", last.Get("changesInReviewBehavior"))
+	require.Len(t, play.trackUpdates, 2)
+	require.Equal(t, releaseStatusDraft, play.trackUpdates[1].Releases[0].Status)
 }
 
 func TestDeployReportsAFailureReasonOnlyWhenTheUploadFails(t *testing.T) {

@@ -26,9 +26,12 @@ const internalServerError = "googleapi: Error 500"
 const changesNotSentForReviewHint = "Google Play does not send this app's changes for review automatically, so nothing was committed. " +
 	"Set retry_without_sending_to_review to true to commit without sending for review, then send the changes for review from the Google Play Console."
 
-// changesInReviewFail is the changes_in_review_behavior value that leaves a review in progress untouched. The default,
-// cancel_and_resubmit, is Google Play's default too, so the Step does not send it.
-const changesInReviewFail = "fail"
+// Values of changes_in_review_behavior that leave a review in progress untouched. The default, cancel_and_resubmit, is
+// Google Play's default too, so the Step does not send it.
+const (
+	changesInReviewFail          = "fail"
+	changesInReviewUploadAsDraft = "upload_as_draft"
+)
 
 // changesAlreadyInReviewReason is the error reason Google Play returns to a commit sent with
 // changesInReviewBehavior=ERROR_IF_IN_REVIEW while an earlier submission of the app is in review.
@@ -36,7 +39,22 @@ const changesAlreadyInReviewReason = "CHANGES_ALREADY_IN_REVIEW"
 
 const changesAlreadyInReviewHint = "Google Play is still reviewing an earlier submission of this app, so nothing was committed and the review continues. " +
 	"Run the Step again after the review is complete, or cancel the review in the Google Play Console. " +
-	"To cancel the review and submit the new changes instead, set 'Behavior when a review is in progress' (changes_in_review_behavior) to cancel_and_resubmit."
+	"To cancel the review and submit the new changes instead, set 'Behavior when a review is in progress' (changes_in_review_behavior) to cancel_and_resubmit; " +
+	"to save the release as a draft instead, set it to upload_as_draft."
+
+// waitOrCancelReview is what to do when the review in progress blocks the commit and upload_as_draft cannot help.
+const waitOrCancelReview = "Run the Step again after the review is complete, or cancel the review in the Google Play Console."
+
+const draftWithoutTrackHint = "Google Play is still reviewing an earlier submission of this app, so nothing was committed and the review continues. " +
+	"No 'Track' (track) is set, so there is no release to save as a draft. " + waitOrCancelReview
+
+const draftAlreadyHint = "Google Play is still reviewing an earlier submission of this app, so nothing was committed and the review continues. " +
+	"The release is a draft already, so the Step has nothing to fall back to. " + waitOrCancelReview
+
+// Google Play does not document whether a draft can be committed while a review is in progress. The draft commit is
+// sent with ERROR_IF_IN_REVIEW too, so a refusal leaves the review untouched.
+const draftRefusedHint = "Google Play is still reviewing an earlier submission of this app and refused to save the release as a draft too, so nothing was committed and the review continues. " +
+	waitOrCancelReview
 
 const internalServerErrorHint = "Google Play API responded with an unknown error\n" +
 	"Suggestion: create a release manually in Google Play Console because the UI has the capability to present the underlying error in certain cases"
@@ -272,16 +290,17 @@ func (p *Publisher) executeEdit(service *androidpublisher.Service, configs Confi
 		return uploadError{err: err}
 	}
 
+	var release *androidpublisher.TrackRelease
 	if strings.TrimSpace(configs.Track) == "" {
 		p.logger.Infof("Skipping track update")
-	} else if err := p.updateTrack(configs, service, appEdit, p.versionCodeMapToSlice(versionCodes)); err != nil {
+	} else if release, err = p.updateTrack(configs, service, appEdit, p.versionCodeMapToSlice(versionCodes)); err != nil {
 		return fmt.Errorf("failed to update track: %w", err)
 	}
 
 	if configs.DryRun {
 		return p.validateEdit(editsService, configs, appEdit)
 	}
-	return p.commitWithRetries(editsService, configs, appEdit)
+	return p.commitWithRetries(editsService, service, configs, appEdit, release)
 }
 
 func (p *Publisher) createEdit(editsService *androidpublisher.EditsService, configs Configs) (*androidpublisher.AppEdit, error) {
@@ -307,18 +326,19 @@ func (p *Publisher) uploadArtifacts(configs Configs, service *androidpublisher.S
 	return versionCodes, nil
 }
 
-func (p *Publisher) updateTrack(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) error {
+// updateTrack puts the release described by configs on the track and returns it.
+func (p *Publisher) updateTrack(configs Configs, service *androidpublisher.Service, appEdit *androidpublisher.AppEdit, versionCodes []int64) (*androidpublisher.TrackRelease, error) {
 	fmt.Println()
 	p.logger.Infof("Update track")
 	release, err := p.createTrackRelease(configs, versionCodes)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if err := p.updateTracks(configs, service, appEdit, release); err != nil {
-		return err
+		return nil, err
 	}
 	p.logger.Donef("Track updated")
-	return nil
+	return release, nil
 }
 
 func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) error {
@@ -333,26 +353,75 @@ func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, co
 
 // commitWithRetries commits the edit. If Google Play cannot send the changes for review automatically, it commits the
 // same edit once more without sending for review (retry_without_sending_to_review); a refused commit leaves the edit
-// valid. With changes_in_review_behavior set to fail, a commit refused because an earlier submission is in review
-// returns the error with what to do about it.
-func (p *Publisher) commitWithRetries(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) error {
-	if configs.ChangesInReviewBehavior == changesInReviewFail {
+// valid. If the commit is refused because an earlier submission is in review, it saves the release as a draft and
+// commits once more (upload_as_draft), or returns the error with what to do about it. release is nil when no track is
+// set.
+func (p *Publisher) commitWithRetries(editsService *androidpublisher.EditsService, service *androidpublisher.Service, configs Configs, appEdit *androidpublisher.AppEdit, release *androidpublisher.TrackRelease) error {
+	switch configs.ChangesInReviewBehavior {
+	case changesInReviewFail:
 		fmt.Println()
 		p.logger.Printf("A review in progress is not cancelled: the commit fails if Google Play is still reviewing an earlier submission.")
+	case changesInReviewUploadAsDraft:
+		fmt.Println()
+		p.logger.Printf("A review in progress is not cancelled: the release is saved as a draft if Google Play is still reviewing an earlier submission.")
 	}
-	err := p.commitEdit(editsService, configs, appEdit, false)
+	changesNotSentForReview := false
+	err := p.commitEdit(editsService, configs, appEdit, changesNotSentForReview)
 	if isChangesNotSentForReviewRequired(err) {
 		if !configs.RetryWithoutSendingToReview {
 			return hintedError{err: err, hint: changesNotSentForReviewHint}
 		}
 		p.logger.Warnf("%s", errorutil.FormattedError(err))
 		p.logger.Warnf("Google Play does not send this app's changes for review automatically. Committing again without sending for review; send the changes for review from the Google Play Console once the Step finishes.")
-		err = p.commitEdit(editsService, configs, appEdit, true)
+		changesNotSentForReview = true
+		err = p.commitEdit(editsService, configs, appEdit, changesNotSentForReview)
 	}
-	if isChangesAlreadyInReview(err) {
+	if !isChangesAlreadyInReview(err) {
+		return err
+	}
+	if configs.ChangesInReviewBehavior != changesInReviewUploadAsDraft {
 		return hintedError{err: err, hint: changesAlreadyInReviewHint}
 	}
-	return err
+	return p.commitAsDraft(editsService, service, configs, appEdit, release, changesNotSentForReview, err)
+}
+
+// commitAsDraft puts the release on the track again as a draft (same version codes, name, notes and update priority,
+// no user fraction) and commits once more, after inReviewErr refused the commit. The commit still sends
+// ERROR_IF_IN_REVIEW, so this never cancels the review in progress.
+func (p *Publisher) commitAsDraft(editsService *androidpublisher.EditsService, service *androidpublisher.Service, configs Configs, appEdit *androidpublisher.AppEdit, release *androidpublisher.TrackRelease, changesNotSentForReview bool, inReviewErr error) error {
+	switch {
+	case release == nil:
+		return hintedError{err: inReviewErr, hint: draftWithoutTrackHint}
+	case release.Status == releaseStatusDraft:
+		return hintedError{err: inReviewErr, hint: draftAlreadyHint}
+	}
+
+	p.logger.Warnf("%s", errorutil.FormattedError(inReviewErr))
+	p.logger.Warnf("Google Play is still reviewing an earlier submission of this app. Saving the release as a draft on the %s track instead, without sending it for review.", configs.Track)
+	draft := *release
+	draft.Status = releaseStatusDraft
+	draft.UserFraction = 0
+	fmt.Println()
+	p.logger.Infof("Update track")
+	if err := p.updateTracks(configs, service, appEdit, &draft); err != nil {
+		return fmt.Errorf("failed to save the release as a draft: %w", err)
+	}
+	p.logger.Donef("Track updated")
+
+	err := p.commitEdit(editsService, configs, appEdit, changesNotSentForReview)
+	if isChangesAlreadyInReview(err) {
+		return hintedError{err: err, hint: draftRefusedHint}
+	}
+	if err != nil {
+		return err
+	}
+	p.logger.Warnf("The release was saved as a draft on the %s track because a review is in progress. Roll it out from the Google Play Console once the review is complete.", configs.Track)
+	return nil
+}
+
+// leavesReviewUntouched reports whether the commit is sent with changesInReviewBehavior=ERROR_IF_IN_REVIEW.
+func leavesReviewUntouched(configs Configs) bool {
+	return configs.ChangesInReviewBehavior == changesInReviewFail || configs.ChangesInReviewBehavior == changesInReviewUploadAsDraft
 }
 
 func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit, changesNotSentForReview bool) error {
@@ -362,7 +431,7 @@ func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, conf
 	call.ChangesNotSentForReview(changesNotSentForReview)
 	// Also sent on the commit without sending for review: it is not known whether that commit cancels a review in
 	// progress, and failing is safer than cancelling it.
-	if configs.ChangesInReviewBehavior == changesInReviewFail {
+	if leavesReviewUntouched(configs) {
 		call.ChangesInReviewBehavior("ERROR_IF_IN_REVIEW")
 	}
 	if _, err := call.Do(); err != nil {
