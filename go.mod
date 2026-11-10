@@ -6,6 +6,7 @@ require (
 	github.com/bitrise-io/go-steputils v1.0.6
 	github.com/bitrise-io/go-utils v1.0.9
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.28
+	github.com/googleapis/gax-go/v2 v2.26.2
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/oauth2 v0.37.0
@@ -24,7 +25,6 @@ require (
 	github.com/google/s2a-go v0.1.11 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.23 // indirect
-	github.com/googleapis/gax-go/v2 v2.26.2 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
