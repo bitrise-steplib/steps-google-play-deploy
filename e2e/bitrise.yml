@@ -76,7 +76,7 @@ workflows:
         - mapping_file: $BITRISE_DEPLOY_DIR/Wearable-mapping.txt
         - verbose_log: true
 
-  test_aab_deploy:
+  manual_test_aab_deploy:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
     - BRANCH: master
@@ -293,7 +293,7 @@ workflows:
         - user_fraction: ""
         - retry_without_sending_to_review: true
         - verbose_log: true
-  test_dry_run:
+  manual_test_dry_run:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
     - BRANCH: master
