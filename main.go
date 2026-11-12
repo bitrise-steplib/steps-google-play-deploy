@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,6 +24,20 @@ const internalServerError = "googleapi: Error 500"
 
 const changesNotSentForReviewHint = "Google Play does not send this app's changes for review automatically, so nothing was committed. " +
 	"Set retry_without_sending_to_review to true to commit without sending for review, then send the changes for review from the Google Play Console."
+
+// changesInReviewFail is the changes_in_review_behavior value that leaves a review in progress untouched. The default,
+// cancel_and_resubmit, is Google Play's default too, so the Step does not send it.
+const changesInReviewFail = "fail"
+
+// changesAlreadyInReviewReason is the error reason Google Play returns to a commit sent with
+// changesInReviewBehavior=ERROR_IF_IN_REVIEW while an earlier submission of the app is in review.
+const changesAlreadyInReviewReason = "CHANGES_ALREADY_IN_REVIEW"
+
+const errorInfoType = "type.googleapis.com/google.rpc.ErrorInfo"
+
+const changesAlreadyInReviewHint = "Google Play is still reviewing an earlier submission of this app, so nothing was committed and the review continues. " +
+	"Run the Step again after the review is complete, or cancel the review in the Google Play Console. " +
+	"To cancel the review and submit the new changes instead, set 'Behavior when a review is in progress' (changes_in_review_behavior) to cancel_and_resubmit."
 
 const internalServerErrorHint = "Google Play API responded with an unknown error\n" +
 	"Suggestion: create a release manually in Google Play Console because the UI has the capability to present the underlying error in certain cases"
@@ -319,18 +334,26 @@ func (p *Publisher) validateEdit(editsService *androidpublisher.EditsService, co
 
 // commitWithRetries commits the edit. If Google Play cannot send the changes for review automatically, it commits the
 // same edit once more without sending for review (retry_without_sending_to_review); a refused commit leaves the edit
-// valid.
+// valid. With changes_in_review_behavior set to fail, a commit refused because an earlier submission is in review
+// returns the error with what to do about it.
 func (p *Publisher) commitWithRetries(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit) error {
+	if configs.ChangesInReviewBehavior == changesInReviewFail {
+		fmt.Println()
+		p.logger.Printf("A review in progress is not cancelled: the commit fails if Google Play is still reviewing an earlier submission.")
+	}
 	err := p.commitEdit(editsService, configs, appEdit, false)
-	if !isChangesNotSentForReviewRequired(err) {
-		return err
+	if isChangesNotSentForReviewRequired(err) {
+		if !configs.RetryWithoutSendingToReview {
+			return hintedError{err: err, hint: changesNotSentForReviewHint}
+		}
+		p.logger.Warnf("%s", errorutil.FormattedError(err))
+		p.logger.Warnf("Google Play does not send this app's changes for review automatically. Committing again without sending for review; send the changes for review from the Google Play Console once the Step finishes.")
+		err = p.commitEdit(editsService, configs, appEdit, true)
 	}
-	if !configs.RetryWithoutSendingToReview {
-		return hintedError{err: err, hint: changesNotSentForReviewHint}
+	if isChangesAlreadyInReview(err) {
+		return hintedError{err: err, hint: changesAlreadyInReviewHint}
 	}
-	p.logger.Warnf("%s", errorutil.FormattedError(err))
-	p.logger.Warnf("Google Play does not send this app's changes for review automatically. Committing again without sending for review; send the changes for review from the Google Play Console once the Step finishes.")
-	return p.commitEdit(editsService, configs, appEdit, true)
+	return err
 }
 
 func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, configs Configs, appEdit *androidpublisher.AppEdit, changesNotSentForReview bool) error {
@@ -338,6 +361,11 @@ func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, conf
 	p.logger.Infof("Committing edit")
 	call := editsService.Commit(configs.PackageName, appEdit.Id)
 	call.ChangesNotSentForReview(changesNotSentForReview)
+	// Also sent on the commit without sending for review: it is not known whether that commit cancels a review in
+	// progress, and failing is safer than cancelling it.
+	if configs.ChangesInReviewBehavior == changesInReviewFail {
+		call.ChangesInReviewBehavior("ERROR_IF_IN_REVIEW")
+	}
 	if _, err := call.Do(); err != nil {
 		return fmt.Errorf("failed to commit edit: %w", googleError(err))
 	}
@@ -345,7 +373,8 @@ func (p *Publisher) commitEdit(editsService *androidpublisher.EditsService, conf
 	return nil
 }
 
-// hintedError is an error with what to do about it, for an error whose fix depends on where it happened. It takes the
+// hintedError is an error with what to do about it, for an error whose fix depends on where it happened or on the
+// Step's inputs, so hint cannot tell it from the error text alone. It takes the
 // place of err in the chain, so errorutil.FormattedError prints err's own text once.
 type hintedError struct {
 	err  error
@@ -411,6 +440,23 @@ func googleMessage(err error) string {
 		return apiErr.Message
 	}
 	return err.Error()
+}
+
+// isChangesAlreadyInReview reports whether Google Play refused the commit because a review is in progress, by the
+// reason in the error's ErrorInfo details. The details are read as the client parsed them: gax-go's apierror rejects
+// Google Play's error body, which also has the legacy errors array.
+func isChangesAlreadyInReview(err error) bool {
+	var apiErr *googleapi.Error
+	if !errors.As(err, &apiErr) || apiErr.Code != http.StatusBadRequest {
+		return false
+	}
+	for _, detail := range apiErr.Details {
+		info, ok := detail.(map[string]any)
+		if ok && info["@type"] == errorInfoType && info["reason"] == changesAlreadyInReviewReason {
+			return true
+		}
+	}
+	return false
 }
 
 // isChangesNotSentForReviewRequired reports whether the commit needs changesNotSentForReview=true (after a rejection).
