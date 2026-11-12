@@ -159,13 +159,21 @@ type fakeResponse struct {
 
 const fakeEditsPath = "/androidpublisher/v3/applications/com.example.app/edits"
 
+// commitInReviewBody is Google Play's response to a commit sent with ERROR_IF_IN_REVIEW while a review is in progress,
+// as seen on the e2e app (#216). Besides the details it has the legacy errors array, which strict JSON parsers such as
+// gax-go's apierror reject.
+const commitInReviewBody = `{"error":{"code":400,"message":"You already have changes in review. Cancel this review or wait for it to complete before you try again.",` +
+	`"errors":[{"message":"You already have changes in review. Cancel this review or wait for it to complete before you try again.","domain":"global","reason":"failedPrecondition"}],` +
+	`"status":"FAILED_PRECONDITION",` +
+	`"details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"CHANGES_ALREADY_IN_REVIEW","domain":"googleapis.com","metadata":{"editId":"edit-1","method":"edits.commit","service":"androidpublisher.googleapis.com"}}]}}`
+
 const (
 	editBody                  = `{"id":"edit-1"}`
 	cannotBeSentForReviewBody = `{"error":{"code":400,"message":"Changes cannot be sent for review automatically. Please set the query parameter changesNotSentForReview to true.","status":"INVALID_ARGUMENT"}}`
 )
 
 var (
-	commitInReview     = fakeResponse{status: http.StatusBadRequest, body: `{"error":{"code":400,"message":"You already have changes in review. Cancel this review or wait for it to complete before you try again.","status":"FAILED_PRECONDITION","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"CHANGES_ALREADY_IN_REVIEW","domain":"androidpublisher.googleapis.com","metadata":{"editId":"edit-1","method":"edits.commit"}}]}}`}
+	commitInReview     = fakeResponse{status: http.StatusBadRequest, body: commitInReviewBody}
 	commitOK           = fakeResponse{status: http.StatusOK, body: editBody}
 	commitManualReview = fakeResponse{status: http.StatusBadRequest, body: cannotBeSentForReviewBody}
 	serverError        = fakeResponse{status: http.StatusInternalServerError, body: `{"error":{"code":500,"message":"Internal error encountered.","status":"INTERNAL"}}`}
@@ -405,14 +413,16 @@ func TestDeployLeavesAReviewInProgressUntouchedWithFail(t *testing.T) {
 
 	require.ErrorContains(t, err, "You already have changes in review.")
 	require.Equal(t, changesAlreadyInReviewHint, hint(err))
-	// The hint does not add a level. Google Play's ErrorInfo details follow its message, flattened by FormattedError.
+	// The hint does not add a level. Google Play's ErrorInfo details and legacy reason follow its message, flattened by
+	// FormattedError, as in the e2e app's log (#216).
 	require.Equal(t, "failed to commit edit:\n"+
 		"  googleapi: Error 400: You already have changes in review. Cancel this review or wait for it to complete before you try again.\n"+
 		"  Details:\n  [\n  {\n"+
 		"  \"@type\": \"type.googleapis.com/google.rpc.ErrorInfo\",\n"+
-		"  \"domain\": \"androidpublisher.googleapis.com\",\n"+
-		"  \"metadata\": {\n  \"editId\": \"edit-1\",\n  \"method\": \"edits.commit\"\n  },\n"+
-		"  \"reason\": \"CHANGES_ALREADY_IN_REVIEW\"\n  }\n  ]", errorutil.FormattedError(err))
+		"  \"domain\": \"googleapis.com\",\n"+
+		"  \"metadata\": {\n  \"editId\": \"edit-1\",\n  \"method\": \"edits.commit\",\n  \"service\": \"androidpublisher.googleapis.com\"\n  },\n"+
+		"  \"reason\": \"CHANGES_ALREADY_IN_REVIEW\"\n  }\n  ]\n"+
+		"  , failedPrecondition", errorutil.FormattedError(err))
 	require.Empty(t, failureReason(err), "only an upload error is a failure reason")
 	require.Len(t, play.commits, 1)
 }

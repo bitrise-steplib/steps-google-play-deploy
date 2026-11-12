@@ -14,7 +14,6 @@ import (
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/v2/errorutil"
 	"github.com/bitrise-io/go-utils/v2/log"
-	"github.com/googleapis/gax-go/v2/apierror"
 	"google.golang.org/api/androidpublisher/v3"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
@@ -33,6 +32,8 @@ const changesInReviewFail = "fail"
 // changesAlreadyInReviewReason is the error reason Google Play returns to a commit sent with
 // changesInReviewBehavior=ERROR_IF_IN_REVIEW while an earlier submission of the app is in review.
 const changesAlreadyInReviewReason = "CHANGES_ALREADY_IN_REVIEW"
+
+const errorInfoType = "type.googleapis.com/google.rpc.ErrorInfo"
 
 const changesAlreadyInReviewHint = "Google Play is still reviewing an earlier submission of this app, so nothing was committed and the review continues. " +
 	"Run the Step again after the review is complete, or cancel the review in the Google Play Console. " +
@@ -442,10 +443,20 @@ func googleMessage(err error) string {
 }
 
 // isChangesAlreadyInReview reports whether Google Play refused the commit because a review is in progress, by the
-// reason in the error's ErrorInfo details.
+// reason in the error's ErrorInfo details. The details are read as the client parsed them: gax-go's apierror rejects
+// Google Play's error body, which also has the legacy errors array.
 func isChangesAlreadyInReview(err error) bool {
-	apiErr, ok := apierror.FromError(err)
-	return ok && apiErr.HTTPCode() == http.StatusBadRequest && apiErr.Reason() == changesAlreadyInReviewReason
+	var apiErr *googleapi.Error
+	if !errors.As(err, &apiErr) || apiErr.Code != http.StatusBadRequest {
+		return false
+	}
+	for _, detail := range apiErr.Details {
+		info, ok := detail.(map[string]any)
+		if ok && info["@type"] == errorInfoType && info["reason"] == changesAlreadyInReviewReason {
+			return true
+		}
+	}
+	return false
 }
 
 // isChangesNotSentForReviewRequired reports whether the commit needs changesNotSentForReview=true (after a rejection).
