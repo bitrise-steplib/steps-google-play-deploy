@@ -148,7 +148,8 @@ workflows:
 
     - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
     - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
-    - TRACK: internal
+    # internal testing is never reviewed; closed testing is, for a few minutes after a commit
+    - TRACK: apk-testing
     before_run:
     - _build_release_status_tool
     - _setup
