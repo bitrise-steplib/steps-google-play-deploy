@@ -56,7 +56,7 @@ func (c Configs) validateJSONKeyPath() error {
 
 	pth := strings.TrimPrefix(string(c.JSONKeyPath), "file://")
 	if exist, err := pathutil.IsPathExists(pth); err != nil {
-		return fmt.Errorf("failed to check if json key path exist at: %s, error: %s", pth, err)
+		return fmt.Errorf("failed to check if json key path exist at: %s: %w", pth, err)
 	} else if !exist {
 		return errors.New("json key path not exist at: " + pth)
 	}
@@ -70,7 +70,7 @@ func (c Configs) validateWhatsnewsDir() error {
 	}
 
 	if exist, err := pathutil.IsDirExists(c.WhatsnewsDir); err != nil {
-		return fmt.Errorf("failed to check if what's new directory exist at: %s, error: %s", c.WhatsnewsDir, err)
+		return fmt.Errorf("failed to check if what's new directory exist at: %s: %w", c.WhatsnewsDir, err)
 	} else if !exist {
 		return errors.New("what's new directory not exist at: " + c.WhatsnewsDir)
 	}
@@ -87,7 +87,7 @@ func (c Configs) validateMappingFile() error {
 
 	for _, path := range c.parseInputList(c.MappingFile) {
 		if exist, err := pathutil.IsPathExists(path); err != nil {
-			return fmt.Errorf("failed to check if mapping file exist at: %s, error: %s", path, err)
+			return fmt.Errorf("failed to check if mapping file exist at: %s: %w", path, err)
 		} else if !exist {
 			return errors.New("mapping file doesn't exist at: " + path)
 		}
@@ -177,7 +177,7 @@ func (c Configs) validateApps() error {
 
 	for _, pth := range apps {
 		if exist, err := pathutil.IsPathExists(pth); err != nil {
-			return fmt.Errorf("failed to check if app exist at: %s, error: %s", pth, err)
+			return fmt.Errorf("failed to check if app exist at: %s: %w", pth, err)
 		} else if !exist {
 			return errors.New("app not exist at: " + pth)
 		}
