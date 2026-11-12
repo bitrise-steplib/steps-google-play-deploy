@@ -17,7 +17,7 @@ app:
 
 # Google Play limits: one open edit per service account, and a daily commit quota per app. So every Step run is
 # gated to ubuntu-latest-stable, CI deploys only to the sdk22 app, and each test uses its own version code,
-# BITRISE_BUILD_NUMBER * 10 + 0..3, so codes never repeat across builds. manual_ workflows are not run by CI.
+# BITRISE_BUILD_NUMBER * 10 + 0..5, so codes never repeat across builds. manual_ workflows are not run by CI.
 workflows:
   manual_test_wearos_deploy:
     summary: Builds and deploys a main app and a wearable app as AAB.
@@ -76,7 +76,7 @@ workflows:
         - mapping_file: $BITRISE_DEPLOY_DIR/Wearable-mapping.txt
         - verbose_log: true
 
-  test_aab_deploy:
+  manual_test_aab_deploy:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
     - BRANCH: master
@@ -130,6 +130,113 @@ workflows:
         - release_name: Overwritten release name
         - changes_in_review_behavior: upload_as_draft
         - verbose_log: true
+
+  test_upload_as_draft_during_review:
+    summary: Deploys twice in a row; the second deploy finds the first one in review and saves its release as a draft.
+    description: |-
+      Google Play keeps this app's changes in review for a few minutes after every commit, so the second deploy, with
+      upload_as_draft, is refused with CHANGES_ALREADY_IN_REVIEW and falls back to a draft. The last step checks that
+      the second release is a draft on the track.
+    envs:
+    - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
+    - BRANCH: master
+
+    - BITRISEIO_ANDROID_KEYSTORE_URL: $SIMPLESAMPLE_ANDROID_KEYSTORE_URL
+    - BITRISEIO_ANDROID_KEYSTORE_PASSWORD: $SIMPLESAMPLE_ANDROID_KEYSTORE_PASSWORD
+    - BITRISEIO_ANDROID_KEYSTORE_ALIAS: $SIMPLESAMPLE_ANDROID_KEY_ALIAS
+    - BITRISEIO_ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: $SIMPLESAMPLE_ANDROID_KEY_PASSWORD
+
+    - PACKAGE_NAME: com.bitrise_io.sample_apps_android_simple_google_play_deploy
+    - SERVICE_ACCOUNT_KEY_URL: $GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_URL
+    # internal testing is never reviewed; closed testing is, for a few minutes after a commit
+    - TRACK: apk-testing
+    before_run:
+    - _build_release_status_tool
+    - _setup
+    steps:
+    - set-java-version:
+        inputs:
+        - set_java_version: "17"
+    - script:
+        title: Set $FIRST_VERSION_CODE and $DRAFT_VERSION_CODE
+        inputs:
+        - content: |-
+            set -ex
+
+            envman add --key FIRST_VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 + 4 ))
+            envman add --key DRAFT_VERSION_CODE --value $(( $BITRISE_BUILD_NUMBER * 10 + 5 ))
+    - change-android-versioncode-and-versionname:
+        title: Set the version code of the first release
+        inputs:
+        - build_gradle_path: ./app/build.gradle
+        - new_version_code: $FIRST_VERSION_CODE
+        - new_version_name: 0.2.6-review
+    - gradle-runner:
+        inputs:
+        - gradle_task: assembleRelease
+        - gradlew_path: ./gradlew
+    - sign-apk:
+        inputs:
+        - android_app: $BITRISE_APK_PATH_LIST
+        - use_apk_signer: true
+    - script:
+        title: Keep the first APK
+        inputs:
+        - content: |-
+            set -ex
+
+            cp "$BITRISE_SIGNED_APK_PATH" "$BITRISE_DEPLOY_DIR/first-release.apk"
+    - change-android-versioncode-and-versionname:
+        title: Set the version code of the draft release
+        inputs:
+        - build_gradle_path: ./app/build.gradle
+        - new_version_code: $DRAFT_VERSION_CODE
+        - new_version_name: 0.2.6-draft
+    - gradle-runner:
+        inputs:
+        - gradle_task: assembleRelease
+        - gradlew_path: ./gradlew
+    - sign-apk:
+        inputs:
+        - android_app: $BITRISE_APK_PATH_LIST
+        - use_apk_signer: true
+    - path::./:
+        title: Execute step, sending the first release for review
+        # Limit running this test to only one stack to avoid parallel testing issues
+        # Running E2E tests on all stacks in parallel would cause conflicting deployments in Google Play to the same app
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
+        - package_name: $PACKAGE_NAME
+        - app_path: $BITRISE_DEPLOY_DIR/first-release.apk
+        - track: $TRACK
+        - mapping_file: ""
+        - user_fraction: ""
+        - verbose_log: true
+    - path::./:
+        title: Execute step while the first release is in review
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - service_account_json_key_path: $SERVICE_ACCOUNT_KEY_URL
+        - package_name: $PACKAGE_NAME
+        - app_path: $BITRISE_SIGNED_APK_PATH
+        - track: $TRACK
+        - mapping_file: ""
+        - user_fraction: ""
+        - changes_in_review_behavior: upload_as_draft
+        - verbose_log: true
+    - script:
+        title: Check that the second release is a draft
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            set -eo pipefail
+
+            "$RELEASE_STATUS_TOOL" -package "$PACKAGE_NAME" -key "$SERVICE_ACCOUNT_KEY_URL" -track "$TRACK" \
+              -version-code "$DRAFT_VERSION_CODE" -want draft
 
   manual_test_apk_deploy_custom_track:
     summary: Tests deploying an APK to a user-defined track
@@ -187,7 +294,7 @@ workflows:
         - user_fraction: ""
         - retry_without_sending_to_review: true
         - verbose_log: true
-  test_dry_run:
+  manual_test_dry_run:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-apps-android-sdk22.git
     - BRANCH: master
@@ -297,6 +404,22 @@ workflows:
         - user_fraction: ""
         - retry_without_sending_to_review: true
         - verbose_log: true
+
+  _build_release_status_tool:
+    steps:
+    - script:
+        title: Build the release status tool (e2e/tools/releasestatus)
+        run_if: |-
+          {{ or (enveq "IS_LATEST_STACK_UBUNTU" "true") (not .IsCI) }}
+        inputs:
+        - content: |-
+            set -ex
+
+            GO_BIN="$(command -v go || true)"
+            if [ -z "$GO_BIN" ]; then GO_BIN="$HOME/.bitrise/toolkits/go/go/bin/go"; fi
+            OUT_DIR="$(mktemp -d)"
+            "$GO_BIN" build -mod=vendor -o "$OUT_DIR/releasestatus" ./e2e/tools/releasestatus
+            envman add --key RELEASE_STATUS_TOOL --value "$OUT_DIR/releasestatus"
 
   _setup:
     steps:
