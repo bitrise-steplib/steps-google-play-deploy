@@ -478,6 +478,7 @@ func TestHint(t *testing.T) {
 	require.Empty(t, hint(wrappedGoogleError(400, changesNotSentForReviewMessage)), "only the commit flow knows whether the retry input helps")
 	require.Equal(t, "set the input", hint(fmt.Errorf("failed to commit edit: %w", hintedError{err: errors.New("refused"), hint: "set the input"})))
 	require.Equal(t, bundleInstallationWarningHint, hint(wrappedGoogleError(403, "The installation of the app bundle may be too large and trigger user warning on some devices, and this needs to be explicitly acknowledged in the request.")))
+	require.Equal(t, targetSDKTooLowHint, hint(wrappedGoogleError(403, "Target SDK of artifact is too low: 42")))
 	require.Equal(t, internalServerErrorHint, hint(wrappedGoogleError(500, "Internal error encountered.")))
 	require.Empty(t, hint(wrappedGoogleError(403, "Version code 42 has already been used.")))
 }

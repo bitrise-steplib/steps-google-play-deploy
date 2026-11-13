@@ -39,6 +39,12 @@ const changesAlreadyInReviewHint = "Google Play is still reviewing an earlier su
 	"Run the Step again after the review is complete, or cancel the review in the Google Play Console. " +
 	"To cancel the review and submit the new changes instead, set 'Behavior when a review is in progress' (changes_in_review_behavior) to cancel_and_resubmit."
 
+// targetSDKTooLowError is Google Play's refusal of an artifact that targets an API level below its current minimum.
+// The number Google Play appends is the artifact's version code, not an API level.
+const targetSDKTooLowError = "Target SDK of artifact is too low"
+const targetSDKTooLowHint = "Google Play requires a higher target API level than the uploaded app targets. The number in the error is the app's version code, not an API level. " +
+	"Raise targetSdkVersion in your app's build configuration and build the app again. See https://developer.android.com/google/play/requirements/target-sdk"
+
 const internalServerErrorHint = "Google Play API responded with an unknown error\n" +
 	"Suggestion: create a release manually in Google Play Console because the UI has the capability to present the underlying error in certain cases"
 
@@ -69,6 +75,8 @@ func hint(err error) string {
 		return hinted.hint
 	case strings.Contains(err.Error(), bundleInstallationWarning):
 		return bundleInstallationWarningHint
+	case strings.Contains(err.Error(), targetSDKTooLowError):
+		return targetSDKTooLowHint
 	case strings.Contains(err.Error(), internalServerError):
 		return internalServerErrorHint
 	}
